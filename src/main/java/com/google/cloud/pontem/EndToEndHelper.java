@@ -29,6 +29,7 @@ import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.Value;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
@@ -236,8 +237,13 @@ public class EndToEndHelper {
     StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
-    Bucket bucket = storage.get(gcsBucketName);
-    bucket.delete(Bucket.BucketSourceOption.metagenerationMatch());
+
+    Iterable<Blob> blobs = storage.list(gcsBucketName, Storage.BlobListOption.prefix("")).iterateAll();
+    for (Blob blob : blobs) {
+      blob.delete(Blob.BlobSourceOption.generationMatch());
+    }
+
+    storage.delete(gcsBucketName, Storage.BucketSourceOption.userProject(projectId));
   }
 
   private static void createCloudSpannerDatabaseAndTableStructure(
