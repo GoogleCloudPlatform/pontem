@@ -33,7 +33,7 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/proje
 ```
 
 ## Getting started
-pontem can be run in various modes. Consult the [usage guide](usage.md) for
+pontem can be run in various modes. Consult the [usage guide](USAGE.md) for
 relevant examples.
 
 ## A note on Security
