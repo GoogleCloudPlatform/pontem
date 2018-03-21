@@ -76,7 +76,7 @@ public class Util {
       "metadata/table_schemas/";
   public static final String FILE_PATH_FOR_TABLE_NAMES_ROW_COUNTS_FROM_JOB_METRICS =
       "metadata/table_row_counts_from_backup_job_metrics.txt";
-  public static final String USER_AGENT_PREFIX = ".1CloudTools--";
+  public static final String USER_AGENT_PREFIX = "pontem/0.0.1";
 
   // Use a delimeter that cannot be a part of a Cloud Spanner table name.
   public static final String TRANSFORM_NODE_NAME_DELIMITER = "-#-";
