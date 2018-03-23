@@ -29,6 +29,11 @@ import org.apache.commons.cli.ParseException;
 /**
  * Verify the integrity of a backup of a Cloud Spanner database.
  *
+ * <p>Database Backup Integrity Check verifies that the backup completed
+ * successfully. In particular, this checks the list of tables backed-up
+ * and the number of rows backed-up. It does not check the cell-level data
+ * values.
+ *
  * <p>A sample run:
  *
  * <pre>
