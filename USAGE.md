@@ -1,3 +1,42 @@
+# Prerequisites
+
+The prerequisites required depend upon whether you use Google Cloud Shell
+or the Local Command Line.
+
+## Google Cloud Shell
+
+Simply open up a [Google Cloud Shell](https://cloud.google.com/shell/docs/quickstart)
+and follow the [Usage](#usage) guide below.
+
+# Local Command Line
+
+## Java and Maven
+Ensure that Java 8 or above is installed.
+
+Ensure that [Maven 3+ is installed](https://maven.apache.org/install.html).
+
+## Permissions
+Before using the pontem, you need to first setup a number of permissions
+in your Google Cloud project. Make sure the service account running the jobs
+has these permissions:
+
+1. Project Viewer
+1. Dataflow Developer
+1. Cloud Spanner Database Administrator
+1. Storage Object Admin
+
+[Dataflow will use a service account.](https://cloud.google.com/dataflow/security-and-permissions#dataflow-service-account)
+In order for Dataflow job to start, you will need to set the
+[service account with these permissions](https://cloud.google.com/dataflow/access-control#creating_jobs).
+
+You will want [to setup a Service Account key](https://support.google.com/googleapi/answer/6158857?hl=en)
+, download the key as a `.json` file and export it into the path.
+
+```bash
+$ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/project-name-a1b2c3d4e.json
+```
+
+
 # Usage
 **Examples**
 - [Backup](#backup)
