@@ -5,11 +5,16 @@ to perform four key operations:
 
 1. Database Backup.
 1. Database Backup Integrity Check which verifies that the backup completed
-successfully.
+successfully. In particular, this checks the list of tables backed-up
+and the number of rows backed-up. It does not check the cell-level data
+values.
 1. Database Restore whereby a database backup that is stored on disk is
 restored to a Cloud Spanner instance.
 1. Database Restore Integrity Check which verifies that the restore
-completed successfully.
+completed successfully. Integrity Check which verifies that the restore completed
+successfully. In particular, this checks the list of tables restored
+and the number of rows restored. It does not check the cell-level data
+values.
 
 ## Prerequisites
 Before using the pontem, you need to first setup a number of permissions
