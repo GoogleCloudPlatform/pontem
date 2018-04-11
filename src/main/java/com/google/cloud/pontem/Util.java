@@ -166,7 +166,14 @@ public class Util {
       // If the database already exists, then this attempt to create it again will fail and
       // throw an exception.
       if (!operation.isSuccessful()) {
-        throw new Exception("Failure creating database " + databaseId);
+        throw new Exception(
+            "Failure creating database named '"
+                + databaseId
+                + "' in instance '"
+                + instanceId
+                + "' and project '"
+                + projectId
+                + "'");
       }
     } catch (SpannerException e) {
       LOG.info("Error creating database " + databaseId + ":\n" + e.toString());
@@ -220,7 +227,8 @@ public class Util {
               + pathToRootOfBackup
               + "\nFilenameFromRoot: "
               + filenameFromRootOfBackup
-              + "\n\nBlobId: " + blobId.toString());
+              + "\n\nBlobId: "
+              + blobId.toString());
     }
 
     if (blob.getSize() < 1_000_000) {
