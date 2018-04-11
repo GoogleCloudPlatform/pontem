@@ -3,19 +3,21 @@
 The prerequisites required depend upon whether you use Google Cloud Shell
 or the Local Command Line.
 
+We strongly recommend you use Google Cloud Shell as there is no setup required.
+
 ## Google Cloud Shell
 
 Simply open up a [Google Cloud Shell](https://cloud.google.com/shell/docs/quickstart)
 and follow the [Usage](#usage) guide below.
 
-# Local Command Line
+## Local Command Line
 
-## Java and Maven
+### Java and Maven
 Ensure that Java 8 or above is installed.
 
 Ensure that [Maven 3+ is installed](https://maven.apache.org/install.html).
 
-## Permissions
+### Permissions
 Before using the pontem, you need to first setup a number of permissions
 in your Google Cloud project. Make sure the service account running the jobs
 has these permissions:
@@ -170,3 +172,13 @@ mvn compile exec:java \
                --databaseBackupLocation=gs://my-cloud-spanner-project/words_db_apache2.2.0_b/ \
                --areAllTablesRestored=true"
 ```
+
+# Performance
+## General Performance Tips
+1. Examine the [Google Cloud IAM Quotas page](https://console.cloud.google.com/iam-admin/quotas)
+Look in particular for quotas that are maxed-out (i.e., showing in deep orange). If you have maxed out your worker count, you will need more "CPUs (all regions)", "In-use IP addresses", and "CPUs".
+Look also for "Persistent Disk Standard (GB)".
+You likely need to increase your Cloud Spanner node count ("Cloud Spanner nodes used") if your Cloud Spanner CPU usage is above 75%.
+
+2. Examine your Cloud Spanner CPU
+If the CPU usage is over 75%, it is likely worth increasing your [node count](https://cloud.google.com/spanner/docs/instances#node_count). Otherwise, the limiting factor is likely somewhere else.
