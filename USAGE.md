@@ -191,6 +191,6 @@ The benchmarks below were performed on a 20 node Cloud Spanner instance using 10
 
 | Cloud Spanner Database Size  | Number of Rows  | Backup Time  | Backup Space   | Restore Time  |
 |---|---|---|---|---|
-| 26TB  | 10B  | ~70 min  |  ~17GB  | ~60 min  |
+| 26TB  | 10B  | ~70 min  |  ~17GB  | ~70 min  |
 
 
