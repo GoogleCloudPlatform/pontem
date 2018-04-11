@@ -21,13 +21,14 @@ if [ -z ${GOOGLE_JAVA_FORMAT_HOME+x} ];
        exit 1;
 fi
 
-# Get files to be committed
-MODIFIED_FILES=`git diff --cached --name-only`
+# Get Java files to be committed
+MODIFIED_FILES=`git diff --cached --name-only -- '*.java'`
 
 # Run the formatter
 GOOGLE_JAVA_FORMAT_OUTPUT=`java -jar $GOOGLE_JAVA_FORMAT_HOME --set-exit-if-changed $MODIFIED_FILES`
 GOOGLE_JAVA_FORMAT_EXIT_STATUS=$?
 
+# TODO(ldanielmadariaga): Handle different verbosity levels
 if [ $GOOGLE_JAVA_FORMAT_EXIT_STATUS -eq 1 ]
   then echo "$GOOGLE_JAVA_FORMAT_OUTPUT"
     exit 1;
