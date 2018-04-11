@@ -68,17 +68,22 @@ public class UtilTest {
         "Bucket name parsing failed",
         "bucketName",
         Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName/multi-backup/djskd"));
+
+    assertEquals(
+        "Bucket name parsing failed",
+        "bucketName2",
+        Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName2/"));
   }
 
   @Test
   public void testGetGcsFolderPathFromDatabaseBackupLocation() throws Exception {
     assertEquals(
         "Folder path parsing failed",
-        "multi-backup/djskd/",
+        "/multi-backup/djskd/",
         Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/djskd"));
     assertEquals(
         "Folder path parsing failed",
-        "multi-backup/",
+        "/multi-backup/",
         Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/"));
   }
 

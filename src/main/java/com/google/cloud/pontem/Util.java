@@ -209,7 +209,9 @@ public class Util {
     StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
-    Blob blob = storage.get(BlobId.of(bucketName, pathToRootOfBackup + filenameFromRootOfBackup));
+
+    BlobId blobId = BlobId.of(bucketName, pathToRootOfBackup + filenameFromRootOfBackup);
+    Blob blob = storage.get(blobId);
     if (blob == null) {
       throw new Exception(
           "No such object in GCS:\nBucketName: "
@@ -217,7 +219,8 @@ public class Util {
               + "\nPathToRoot: "
               + pathToRootOfBackup
               + "\nFilenameFromRoot: "
-              + filenameFromRootOfBackup);
+              + filenameFromRootOfBackup
+              + "\n\nBlobId: " + blobId.toString());
     }
 
     if (blob.getSize() < 1_000_000) {
@@ -283,8 +286,8 @@ public class Util {
     if (path.length() == 0) {
       path = "/";
     }
-    if (path.length() > 1 && path.charAt(0) == '/') {
-      path = path.substring(1);
+    if (path.length() > 1 && path.charAt(0) != '/') {
+      path = '/' + path;
     }
     if (path.charAt(path.length() - 1) != '/') {
       path += '/';
