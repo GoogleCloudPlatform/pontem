@@ -212,7 +212,12 @@ public class Util {
     Blob blob = storage.get(BlobId.of(bucketName, pathToRootOfBackup + filenameFromRootOfBackup));
     if (blob == null) {
       throw new Exception(
-          "No such object in GCS:\n" + bucketName + pathToRootOfBackup + filenameFromRootOfBackup);
+          "No such object in GCS:\nBucketName: "
+              + bucketName
+              + "\nPathToRoot: "
+              + pathToRootOfBackup
+              + "\nFilenameFromRoot: "
+              + filenameFromRootOfBackup);
     }
 
     if (blob.getSize() < 1_000_000) {
