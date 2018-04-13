@@ -1,6 +1,6 @@
 # pontem
 ## Overview
-pontem is an open-source project that enable susers of Cloud Spanner
+pontem is an open-source project that enable users of Cloud Spanner
 to perform four key operations:
 
 1. Database Backup.
