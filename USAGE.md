@@ -182,3 +182,13 @@ You likely need to increase your Cloud Spanner node count ("Cloud Spanner nodes 
 
 2. Examine your Cloud Spanner CPU
 If the CPU usage is over 75%, it is likely worth increasing your [node count](https://cloud.google.com/spanner/docs/instances#node_count). Otherwise, the limiting factor is likely somewhere else.
+
+
+## Benchmarks
+The times to perform backup and restore will vary dramatically based upon on Cloud Spanner node count, Dataflow worker count, persistent disk available to Dataflow, and the number of parent-child tables. For example, if you have a parent-child table, the parent will need to be restored first before the child can even begin being restored.
+
+The benchmarks below were performed on a 20 node Cloud Spanner instance using 1000 Dataflow workers with 250,000 Persistent Disk Standard (GB).
+
+| Cloud Spanner Database Size  | Number of Rows  | Backup Time  | Backup Space   | Restore Time  |
+|---|---|---|---|---|
+| 26TB  | 10B  | ~70 min  |  ~17GB  | ~25 hours  |
