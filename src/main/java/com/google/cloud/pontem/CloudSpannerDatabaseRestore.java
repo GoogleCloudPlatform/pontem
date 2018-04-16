@@ -151,6 +151,7 @@ public class CloudSpannerDatabaseRestore {
      * --outputSpannerDatabaseInstanceId
      */
     @Description("Whether to create database and tables if they do not exist.")
+    @Default.Boolean(true)
     Boolean getShouldCreateDatabaseAndTables();
 
     void setShouldCreateDatabaseAndTables(Boolean value);

@@ -34,6 +34,7 @@ import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageClass;
+import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.cli.CommandLine;
@@ -176,7 +177,8 @@ public class EndToEndHelper {
           projectId,
           instanceId,
           databaseId,
-          Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath));
+          Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+          false);
     } else if (operation.equals("teardown")) {
       tearDownEnvironmentForEndToEndTests(
           projectId,
@@ -187,6 +189,8 @@ public class EndToEndHelper {
       verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, util);
     } else if (operation.equals("verifyGcsBackup")) {
       verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, util);
+    } else if (operation.equals("teardownDatabase")) {
+      deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
     } else {
       throw new Exception("Unable to execute operation: " + operation);
     }
@@ -199,12 +203,18 @@ public class EndToEndHelper {
   }
 
   public static void setupEnvironmentForEndToEndTests(
-      String projectId, String instanceId, String databaseId, String gcsBucketName)
+      String projectId,
+      String instanceId,
+      String databaseId,
+      String gcsBucketName,
+      boolean shouldFailIfAlreadyExists)
       throws Exception {
-    createCloudSpannerDatabaseAndTableStructure(projectId, instanceId, databaseId);
-    createGcsBucket(projectId, gcsBucketName);
+    createGcsBucket(projectId, gcsBucketName, shouldFailIfAlreadyExists);
 
-    populateCloudSpannerDatabaseWithBasicContent(projectId, instanceId, databaseId);
+    createCloudSpannerDatabaseAndTableStructure(
+        projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
+    populateCloudSpannerDatabaseWithBasicContent(
+        projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
   }
 
   private static void deleteCloudSpannerDatabase(
@@ -238,7 +248,8 @@ public class EndToEndHelper {
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
 
-    Iterable<Blob> blobs = storage.list(gcsBucketName, Storage.BlobListOption.prefix("")).iterateAll();
+    Iterable<Blob> blobs =
+        storage.list(gcsBucketName, Storage.BlobListOption.prefix("")).iterateAll();
     for (Blob blob : blobs) {
       blob.delete(Blob.BlobSourceOption.generationMatch());
     }
@@ -247,27 +258,48 @@ public class EndToEndHelper {
   }
 
   private static void createCloudSpannerDatabaseAndTableStructure(
-      String projectId, String instanceId, String databaseId) throws Exception {
+      String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyCreated)
+      throws Exception {
     Util util = new Util();
-    util.createDatabaseAndTables(projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
+    try {
+      util.createDatabaseAndTables(projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
+    } catch (SpannerException e) {
+      if (e.getMessage().contains("ALREADY_EXISTS") && !shouldFailIfAlreadyCreated) {
+        LOG.info("Cloud Spanner database already exists.");
+      } else {
+        throw e;
+      }
+    }
   }
 
-  private static void createGcsBucket(String projectId, String bucketName) {
+  private static void createGcsBucket(
+      String projectId, String bucketName, boolean shouldFailIfAlreadyCreated) {
     StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
-    Bucket newBucket =
-        storage.create(
-            BucketInfo.newBuilder(bucketName)
-                // See here for possible values: http://g.co/cloud/storage/docs/storage-classes
-                .setStorageClass(StorageClass.REGIONAL)
-                // Possible values: http://g.co/cloud/storage/docs/bucket-locations#location-mr
-                .setLocation("us-central1")
-                .build());
+
+    try {
+      Bucket newBucket =
+          storage.create(
+              BucketInfo.newBuilder(bucketName)
+                  // See here for possible values: http://g.co/cloud/storage/docs/storage-classes
+                  .setStorageClass(StorageClass.REGIONAL)
+                  // Possible values: http://g.co/cloud/storage/docs/bucket-locations#location-mr
+                  .setLocation("us-central1")
+                  .build());
+    } catch (StorageException e) {
+      if (e.getMessage().equals("You already own this bucket. Please select another name.")
+          && !shouldFailIfAlreadyCreated) {
+        LOG.info("Bucket already exists.");
+      } else {
+        throw e;
+      }
+    }
   }
 
   private static void populateCloudSpannerDatabaseWithBasicContent(
-      String projectId, String instanceId, String databaseId) throws Exception {
+      String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyPopulated)
+      throws Exception {
     SpannerOptions options =
         SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
     Spanner spanner = options.getService();
@@ -277,6 +309,12 @@ public class EndToEndHelper {
 
       Timestamp commitTimestamp = dbClient.write(MUTATIONS);
       LOG.info("Wrote mutations at " + commitTimestamp.toString());
+    } catch (SpannerException e) {
+      if (e.getMessage().contains("ALREADY_EXISTS") && !shouldFailIfAlreadyPopulated) {
+        LOG.info("Cloud Spanner mutations already populated.");
+      } else {
+        throw e;
+      }
     } finally {
       spanner.close();
     }
