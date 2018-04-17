@@ -197,3 +197,14 @@ The benchmarks below were performed on a 20 node Cloud Spanner instance using 10
 |---|---|---|---|---|
 | 26TB  | 10B  | ~70 min  |  ~17GB  | ~25 hours  |
 | 150GB | 1B | ~ 35 min | ~65GB | ~2.5 hours  |
+
+# Cost
+The costs involved in performing a backup and restore include:
+
+  * [Costs associated with Dataflow jobs](https://cloud.google.com/dataflow/pricing) such as CPU, storage, and memory.
+  * [Costs associated with Cloud Storage](https://cloud.google.com/storage/pricing) such as network usage and data storage.
+  * [Costs associated with Cloud Spanner](https://cloud.google.com/spanner/pricing) such as network usage and any additional nodes.
+
+For example, if you backup 2TB and use an additional 10 Cloud Spanner nodes with 750 Dataflow workers and 250TB of Dataflow storage and 2TB of Google Cloud Storage, the cost for a day will be about $300.
+
+To compute a sample cost for you, use the [Google Cloud pricing tool](https://cloud.google.com/products/calculator/).
