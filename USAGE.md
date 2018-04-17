@@ -191,8 +191,9 @@ consider limiting the Dataflow worker count using the ``--maxNumWorkers`` flag.
 ## Benchmarks
 The times to perform backup and restore will vary dramatically based upon on Cloud Spanner node count, Dataflow worker count, persistent disk available to Dataflow, and the number of parent-child tables. For example, if you have a parent-child table, the parent will need to be restored first before the child can even begin being restored.
 
-The benchmarks below were performed on a 20 node Cloud Spanner instance using 1000 Dataflow workers with 250,000 Persistent Disk Standard (GB).
+The benchmarks below were performed on a 20 node Cloud Spanner instance using 1000 Dataflow workers with 250,000 Persistent Disk Standard (GB). In some instances, the flag ``--maxNumWorkers`` was used to limit the number of Dataflow workers to 150 as Cloud Spanner was running too hot during the insert period.
 
 | Cloud Spanner Database Size  | Number of Rows  | Backup Time  | Backup Space   | Restore Time  |
 |---|---|---|---|---|
 | 26TB  | 10B  | ~70 min  |  ~17GB  | ~25 hours  |
+| 150GB | 1B | ~ 35 min | ~65GB | ~2.5 hours  |
