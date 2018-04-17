@@ -217,6 +217,11 @@ public class Util {
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
 
+    // Blob path should not start with '/'
+    if (pathToRootOfBackup.charAt(0) == '/') {
+      pathToRootOfBackup = pathToRootOfBackup.substring(1);
+    }
+
     BlobId blobId = BlobId.of(bucketName, pathToRootOfBackup + filenameFromRootOfBackup);
     Blob blob = storage.get(blobId);
     if (blob == null) {
@@ -258,6 +263,11 @@ public class Util {
     StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
+
+    // Blob path should not start with '/'
+    if (pathToRootOfBackup.charAt(0) == '/') {
+      pathToRootOfBackup = pathToRootOfBackup.substring(1);
+    }
 
     BlobId blobId = BlobId.of(bucketName, pathToRootOfBackup + filenameFromRootOfBackup);
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("text/plain").build();
