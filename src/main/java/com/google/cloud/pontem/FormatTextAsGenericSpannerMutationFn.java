@@ -34,7 +34,7 @@ import org.apache.beam.sdk.transforms.SimpleFunction;
  * base64-encoded binary data from Cloud Spanner and turns it into a Cloud Spanner {@code Mutation}
  * which can be written into Cloud Spanner.
  *
- * @see https://cloud.google.com/spanner/docs/data-types
+ * <p>See https://cloud.google.com/spanner/docs/data-types
  */
 public class FormatTextAsGenericSpannerMutationFn extends SimpleFunction<String, Mutation> {
   private final Counter tableRowsReadCounter;

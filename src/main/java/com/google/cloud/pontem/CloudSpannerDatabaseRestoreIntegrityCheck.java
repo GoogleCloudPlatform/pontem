@@ -31,10 +31,9 @@ import org.apache.commons.cli.ParseException;
 /**
  * Verify the integrity of a restore of a Cloud Spanner database.
  *
- * <p>Integrity Check which verifies that the restore completed
- * successfully. In particular, this checks the list of tables restored
- * and the number of rows restored. It does not check the cell-level data
- * values.
+ * <p>Integrity Check which verifies that the restore completed successfully. In particular, this
+ * checks the list of tables restored and the number of rows restored. It does not check the
+ * cell-level data values.
  *
  * <p>A sample run:
  *
@@ -52,6 +51,7 @@ import org.apache.commons.cli.ParseException;
  *                --restoreJobId=2017-12-28_10_43_41-16236058809269230845 \
  *                --databaseBackupLocation=gs://my-cloud-spanner-project/words_db_apache2.2.0_b/ \
  *                --areAllTablesRestored=false"
+ * </pre>
  *
  * <p>A sample run that requires every table to have been restored:
  *

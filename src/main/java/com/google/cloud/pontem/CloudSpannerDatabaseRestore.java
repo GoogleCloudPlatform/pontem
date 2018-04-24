@@ -135,7 +135,7 @@ public class CloudSpannerDatabaseRestore {
      * transaction contains too many mutations." The solution is to decrease the write batch size by
      * explicitly setting this flag.
      *
-     * @see org/apache/beam/sdk/io/gcp/spanner/SpannerIO.Write.html#withBatchSizeBytes-long-
+     * <p>See org/apache/beam/sdk/io/gcp/spanner/SpannerIO.Write.html#withBatchSizeBytes-long-
      */
     @Description("Bytes write size. Corresponds to SpannerIO.Write withBatchSizeBytes")
     @Default.Long(1048576) // 1MB

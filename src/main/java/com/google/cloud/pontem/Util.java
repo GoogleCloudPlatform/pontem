@@ -60,7 +60,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Utility function for Cloud Spanner backup and restore */
+/** Utility function for Cloud Spanner backup and restore. */
 public class Util {
   private static final Logger LOG = LoggerFactory.getLogger(Util.class);
 
@@ -85,11 +85,9 @@ public class Util {
   public static final String DDL_DELIMITER = "\n##\n";
 
   /**
-   * Fetch the DDL for the database.
+   * Fetch the DDL for the database. See https://bit.ly/2qVpToj for more.
    *
    * @return DDL for the database in sequential order.
-   * @see
-   *     https://googlecloudplatform.github.io/google-cloud-java/0.25.0/apidocs/com/google/cloud/spanner/DatabaseAdminClient.html#getDatabaseDdl(java.lang.String,%20java.lang.String)
    */
   public ImmutableList<String> queryDatabaseDdl(
       String projectId, String instance, String databaseId) {
@@ -138,9 +136,9 @@ public class Util {
   }
 
   /**
-   * Create database and populate it with a specific database definition language
+   * Create database and populate it with a specific database definition language.
    *
-   * @see https://cloud.google.com/spanner/docs/data-definition-language
+   * <p>See https://cloud.google.com/spanner/docs/data-definition-language
    */
   public void createDatabaseAndTables(
       String projectId, String instanceId, String databaseId, ImmutableList<String> databaseDdl)
@@ -192,7 +190,7 @@ public class Util {
    * Take in raw text version of a database's DDL and return a list of DDL statements. The list of
    * DDL statements can be executed sequentially.
    *
-   * @see https://cloud.google.com/spanner/docs/data-definition-language
+   * <p>See https://cloud.google.com/spanner/docs/data-definition-language
    */
   public static ImmutableList<String> convertRawDdlIntoDdlList(String rawDdl) {
     List<String> statements = new ArrayList<String>(Arrays.asList(rawDdl.split(DDL_DELIMITER)));
@@ -386,11 +384,13 @@ public class Util {
   }
 
   /**
-   * @see https://goo.gl/qexnaZ
-   *     <p>The exact version of Apache Beam used to execute the backup job will have an effect on
-   *     dataflow step order and step names (and therefore will affect parsing).
-   *     <p>You can try out this API's getMetrics call manually for debugging using the following
-   *     URL: https://cloud.google.com/dataflow/docs/reference/rest/v1b3/projects.jobs/getMetrics
+   * The exact version of Apache Beam used to execute the backup job will have an effect on dataflow
+   * step order and step names (and therefore will affect parsing).
+   *
+   * <p>You can try out this API's getMetrics call manually for debugging using the following URL:
+   * https://cloud.google.com/dataflow/docs/reference/rest/v1b3/projects.jobs/getMetrics .
+   *
+   * <p>See https://goo.gl/qexnaZ
    */
   public static Map<String, Long> getTableRowCountsFromJobMetrics(JobMetrics jobMetrics)
       throws DataIntegrityErrorException {
