@@ -285,8 +285,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Hamcrest and JUnit are required dependencies of PAssert,
-             which is used in the main code of DebuggingWordCount example. -->
+        <!-- Hamcrest and JUnit are required for tests -->
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
