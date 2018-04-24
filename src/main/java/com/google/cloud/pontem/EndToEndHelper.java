@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
  *                --databaseInstanceId=my-cloud-spanner-instance \
  *                --databaseId=my-database \
  *                --operation=teardown"
+ * </pre>
  */
 public class EndToEndHelper {
   private static final Logger LOG = LoggerFactory.getLogger(EndToEndHelper.class);

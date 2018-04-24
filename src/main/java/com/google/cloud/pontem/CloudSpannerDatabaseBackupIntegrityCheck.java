@@ -29,10 +29,9 @@ import org.apache.commons.cli.ParseException;
 /**
  * Verify the integrity of a backup of a Cloud Spanner database.
  *
- * <p>Database Backup Integrity Check verifies that the backup completed
- * successfully. In particular, this checks the list of tables backed-up
- * and the number of rows backed-up. It does not check the cell-level data
- * values.
+ * <p>Database Backup Integrity Check verifies that the backup completed successfully. In
+ * particular, this checks the list of tables backed-up and the number of rows backed-up. It does
+ * not check the cell-level data values.
  *
  * <p>A sample run:
  *
@@ -42,6 +41,7 @@ import org.apache.commons.cli.ParseException;
  *   -Dexec.args="--project=my-cloud-spanner-project \
  *                --databaseBackupLocation=gs://my-cloud-spanner-project/multi-backup \
  *                --job=2017-10-25_11_18_28-6233650047978038157"
+ * </pre>
  *
  * <p>A sample run that requires checking row counts against the meta-data file:
  *
