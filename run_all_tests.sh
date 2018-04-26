@@ -63,6 +63,7 @@ fi
 echo "FINISHED parsing flags."
 
 # Run Unit Tests
+mvn clean verify || exit 1
 mvn clean test || exit 1
 
 echo "FINISHED running unit tests."
