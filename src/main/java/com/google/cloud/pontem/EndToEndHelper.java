@@ -255,7 +255,7 @@ public class EndToEndHelper {
       blob.delete(Blob.BlobSourceOption.generationMatch());
     }
 
-    storage.delete(gcsBucketName, Storage.BucketSourceOption.userProject(projectId));
+    storage.delete(gcsBucketName);
   }
 
   private static void createCloudSpannerDatabaseAndTableStructure(
@@ -333,10 +333,13 @@ public class EndToEndHelper {
     if (tables.length != 2) {
       throw new Exception("Table names not backed-up");
     }
-    String tableName0 = tables[0].substring(0, tables[0].indexOf(','));
-    String tableName1 = tables[1].substring(0, tables[1].indexOf(','));
-    if (!tableName1.equals(PARENT_TABLE_NAME) || !tableName0.equals(CHILD_TABLE_NAME)) {
-      throw new Exception("Table names not backed-up properly.\n" + tableName0 + "\n" + tableName1);
+    String tableName0 = tables[0].substring(0, tables[0].indexOf(',')).trim();
+    String tableName1 = tables[1].substring(0, tables[1].indexOf(',')).trim();
+    if (!((tableName1.equals(PARENT_TABLE_NAME) && tableName0.equals(CHILD_TABLE_NAME))
+        || (tableName1.equals(CHILD_TABLE_NAME) && tableName0.equals(PARENT_TABLE_NAME)))) {
+      throw new Exception("Table names not backed-up properly."
+                          + "\nFound:\n" + tableName0 + "\n" + tableName1
+                          + "\nExpected:\n" + PARENT_TABLE_NAME + "\n" + CHILD_TABLE_NAME);
     }
   }
 

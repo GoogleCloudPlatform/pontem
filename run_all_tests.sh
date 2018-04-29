@@ -63,7 +63,7 @@ fi
 echo "FINISHED parsing flags."
 
 # Run Unit Tests
-mvn clean verify || exit 1
+echo "BEGIN running unit tests."
 mvn clean test || exit 1
 
 echo "FINISHED running unit tests."
@@ -71,6 +71,7 @@ echo "FINISHED running unit tests."
 # Run End-To-End (E2E) Tests
 
 ## Setup
+echo "BEGIN running E2E setup."
 mvn compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
@@ -82,6 +83,7 @@ mvn compile exec:java \
 echo "FINISHED setup phase."
 
 ## Backup
+echo "BEGIN bacup."
 mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
@@ -93,6 +95,7 @@ mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpann
 echo "FINISHED backup phase."
 
 ## Verify Backup
+echo "BEGIN verify backup."
 mvn compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
@@ -104,6 +107,7 @@ mvn compile exec:java \
 echo "FINISHED verify backup phase."
 
 ## Tear Down Database
+echo "BEGIN database teardown."
 mvn compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
@@ -115,6 +119,7 @@ mvn compile exec:java \
 echo "FINISHED tear down database phase."
 
 ## Restore From Backup
+echo "BEGIN restore from backup."
 mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
@@ -126,6 +131,7 @@ mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpann
 echo "FINISHED restore from backup phase."
 
 ## Verify Database Restore
+echo "BEGIN database restore verify."
 mvn compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
@@ -134,7 +140,10 @@ mvn compile exec:java \
                 --databaseId=my-database \
                 --operation=verifyDatabase" || exit 1
 
+echo "FINISHED database restore verify."
+
 ## Tear Down
+echo "BEGIN final tear down."
 mvn compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
