@@ -83,7 +83,7 @@ mvn compile exec:java \
 echo "FINISHED setup phase."
 
 ## Backup
-echo "BEGIN bacup."
+echo "BEGIN backup."
 mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \

@@ -359,8 +359,8 @@ public class CloudSpannerDatabaseBackup {
     ImmutableList<Struct> tableNames =
         util.performSingleSpannerQuery(projectId, instance, databaseId, tableNamesQuery);
     ArrayList<String> tableNamesAsStrings = new ArrayList<String>();
+    String parentTableName = "";
     for (Struct inputRow : tableNames) {
-      String parentTableName = "";
       if (!inputRow.isNull("parent_table_name")) {
         parentTableName = inputRow.getString("parent_table_name");
       }

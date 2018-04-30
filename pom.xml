@@ -31,7 +31,7 @@
 
     <properties>
         <!-- Since Cloud Spanner is using GAX 1.1.0, must use Cloud Storage version
-             with the same version of GAX, which goes all the wa back to 1.0.2 -->
+             with the same version of GAX, which goes all the way back to 1.0.2 -->
         <google-cloud-storage.version>1.0.2</google-cloud-storage.version>
         <java.version>1.8</java.version>
     </properties>
