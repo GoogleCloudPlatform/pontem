@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import org.apache.beam.sdk.Pipeline;
@@ -36,6 +37,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
@@ -348,6 +350,26 @@ public class CloudSpannerDatabaseBackup {
     return query;
   }
 
+  /**
+   * Temporary workaround put in until https://github.com/apache/beam/pull/4946 is live.
+   * Gets the list of tables to backup.
+   */
+  public static ImmutableList<String> getTableNamesBeingBackedUp(
+      String projectId, String instance, String databaseId, String tableNamesQuery, Util util) {
+    ImmutableList<Struct> tableNames =
+        util.performSingleSpannerQuery(projectId, instance, databaseId, tableNamesQuery);
+    ArrayList<String> tableNamesAsStrings = new ArrayList<String>();
+    String parentTableName = "";
+    for (Struct inputRow : tableNames) {
+      if (!inputRow.isNull("parent_table_name")) {
+        parentTableName = inputRow.getString("parent_table_name");
+      }
+      tableNamesAsStrings.add(inputRow.getString("table_name") + "," + parentTableName);
+    }
+
+    return ImmutableList.copyOf(tableNamesAsStrings);
+  }
+
   public static void main(String[] args) throws Exception {
     // STEP 1: Setup pipeline and Spanner configuration
     final SpannerBackupOptions options =
@@ -409,19 +431,31 @@ public class CloudSpannerDatabaseBackup {
     // list we backup is the list present at the snapshot we created above. Otherwise,
     // it is possible a table could be missed or added to the backup OR parent-child table
     // relationships could change during run-time.
-    final PCollection<Struct> collectionOfTableNamesAsStruct =
-        p.apply(
-            "Read Table List To Backup",
-            SpannerIO.read()
-                .withSpannerConfig(spannerConfig)
-                .withQuery(getSqlQueryForTablesToBackup(tableNamesToBackup))
-                .withTransaction(transaction));
+
+    // Remove when https://github.com/apache/beam/pull/4946 is live
+    //    final PCollection<Struct> collectionOfTableNamesAsStruct =
+    //        p.apply(
+    //            "Read Table List To Backup",
+    //            SpannerIO.read()
+    //                .withSpannerConfig(spannerConfig)
+    //                .withQuery(getSqlQueryForTablesToBackup(tableNamesToBackup))
+    //                .withTransaction(transaction));
 
     // This is done as meta-data about the backup is stored for both verification and for
     // restoration.
     final PCollection<String> collectionOfTableNames =
-        collectionOfTableNamesAsStruct.apply(
-            "Map Table Names", MapElements.via(new FormatSpannerTablesListStructAsTextFn()));
+        p.apply(
+            Create.of(
+                getTableNamesBeingBackedUp(
+                    options.getProjectId(),
+                    options.getInputSpannerInstanceId(),
+                    options.getInputSpannerDatabaseId(),
+                    getSqlQueryForTablesToBackup(tableNamesToBackup),
+                    util)));
+
+    // Remove when https://github.com/apache/beam/pull/4946 is live
+    //        collectionOfTableNamesAsStruct.apply(
+    //            "Map Table Names", MapElements.via(new FormatSpannerTablesListStructAsTextFn()));
 
     // Contents can be safely written to one file as contents
     // would not be more than a hundred rows in normal cases
