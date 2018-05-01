@@ -20,6 +20,9 @@
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +41,47 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class CloudSpannerDatabaseBackupTest {
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+
+  @Test
+  public void testGetOutputPath() {
+    assertEquals("foo/bar/", CloudSpannerDatabaseBackup.getOutputPath("foo/bar"));
+    assertEquals("foo/bar/", CloudSpannerDatabaseBackup.getOutputPath("foo/bar/"));
+  }
+
+  @Test
+  public void testGetSqlQueryForTablesToBackup() {
+    String expected =
+        "SELECT table_name, parent_table_name FROM information_schema.tables AS t "
+            + "WHERE t.table_catalog = '' and t.table_schema = '' and "
+            + "table_name IN (\"tableName1\",\"tableName2\") ORDER BY parent_table_name DESC";
+    String actual =
+        CloudSpannerDatabaseBackup.getSqlQueryForTablesToBackup(
+            ImmutableList.of("tableName1", "tableName2"));
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testQueryListOfAllTablesInDatabase() {
+    String projectId = "cloud-project-id";
+    String instance = "gs://my-bucket/myPath";
+    String databaseId = "";
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.performSingleSpannerQuery(
+            eq(projectId),
+            eq(instance),
+            eq(databaseId),
+            eq(CloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
+        .thenReturn(
+            ImmutableList.of(
+                Struct.newBuilder().set("table_name").to("tableName1").build(),
+                Struct.newBuilder().set("table_name").to("tableName2").build()));
+
+    ImmutableSet<String> expected = ImmutableSet.of("tableName1", "tableName2");
+    ImmutableSet<String> actual = CloudSpannerDatabaseBackup.queryListOfAllTablesInDatabase(
+        projectId, instance, databaseId, mockUtil);
+    assertEquals(expected, actual);
+  }
 
   @Test
   public void testGetListOfTablesToBackup() throws Exception {

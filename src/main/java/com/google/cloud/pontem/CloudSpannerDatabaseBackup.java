@@ -240,7 +240,7 @@ public class CloudSpannerDatabaseBackup {
     }
   }
 
-  private static final String LIST_ALL_TABLES_SQL_QUERY =
+  public static final String LIST_ALL_TABLES_SQL_QUERY =
       "SELECT table_name, parent_table_name FROM information_schema.tables AS t WHERE t"
           + ".table_catalog = '' and t.table_schema = '' ORDER BY parent_table_name DESC";
 
