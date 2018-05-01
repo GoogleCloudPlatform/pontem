@@ -366,6 +366,11 @@ public class CloudSpannerDatabaseRestore {
             options.getTablesToExcludeFromRestore(),
             util);
 
+    if (mapOfParentToAllChildrenTablesInOrderToFetch.size() == 0) {
+      LOG.info("Attempting to restore backup for 0 tables."
+          + "Input Folder: " + options.getInputFolder());
+    }
+
     // STEP 4: Create Pipeline, Read data from disk, Convert to Mutation, and Write to Cloud
     // Spanner.
     // For each root table, create a thread that handles that table and all its children.
