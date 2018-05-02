@@ -49,6 +49,8 @@ public final class EndToEndHelperTest {
                 + EndToEndHelper.PARENT_TABLE_NAME
                 + "\n"
                 + EndToEndHelper.PARENT_TABLE_NAME
+                + ",\n"
+                + EndToEndHelper.FOO_TABLE_NAME
                 + ",");
 
     EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockUtil);
@@ -87,6 +89,13 @@ public final class EndToEndHelperTest {
     Util mockUtil = mock(Util.class);
     when(mockUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
         .thenReturn(EndToEndHelper.GOOGLE_CLOUD_SPANNER_DDL);
+
+    when(mockUtil.performSingleSpannerQuery(
+            eq(projectId),
+            eq(instanceId),
+            eq(databaseId),
+            eq("SELECT * FROM " + EndToEndHelper.FOO_TABLE_NAME + ";")))
+        .thenReturn(EndToEndHelper.FOO_TABLE_STRUCTS);
 
     when(mockUtil.performSingleSpannerQuery(
             eq(projectId),
