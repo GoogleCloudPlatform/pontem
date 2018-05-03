@@ -7,18 +7,19 @@ env:
 language: java
 sudo: false
 jdk:
-- openjdk8
+  - openjdk8
 before_install:
-- openssl aes-256-cbc -K $encrypted_d25b186b6dd5_key -iv $encrypted_d25b186b6dd5_iv
-  -in client-secrets.json.enc -out client-secrets.json -d
+  - openssl aes-256-cbc -K $encrypted_d25b186b6dd5_key -iv $encrypted_d25b186b6dd5_iv
+    -in client-secrets.json.enc -out client-secrets.json -d
 stages:
-- unit_test
-- e2e_test
+  - unit_test
+  - e2e_test
 jobs:
   include:
   - stage: unit_test
-    script: mvn cobertura:cobertura
+    script: mvn -q clean test
+    script: mvn -q cobertura:cobertura
   - stage: e2e_test
-    script: "./travis/run_e2e_tests.sh ${E2E_TEST_PROJECT} ${E2E_TEST_BUCKET} ${E2E_TEST_DATABASE}"
+    script: "./travis/run_e2e_tests.sh $E2E_TEST_PROJECT $E2E_TEST_BUCKET $E2E_TEST_DATABASE"
 after_success:
   - bash <(curl -s https://codecov.io/bash)
