@@ -62,12 +62,6 @@ fi
 
 echo "FINISHED parsing flags."
 
-# Run Unit Tests
-echo "BEGIN running unit tests."
-mvn clean test || exit 1
-
-echo "FINISHED running unit tests."
-
 # Run End-To-End (E2E) Tests
 
 ## Setup
