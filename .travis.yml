@@ -20,6 +20,6 @@ jobs:
     script: mvn -q clean test
     script: mvn -q cobertura:cobertura
   - stage: e2e_test
-    script: "./travis/run_e2e_tests.sh $E2E_TEST_PROJECT $E2E_TEST_BUCKET $E2E_TEST_DATABASE"
+    script: "./travis/run_e2e_tests.sh --project=${E2E_TEST_PROJECT} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 after_success:
   - bash <(curl -s https://codecov.io/bash)
