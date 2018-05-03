@@ -17,5 +17,8 @@ jobs:
   include:
     - stage: unit_test
       script: mvn clean test
+      script: mvn cobertura:cobertura
     - stage: e2e_test
       script: ./travis/run_e2e_tests.sh ${E2E_TEST_PROJECT} ${E2E_TEST_BUCKET} ${E2E_TEST_DATABASE}
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
