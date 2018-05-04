@@ -19,6 +19,7 @@
  */
 package com.google.cloud.pontem;
 
+import com.google.cloud.Date;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
@@ -37,6 +38,7 @@ import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -63,8 +65,35 @@ import org.slf4j.LoggerFactory;
 public class EndToEndHelper {
   private static final Logger LOG = LoggerFactory.getLogger(EndToEndHelper.class);
 
+  public static final String FOO_TABLE_NAME = "foo_table";
   public static final String PARENT_TABLE_NAME = "parent_table";
   public static final String CHILD_TABLE_NAME = "child_table";
+  public static final ImmutableSet<String> TABLE_NAMES =
+      ImmutableSet.of(FOO_TABLE_NAME, PARENT_TABLE_NAME, CHILD_TABLE_NAME);
+  public static final Mutation FOO_TABLE_MUTATION_1 =
+      Mutation.newInsertBuilder(FOO_TABLE_NAME)
+          .set("colFloat")
+          .to(32.53829d)
+          .set("colTimestamp")
+          .to(Timestamp.parseTimestamp("2017-09-15T00:00:00.111111Z"))
+          .set("colDate")
+          .to(Date.fromYearMonthDay(2017, 11, 11))
+          .set("colString")
+          .to("helloString")
+          .set("colInt")
+          .to(102)
+          .build();
+  public static final Mutation FOO_TABLE_MUTATION_2 =
+      Mutation.newInsertBuilder(FOO_TABLE_NAME)
+          .set("colFloat")
+          .to(34.35d)
+          .set("colTimestamp")
+          .to(Timestamp.parseTimestamp("2016-09-15T00:00:00.111111Z"))
+          .set("colDate")
+          .to(Date.fromYearMonthDay(2018, 11, 11))
+          .set("colString")
+          .to("hello world")
+          .build();
   public static final Mutation PARENT_TABLE_MUTATION_1 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
@@ -87,7 +116,24 @@ public class EndToEndHelper {
           .to("child_hello")
           .build();
   public static final ImmutableList<Mutation> MUTATIONS =
-      ImmutableList.of(PARENT_TABLE_MUTATION_1, PARENT_TABLE_MUTATION_2, CHILD_TABLE_MUTATION);
+      ImmutableList.of(
+          FOO_TABLE_MUTATION_1,
+          FOO_TABLE_MUTATION_2,
+          PARENT_TABLE_MUTATION_1,
+          PARENT_TABLE_MUTATION_2,
+          CHILD_TABLE_MUTATION);
+  public static final ImmutableList<Struct> FOO_TABLE_STRUCTS =
+      ImmutableList.of(
+          Struct.newBuilder()
+              .add("colFloat", Value.float64(32.53829d))
+              .add("colString", Value.string("helloString"))
+              .add("colTimestamp", Value.date(Date.fromYearMonthDay(2018, 10, 1)))
+              .build(),
+          Struct.newBuilder()
+              .add("colFloat", Value.float64(34.35d))
+              .add("colString", Value.string("hello world"))
+              .add("colTimestamp", Value.date(Date.fromYearMonthDay(2017, 10, 1)))
+              .build());
   public static final ImmutableList<Struct> PARENT_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
@@ -107,6 +153,16 @@ public class EndToEndHelper {
 
   public static final ImmutableList<String> GOOGLE_CLOUD_SPANNER_DDL =
       ImmutableList.of(
+          "CREATE TABLE foo_table (\n"
+              + "  colFloat FLOAT64 NOT NULL,\n"
+              + "  colArray ARRAY<INT64>,\n"
+              + "  colBool BOOL,\n"
+              + "  colBytes BYTES(MAX),\n"
+              + "  colDate DATE NOT NULL,\n"
+              + "  colString STRING(MAX) NOT NULL,\n"
+              + "  colTimestamp TIMESTAMP NOT NULL,\n"
+              + "  colInt INT64,\n"
+              + ") PRIMARY KEY(colFloat)",
           "CREATE TABLE parent_table (\n"
               + "  foo_id INT64 NOT NULL,\n"
               + "  bar_string STRING(MAX),\n"
@@ -330,16 +386,29 @@ public class EndToEndHelper {
             Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
     String tables[] = rawFileContentsOfTableList.split("\\r?\\n");
-    if (tables.length != 2) {
+    if (tables.length != TABLE_NAMES.size()) {
       throw new Exception("Table names not backed-up");
     }
     String tableName0 = tables[0].substring(0, tables[0].indexOf(',')).trim();
     String tableName1 = tables[1].substring(0, tables[1].indexOf(',')).trim();
-    if (!((tableName1.equals(PARENT_TABLE_NAME) && tableName0.equals(CHILD_TABLE_NAME))
-        || (tableName1.equals(CHILD_TABLE_NAME) && tableName0.equals(PARENT_TABLE_NAME)))) {
-      throw new Exception("Table names not backed-up properly."
-                          + "\nFound:\n" + tableName0 + "\n" + tableName1
-                          + "\nExpected:\n" + PARENT_TABLE_NAME + "\n" + CHILD_TABLE_NAME);
+    String tableName2 = tables[2].substring(0, tables[2].indexOf(',')).trim();
+    if (!TABLE_NAMES.contains(tableName0)
+        || !TABLE_NAMES.contains(tableName1)
+        || !TABLE_NAMES.contains(tableName2)) {
+      throw new Exception(
+          "Table names not backed-up properly."
+              + "\nFound:\n"
+              + tableName0
+              + "\n"
+              + tableName1
+              + "\n"
+              + tableName2
+              + "\nExpected:\n"
+              + PARENT_TABLE_NAME
+              + "\n"
+              + CHILD_TABLE_NAME
+              + "\n"
+              + FOO_TABLE_NAME);
     }
   }
 
@@ -355,6 +424,10 @@ public class EndToEndHelper {
     }
 
     // STEP 2: Check Database Content
+    ImmutableList<Struct> fooResultSet =
+        util.performSingleSpannerQuery(
+            projectId, instanceId, databaseId, "SELECT * FROM " + FOO_TABLE_NAME + ";");
+
     ImmutableList<Struct> parentResultSet =
         util.performSingleSpannerQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + PARENT_TABLE_NAME + ";");
@@ -365,10 +438,19 @@ public class EndToEndHelper {
 
     // STEP 3: Check Row Results
     // STEP 3a: Check Row Result Count
-    if (parentResultSet.size() + childResultSet.size() != MUTATIONS.size()) {
+    if (fooResultSet.size() + parentResultSet.size() + childResultSet.size() != MUTATIONS.size()) {
       throw new Exception("Number of rows in database is not as expected");
     }
     // STEP 3b: Check content
+    if (!fooResultSet.get(0).getString("colString").equals("helloString")) {
+      throw new Exception("Contents of foo string do not match");
+    }
+    if (fooResultSet.get(0).getDouble("colFloat") != 32.53829d) {
+      throw new Exception("Contents of col float do not match");
+    }
+    if (!fooResultSet.get(1).getString("colString").equals("hello world")) {
+      throw new Exception("Contents of foo string do not match");
+    }
     if (!childResultSet.get(0).getString("child_bar_string").equals("child_hello")) {
       throw new Exception("Contents of child string do not match");
     }
