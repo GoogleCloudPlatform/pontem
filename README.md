@@ -1,4 +1,10 @@
 # pontem
+
+**branch: master** | **branch: dev**
+:------------ | :------------
+[![Build Status](https://travis-ci.org/GoogleCloudPlatform/pontem.svg?branch=master)](https://travis-ci.org/GoogleCloudPlatform/pontem)|[![Build Status](https://travis-ci.org/GoogleCloudPlatform/pontem.svg?branch=dev)](https://travis-ci.org/GoogleCloudPlatform/pontem)
+[![codecov](https://codecov.io/gh/GoogleCloudPlatform/pontem/branch/master/graph/badge.svg)](https://codecov.io/gh/GoogleCloudPlatform/pontem)|[![codecov](https://codecov.io/gh/GoogleCloudPlatform/pontem/branch/dev/graph/badge.svg)](https://codecov.io/gh/GoogleCloudPlatform/pontem)
+
 ## Overview
 pontem is an open-source project that enable users of Cloud Spanner
 to perform four key operations:
