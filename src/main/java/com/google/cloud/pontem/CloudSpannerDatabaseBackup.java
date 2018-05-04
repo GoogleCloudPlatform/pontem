@@ -242,7 +242,8 @@ public class CloudSpannerDatabaseBackup {
 
   public static final String LIST_ALL_TABLES_SQL_QUERY =
       "SELECT table_name, parent_table_name FROM information_schema.tables AS t WHERE t"
-          + ".table_catalog = '' and t.table_schema = '' ORDER BY parent_table_name DESC";
+          + ".table_catalog = '' and t.table_schema = '' ORDER BY"
+          + " parent_table_name, table_name DESC";
 
   /**
    * Fetch all the table names in a specific cloud spanner database.
@@ -351,8 +352,8 @@ public class CloudSpannerDatabaseBackup {
   }
 
   /**
-   * Temporary workaround put in until https://github.com/apache/beam/pull/4946 is live.
-   * Gets the list of tables to backup.
+   * Temporary workaround put in until https://github.com/apache/beam/pull/4946 is live. Gets the
+   * list of tables to backup.
    */
   public static ImmutableList<String> getTableNamesBeingBackedUp(
       String projectId, String instance, String databaseId, String tableNamesQuery, Util util) {
