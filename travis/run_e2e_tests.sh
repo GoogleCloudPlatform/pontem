@@ -62,17 +62,11 @@ fi
 
 echo "FINISHED parsing flags."
 
-# Run Unit Tests
-echo "BEGIN running unit tests."
-mvn clean test || exit 1
-
-echo "FINISHED running unit tests."
-
 # Run End-To-End (E2E) Tests
 
 ## Setup
 echo "BEGIN running E2E setup."
-mvn compile exec:java \
+mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/backup \
@@ -84,7 +78,7 @@ echo "FINISHED setup phase."
 
 ## Backup
 echo "BEGIN backup."
-mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
+mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
  --inputSpannerInstanceId=${DATABASE_INSTANCE} \
@@ -96,7 +90,7 @@ echo "FINISHED backup phase."
 
 ## Verify Backup
 echo "BEGIN verify backup."
-mvn compile exec:java \
+mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/backup \
@@ -108,7 +102,7 @@ echo "FINISHED verify backup phase."
 
 ## Tear Down Database
 echo "BEGIN database teardown."
-mvn compile exec:java \
+mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/multi-backup \
@@ -120,7 +114,7 @@ echo "FINISHED tear down database phase."
 
 ## Restore From Backup
 echo "BEGIN restore from backup."
-mvn clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
+mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
  --outputSpannerInstanceId=${DATABASE_INSTANCE} \
@@ -132,7 +126,7 @@ echo "FINISHED restore from backup phase."
 
 ## Verify Database Restore
 echo "BEGIN database restore verify."
-mvn compile exec:java \
+mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/multi-backup \
@@ -144,7 +138,7 @@ echo "FINISHED database restore verify."
 
 ## Tear Down
 echo "BEGIN final tear down."
-mvn compile exec:java \
+mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/backup \
