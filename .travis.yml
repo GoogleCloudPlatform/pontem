@@ -23,6 +23,7 @@ stages:
 jobs:
   include:
   - stage: UNIT_TESTS
+    script: mvn -q clean test
     script: mvn -q cobertura:cobertura
   - stage: E2E_TESTS
     script: "./travis/run_e2e_tests.sh --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET}
