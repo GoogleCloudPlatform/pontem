@@ -76,6 +76,8 @@ mvn -q compile exec:java \
 
 echo "FINISHED setup phase."
 
+sleep 1m
+
 ## Backup
 echo "BEGIN backup."
 mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
@@ -87,6 +89,8 @@ mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSp
  --projectId=${GCP_BUCKET}"  -Pdataflow-runner || exit 1
 
 echo "FINISHED backup phase."
+
+sleep 1m
 
 ## Verify Backup
 echo "BEGIN verify backup."
@@ -100,6 +104,8 @@ mvn -q compile exec:java \
 
 echo "FINISHED verify backup phase."
 
+sleep 1m
+
 ## Tear Down Database
 echo "BEGIN database teardown."
 mvn -q compile exec:java \
@@ -111,6 +117,8 @@ mvn -q compile exec:java \
                 --operation=teardownDatabase" || exit 1
 
 echo "FINISHED tear down database phase."
+
+sleep 1m
 
 ## Restore From Backup
 echo "BEGIN restore from backup."
@@ -124,6 +132,8 @@ mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSp
 
 echo "FINISHED restore from backup phase."
 
+sleep 1m
+
 ## Verify Database Restore
 echo "BEGIN database restore verify."
 mvn -q compile exec:java \
@@ -135,6 +145,8 @@ mvn -q compile exec:java \
                 --operation=verifyDatabase" || exit 1
 
 echo "FINISHED database restore verify."
+
+sleep 1m
 
 ## Tear Down
 echo "BEGIN final tear down."
