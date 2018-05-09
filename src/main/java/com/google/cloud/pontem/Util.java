@@ -57,12 +57,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /** Utility function for Cloud Spanner backup and restore. */
 public class Util {
-  private static final Logger LOG = LoggerFactory.getLogger(Util.class);
+  private static final Logger LOG = Logger.getLogger(Util.class.getName());
 
   public static final String READ_DATA_TRANSFORM_NODE_NAME = "Read_Data";
   public static final String WRITE_DATA_TRANSFORM_NODE_NAME = "Write_Data";
@@ -353,7 +352,7 @@ public class Util {
     if (metadataMap.size() != lines.length) {
       throw new Exception("Mismatch parsing metadata");
     }
-    LOG.error("Found " + metadataMap.size() + " tables in metadata");
+    LOG.warning("Found " + metadataMap.size() + " tables in metadata");
     return metadataMap;
   }
 
@@ -467,7 +466,7 @@ public class Util {
     }
 
     if (tableRowCounts.size() == 0) {
-      LOG.error(
+      LOG.warning(
           "Found 0 tables when parsing Job Metrics." + " Likely an error parsing Job Metrics.");
     }
     return tableRowCounts;

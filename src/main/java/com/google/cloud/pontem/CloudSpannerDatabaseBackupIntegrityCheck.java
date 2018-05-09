@@ -18,6 +18,7 @@ package com.google.cloud.pontem;
 import com.google.api.services.dataflow.model.JobMetrics;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -111,6 +112,9 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
 
     return options;
   }
+
+  private static final Logger LOG =
+      Logger.getLogger(CloudSpannerDatabaseBackupIntegrityCheck.class.getName());
 
   public static void main(String[] args) throws Exception {
     // STEP 1: Parse inputs.

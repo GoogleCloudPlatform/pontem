@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.FileBasedSink;
@@ -43,8 +44,6 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Perform a backup of an entire Cloud Spanner database.
@@ -120,7 +119,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  */
 public class CloudSpannerDatabaseBackup {
-  private static final Logger LOG = LoggerFactory.getLogger(CloudSpannerDatabaseBackup.class);
+  private static final Logger LOG = Logger.getLogger(CloudSpannerDatabaseBackup.class.getName());
 
   /**
    * Dataflow job configuration options. Inherits standard configuration options from {@code
