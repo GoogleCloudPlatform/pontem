@@ -100,6 +100,7 @@ public class Util {
    */
   public ImmutableList<String> queryDatabaseDdl(
       String projectId, String instance, String databaseId) {
+    LOG.info("Query database DDL for database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
@@ -124,6 +125,7 @@ public class Util {
    */
   public ImmutableList<Struct> performSingleSpannerQuery(
       String projectId, String instance, String databaseId, String querySql) {
+    LOG.info("Begin performing single Spanner query on database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
@@ -150,6 +152,7 @@ public class Util {
   public void createDatabaseAndTables(
       String projectId, String instanceId, String databaseId, ImmutableList<String> databaseDdl)
       throws Exception {
+    LOG.info("Begin creating Cloud Spanner database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
@@ -193,6 +196,7 @@ public class Util {
     } finally {
       spanner.close();
     }
+    LOG.info("End creating Cloud Spanner database " + databaseId);
   }
 
   public static String convertDdlListIntoRawText(ImmutableList<String> ddlStatements) {
