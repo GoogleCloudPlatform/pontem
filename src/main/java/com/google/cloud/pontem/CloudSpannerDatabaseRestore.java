@@ -174,6 +174,13 @@ public class CloudSpannerDatabaseRestore {
     String[] getTablesToExcludeFromRestore();
 
     void setTablesToExcludeFromRestore(String[] value);
+
+    @Description("Cloud Spanner host")
+    @Required
+    @Default.String(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
+    String getSpannerHost();
+
+    void setSpannerHost(String value);
   }
 
   /**
@@ -339,6 +346,7 @@ public class CloudSpannerDatabaseRestore {
     // STEP 1b: Setup Spanner configuration
     final SpannerConfig spannerConfig =
         SpannerConfig.create()
+            .withHost(options.getSpannerHost())
             .withInstanceId(options.getOutputSpannerInstanceId())
             .withDatabaseId(options.getOutputSpannerDatabaseId());
 
