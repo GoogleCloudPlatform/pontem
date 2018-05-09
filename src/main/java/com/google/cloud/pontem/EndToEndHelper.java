@@ -292,8 +292,8 @@ public class EndToEndHelper {
               + projectId
               + "'");
       dbAdminClient.dropDatabase(instanceId, databaseId);
-      // Pause for 30 seconds to allow Cloud Spanner database to update.
-      Thread.sleep(30000);
+      // Pause for 60 seconds to allow Cloud Spanner database to update.
+      Thread.sleep(60000);
     } catch (SpannerException e) {
       LOG.info("Error dropping database " + databaseId + ":\n" + e.toString());
     } catch (InterruptedException e) {
