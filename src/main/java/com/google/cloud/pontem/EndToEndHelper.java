@@ -295,6 +295,8 @@ public class EndToEndHelper {
       Thread.sleep(30000);
     } catch (SpannerException e) {
       LOG.info("Error dropping database " + databaseId + ":\n" + e.toString());
+    } catch (InterruptedException e) {
+      LOG.info(e.toString());
     } finally {
       spanner.close();
     }
