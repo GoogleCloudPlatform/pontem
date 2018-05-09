@@ -228,6 +228,13 @@ public class CloudSpannerDatabaseBackup {
     String[] getTablesToExcludeFromBackup();
 
     void setTablesToExcludeFromBackup(String[] value);
+
+    @Description("Cloud Spanner host")
+    @Required
+    @Default.String(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
+    String getSpannerHost();
+
+   void setSpannerHost(String value);
   }
 
   /** Get path to write output of backup to. */
@@ -382,6 +389,7 @@ public class CloudSpannerDatabaseBackup {
 
     final SpannerConfig spannerConfig =
         SpannerConfig.create()
+            .withHost(options.getSpannerHost())
             .withInstanceId(options.getInputSpannerInstanceId())
             .withDatabaseId(options.getInputSpannerDatabaseId());
 

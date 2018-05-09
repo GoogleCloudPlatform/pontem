@@ -83,6 +83,16 @@ public class Util {
   // Use a delimeter to delinate the statements in a database DDL.
   public static final String DDL_DELIMITER = "\n##\n";
 
+  public static final String CLOUD_SPANNER_API_ENDPOINT_HOSTNAME = "https://spanner.googleapis.com";
+
+  public static SpannerOptions.Builder getSpannerOptionsBuilder() {
+    SpannerOptions.Builder options =
+        SpannerOptions.newBuilder()
+            .setHost(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
+            .setUserAgentPrefix(Util.USER_AGENT_PREFIX);
+    return options;
+  }
+
   /**
    * Fetch the DDL for the database. See https://bit.ly/2qVpToj for more.
    *
@@ -90,8 +100,7 @@ public class Util {
    */
   public ImmutableList<String> queryDatabaseDdl(
       String projectId, String instance, String databaseId) {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
     List<String> ddl = Lists.newArrayList();
@@ -115,8 +124,7 @@ public class Util {
    */
   public ImmutableList<Struct> performSingleSpannerQuery(
       String projectId, String instance, String databaseId, String querySql) {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
     List<Struct> resultsAsStruct = Lists.newArrayList();
@@ -142,8 +150,7 @@ public class Util {
   public void createDatabaseAndTables(
       String projectId, String instanceId, String databaseId, ImmutableList<String> databaseDdl)
       throws Exception {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);

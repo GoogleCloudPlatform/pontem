@@ -275,8 +275,7 @@ public class EndToEndHelper {
 
   private static void deleteCloudSpannerDatabase(
       String projectId, String instanceId, String databaseId) {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
@@ -356,8 +355,7 @@ public class EndToEndHelper {
   private static void populateCloudSpannerDatabaseWithBasicContent(
       String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyPopulated)
       throws Exception {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
