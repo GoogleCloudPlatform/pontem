@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -125,6 +126,9 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
     return options;
   }
 
+  private static final Logger LOG =
+      Logger.getLogger(CloudSpannerDatabaseRestoreIntegrityCheck.class.getName());
+
   public static void main(String[] args) throws Exception {
     // STEP 1: Parse inputs.
     Options options = configureCommandlineOptions();
@@ -135,7 +139,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
     try {
       cmd = parser.parse(options, args);
     } catch (ParseException e) {
-      System.out.println(e.getMessage());
+      LOG.warning(e.getMessage());
       formatter.printHelp("utility-name", options);
 
       System.exit(1);
@@ -165,7 +169,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
         requireAllTablesRestored,
         util);
 
-    System.out.println("Database Restore Integrity Check Complete");
+    LOG.info("Database Restore Integrity Check Complete");
   }
 
   /**
@@ -186,7 +190,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
     // STEP 2a: Get backup metrics from dataflow job.
     Map<String, Long> tableNameToNumRowsFromBackup = new HashMap<String, Long>();
     try {
-      System.out.println("Fetching metrics for jobid " + backupJobId);
+      LOG.info("Fetching metrics for jobid " + backupJobId);
       JobMetrics backupJobMetrics = util.fetchMetricsForDataflowJob(projectId, backupJobId);
 
       // STEP 2b: Parse data from backup using job metrics
@@ -209,7 +213,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
     // STEP 3a: Get restore metrics from dataflow job.
     List<JobMetrics> restoreJobMetrics = new ArrayList<JobMetrics>();
     for (String restoreJobId : restoreJobIds) {
-      System.out.println("Fetching metrics for jobid " + restoreJobId);
+      LOG.info("Fetching metrics for jobid " + restoreJobId);
       restoreJobMetrics.add(util.fetchMetricsForDataflowJob(projectId, restoreJobId));
     }
 

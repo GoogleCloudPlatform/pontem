@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
@@ -36,8 +37,6 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Perform a restore from backup of an entire Cloud Spanner database.
@@ -90,7 +89,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  */
 public class CloudSpannerDatabaseRestore {
-  private static final Logger LOG = LoggerFactory.getLogger(CloudSpannerDatabaseRestore.class);
+  private static final Logger LOG = Logger.getLogger(CloudSpannerDatabaseRestore.class.getName());
 
   /**
    * Dataflow job configuration options. Inherits standard {@code PipelineOptions} configuration
@@ -367,8 +366,10 @@ public class CloudSpannerDatabaseRestore {
             util);
 
     if (mapOfParentToAllChildrenTablesInOrderToFetch.size() == 0) {
-      LOG.info("Attempting to restore backup for 0 tables."
-          + "Input Folder: " + options.getInputFolder());
+      LOG.info(
+          "Attempting to restore backup for 0 tables."
+              + "Input Folder: "
+              + options.getInputFolder());
     }
 
     // STEP 4: Create Pipeline, Read data from disk, Convert to Mutation, and Write to Cloud

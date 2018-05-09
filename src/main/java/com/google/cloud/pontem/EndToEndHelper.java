@@ -39,6 +39,7 @@ import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -46,8 +47,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for performing end to end tests.
@@ -63,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  */
 public class EndToEndHelper {
-  private static final Logger LOG = LoggerFactory.getLogger(EndToEndHelper.class);
+  private static final Logger LOG = Logger.getLogger(EndToEndHelper.class.getName());
 
   public static final String FOO_TABLE_NAME = "foo_table";
   public static final String PARENT_TABLE_NAME = "parent_table";
@@ -216,7 +215,7 @@ public class EndToEndHelper {
     try {
       cmd = parser.parse(options, args);
     } catch (ParseException e) {
-      System.out.println(e.getMessage());
+      LOG.info(e.getMessage());
       formatter.printHelp("utility-name", options);
 
       System.exit(1);
