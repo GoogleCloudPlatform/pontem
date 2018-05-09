@@ -179,6 +179,14 @@ public class Util {
                 + projectId
                 + "'");
       }
+      LOG.info(
+          "Successfully created database named '"
+              + databaseId
+              + "' in instance '"
+              + instanceId
+              + "' and project '"
+              + projectId
+              + "'");
     } catch (SpannerException e) {
       LOG.info("Error creating database " + databaseId + ":\n" + e.toString());
       throw e;
