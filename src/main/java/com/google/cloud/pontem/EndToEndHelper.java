@@ -302,6 +302,10 @@ public class EndToEndHelper {
       LOG.info("Finished deletion of Cloud Spanner database " + databaseId);
       spanner.close();
     }
+    ImmutableList<String> databaseNames = Util.getListOfDatabaseNames(projectId, instanceId, 10);
+    LOG.info(
+        "Database names remaining in instance " + instanceId + ":\n" + databaseNames.toString());
+    LOG.info("End deletion of Cloud Spanner database " + databaseId);
   }
 
   private static void deleteGcsBucket(String projectId, String gcsBucketName) {
