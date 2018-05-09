@@ -444,19 +444,28 @@ public class EndToEndHelper {
     ImmutableList<Struct> fooResultSet =
         util.performSingleSpannerQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + FOO_TABLE_NAME + ";");
+    LOG.info("Number of rows in table " + FOO_TABLE_NAME + " = " + fooResultSet.size());
 
     ImmutableList<Struct> parentResultSet =
         util.performSingleSpannerQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + PARENT_TABLE_NAME + ";");
+    LOG.info("Number of rows in table " + PARENT_TABLE_NAME + " = " + parentResultSet.size());
 
     ImmutableList<Struct> childResultSet =
         util.performSingleSpannerQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + CHILD_TABLE_NAME + ";");
+    LOG.info("Number of rows in table " + CHILD_TABLE_NAME + " = " + childResultSet.size());
 
     // STEP 3: Check Row Results
     // STEP 3a: Check Row Result Count
-    if (fooResultSet.size() + parentResultSet.size() + childResultSet.size() != MUTATIONS.size()) {
-      throw new Exception("Number of rows in database is not as expected");
+    int actualRowCount = fooResultSet.size() + parentResultSet.size() + childResultSet.size();
+    if (actualRowCount != MUTATIONS.size()) {
+      throw new Exception(
+          "Number of rows in database ("
+              + actualRowCount
+              + ") "
+              + "not as expected: "
+              + MUTATIONS.size());
     }
     // STEP 3b: Check content
     if (!fooResultSet.get(0).getString("colString").equals("helloString")) {
