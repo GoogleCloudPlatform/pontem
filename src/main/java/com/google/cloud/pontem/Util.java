@@ -24,6 +24,7 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.gax.paging.Page;
 import com.google.api.services.dataflow.Dataflow;
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.api.services.dataflow.model.MetricStructuredName;
@@ -33,6 +34,7 @@ import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Operation;
+import com.google.cloud.spanner.Options;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerException;
@@ -45,6 +47,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import java.math.BigDecimal;
@@ -93,6 +96,31 @@ public class Util {
     return options;
   }
 
+  /** Fetch a list of all database names. */
+  public static ImmutableList<String> getListOfDatabaseNames(
+      String projectId, String instanceId, int numDatabases) {
+    LOG.info("Begin getting list of database names");
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
+    Spanner spanner = options.getService();
+
+    DatabaseAdminClient dbAdminClient = spanner.getDatabaseAdminClient();
+
+    List<String> databaseNames = new ArrayList<>();
+
+    try {
+      Page<Database> page = dbAdminClient.listDatabases(instanceId, Options.pageSize(numDatabases));
+      while (page != null && page.hasNextPage()) {
+        Database db = Iterables.getOnlyElement(page.getValues());
+        databaseNames.add(db.getId().getName());
+        page = page.getNextPage();
+      }
+    } finally {
+      spanner.close();
+    }
+    LOG.info("End getting list of database names, size: " + databaseNames.size());
+    return ImmutableList.copyOf(databaseNames);
+  }
+
   /**
    * Fetch the DDL for the database. See https://bit.ly/2qVpToj for more.
    *
@@ -100,6 +128,7 @@ public class Util {
    */
   public ImmutableList<String> queryDatabaseDdl(
       String projectId, String instance, String databaseId) {
+    LOG.info("Query database DDL for database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
@@ -124,6 +153,7 @@ public class Util {
    */
   public ImmutableList<Struct> performSingleSpannerQuery(
       String projectId, String instance, String databaseId, String querySql) {
+    LOG.info("Begin performing single Spanner query on database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
@@ -150,6 +180,7 @@ public class Util {
   public void createDatabaseAndTables(
       String projectId, String instanceId, String databaseId, ImmutableList<String> databaseDdl)
       throws Exception {
+    LOG.info("Begin creating Cloud Spanner database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
@@ -179,12 +210,21 @@ public class Util {
                 + projectId
                 + "'");
       }
+      LOG.info(
+          "Successfully created database named '"
+              + databaseId
+              + "' in instance '"
+              + instanceId
+              + "' and project '"
+              + projectId
+              + "'");
     } catch (SpannerException e) {
       LOG.info("Error creating database " + databaseId + ":\n" + e.toString());
       throw e;
     } finally {
       spanner.close();
     }
+    LOG.info("End creating Cloud Spanner database " + databaseId);
   }
 
   public static String convertDdlListIntoRawText(ImmutableList<String> ddlStatements) {
