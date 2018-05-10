@@ -234,7 +234,7 @@ public class CloudSpannerDatabaseBackup {
     @Default.String(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
     String getSpannerHost();
 
-   void setSpannerHost(String value);
+    void setSpannerHost(String value);
   }
 
   /** Get path to write output of backup to. */
