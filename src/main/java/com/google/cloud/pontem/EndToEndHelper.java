@@ -39,6 +39,7 @@ import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -202,6 +203,13 @@ public class EndToEndHelper {
     operation.setRequired(true);
     options.addOption(operation);
 
+    /** The operation should fail if it content (e.g., test database) already exists */
+    Option shouldFailIfContentAlreadyExists =
+        new Option(
+            "s", "shouldFailIfContentAlreadyExists", true, "End to End Helper Operation Requested");
+    shouldFailIfContentAlreadyExists.setRequired(false);
+    options.addOption(shouldFailIfContentAlreadyExists);
+
     return options;
   }
 
@@ -222,33 +230,40 @@ public class EndToEndHelper {
       return;
     }
 
-    final String operation = cmd.getOptionValue("operation");
-    final String databaseId = cmd.getOptionValue("databaseId");
-    final String instanceId = cmd.getOptionValue("databaseInstanceId");
-    final String projectId = cmd.getOptionValue("projectId");
-    final String gcsRootBackupFolderPath = cmd.getOptionValue("gcsRootBackupFolderPath");
-    final Util util = new Util();
-    if (operation.equals("setup")) {
-      setupEnvironmentForEndToEndTests(
-          projectId,
-          instanceId,
-          databaseId,
-          Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-          false);
-    } else if (operation.equals("teardown")) {
-      tearDownEnvironmentForEndToEndTests(
-          projectId,
-          instanceId,
-          databaseId,
-          Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath));
-    } else if (operation.equals("verifyDatabase")) {
-      verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, util);
-    } else if (operation.equals("verifyGcsBackup")) {
-      verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, util);
-    } else if (operation.equals("teardownDatabase")) {
-      deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
-    } else {
-      throw new Exception("Unable to execute operation: " + operation);
+    try {
+      final String operation = cmd.getOptionValue("operation");
+      final String databaseId = cmd.getOptionValue("databaseId");
+      final String instanceId = cmd.getOptionValue("databaseInstanceId");
+      final String projectId = cmd.getOptionValue("projectId");
+      final String gcsRootBackupFolderPath = cmd.getOptionValue("gcsRootBackupFolderPath");
+      final boolean shouldFailIfContentAlreadyExists =
+          Boolean.valueOf(cmd.getOptionValue("shouldFailIfContentAlreadyExists", "false"));
+      final Util util = new Util();
+      if (operation.equals("setup")) {
+        setupEnvironmentForEndToEndTests(
+            projectId,
+            instanceId,
+            databaseId,
+            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            shouldFailIfContentAlreadyExists);
+      } else if (operation.equals("teardown")) {
+        tearDownEnvironmentForEndToEndTests(
+            projectId,
+            instanceId,
+            databaseId,
+            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath));
+      } else if (operation.equals("verifyDatabase")) {
+        verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, util);
+      } else if (operation.equals("verifyGcsBackup")) {
+        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, util);
+      } else if (operation.equals("teardownDatabase")) {
+        deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
+      } else {
+        throw new Exception("Unable to execute operation: " + operation);
+      }
+    } catch (Exception e) {
+      LOG.warning(e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+      throw e;
     }
   }
 
@@ -292,12 +307,8 @@ public class EndToEndHelper {
               + projectId
               + "'");
       dbAdminClient.dropDatabase(instanceId, databaseId);
-      // Pause for 60 seconds to allow Cloud Spanner database to update.
-      Thread.sleep(60000);
     } catch (SpannerException e) {
       LOG.info("Error dropping database " + databaseId + ":\n" + e.toString());
-    } catch (InterruptedException e) {
-      LOG.info(e.toString());
     } finally {
       LOG.info("Finished deletion of Cloud Spanner database " + databaseId);
       spanner.close();
@@ -382,7 +393,7 @@ public class EndToEndHelper {
       LOG.info("Wrote " + MUTATIONS.size() + " mutations at " + commitTimestamp.toString());
     } catch (SpannerException e) {
       if (e.getMessage().contains("ALREADY_EXISTS") && !shouldFailIfAlreadyPopulated) {
-        LOG.info("Cloud Spanner mutations already populated.");
+        LOG.info("Cloud Spanner mutations already populated.\n" + e.getMessage());
       } else {
         throw e;
       }
