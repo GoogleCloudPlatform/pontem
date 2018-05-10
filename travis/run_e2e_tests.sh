@@ -62,21 +62,25 @@ fi
 
 echo "FINISHED parsing flags."
 
-DATABASE_NAME="my-database-"`date +%s`
+DATE_STR=`date +%s`
+DATABASE_NAME="my-database-"${DATE_STR}
 echo "Database Name Set: ${DATABASE_NAME}"
 
+GCP_FOLDER="my-database-"${DATE_STR}
+echo "GCP Folder Name Set: ${GCP_FOLDER}"
+
 # Tear Down Method
-full_tear_down()
-{
+full_tear_down_and_exit () {
 echo "Beginning tear down function"
 mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
-                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/backup \
+                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=teardown" || exit 1
 echo "Ending tear down function"
+exit 1
 }
 
 # Run End-To-End (E2E) Tests
@@ -86,14 +90,14 @@ echo "BEGIN running E2E setup."
 mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
-                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/backup \
+                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
-                --operation=setup" || full_tear_down && exit 1
+                --operation=setup" || full_tear_down_and_exit
 
 echo "FINISHED setup phase."
 
-sleep 1m
+sleep 20s
 
 ## Backup
 echo "BEGIN backup."
@@ -102,8 +106,8 @@ mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSp
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
  --inputSpannerInstanceId=${DATABASE_INSTANCE} \
  --inputSpannerDatabaseId=${DATABASE_NAME} \
- --outputFolder=gs://${GCP_BUCKET}/backup \
- --projectId=${GCP_BUCKET}"  -Pdataflow-runner || full_tear_down && exit 1
+ --outputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
+ --projectId=${GCP_BUCKET}"  -Pdataflow-runner || full_tear_down_and_exit
 
 echo "FINISHED backup phase."
 
@@ -112,10 +116,10 @@ echo "BEGIN verify backup."
 mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
-                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/backup \
+                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
-                --operation=verifyGcsBackup" || full_tear_down && exit 1
+                --operation=verifyGcsBackup" || full_tear_down_and_exit
 
 echo "FINISHED verify backup phase."
 
@@ -124,14 +128,14 @@ echo "BEGIN database teardown."
 mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
-                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/multi-backup \
+                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
-                --operation=teardownDatabase" || full_tear_down && exit 1
+                --operation=teardownDatabase" || full_tear_down_and_exit
 
 echo "FINISHED tear down database phase."
 
-sleep 1m
+sleep 20s
 
 ## Restore From Backup
 echo "BEGIN restore from backup."
@@ -140,8 +144,8 @@ mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSp
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
  --outputSpannerInstanceId=${DATABASE_INSTANCE} \
  --outputSpannerDatabaseId=${DATABASE_NAME} \
- --inputFolder=gs://${GCP_BUCKET}/backup \
- --projectId=${GCP_PROJECT}"  -Pdataflow-runner || full_tear_down && exit 1
+ --inputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
+ --projectId=${GCP_PROJECT}"  -Pdataflow-runner || full_tear_down_and_exit
 
 echo "FINISHED restore from backup phase."
 
@@ -150,15 +154,21 @@ echo "BEGIN database restore verify."
 mvn -q compile exec:java \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
-                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/multi-backup \
+                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
-                --operation=verifyDatabase" || full_tear_down && exit 1
+                --operation=verifyDatabase" || full_tear_down_and_exit
 
 echo "FINISHED database restore verify."
 
 ## Tear Down
 echo "BEGIN final tear down."
-full_tear_down
+mvn -q compile exec:java \
+   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+   -Dexec.args="--projectId=${GCP_PROJECT} \
+                --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
+                --databaseInstanceId=${DATABASE_INSTANCE} \
+                --databaseId=${DATABASE_NAME} \
+                --operation=teardown" || exit 1
 echo "FINISHED - All Tests Passed Successfully"
 exit 0
