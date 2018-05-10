@@ -379,7 +379,7 @@ public class EndToEndHelper {
       DatabaseClient dbClient = spanner.getDatabaseClient(db);
 
       Timestamp commitTimestamp = dbClient.write(MUTATIONS);
-      LOG.info("Wrote mutations at " + commitTimestamp.toString());
+      LOG.info("Wrote " + MUTATIONS.size() + " mutations at " + commitTimestamp.toString());
     } catch (SpannerException e) {
       if (e.getMessage().contains("ALREADY_EXISTS") && !shouldFailIfAlreadyPopulated) {
         LOG.info("Cloud Spanner mutations already populated.");
