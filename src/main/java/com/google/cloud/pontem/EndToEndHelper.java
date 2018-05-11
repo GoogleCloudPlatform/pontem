@@ -177,7 +177,7 @@ public class EndToEndHelper {
   private static Options configureCommandlineOptions() {
     Options options = new Options();
 
-    /** Google Cloud Storage Bucket. */
+    /** Google Cloud Storage Absolute Path to Backup Folder. */
     Option gcsRootBackupFolderPath = new Option("b", "gcsRootBackupFolderPath", true, "GCS Folder");
     gcsRootBackupFolderPath.setRequired(true);
     options.addOption(gcsRootBackupFolderPath);
@@ -193,7 +193,7 @@ public class EndToEndHelper {
     databaseInstanceId.setRequired(true);
     options.addOption(databaseInstanceId);
 
-    /** The Google Cloud Spanner database id */
+    /** The Google Cloud Spanner database id (i.e., name) */
     Option databaseid = new Option("d", "databaseId", true, "Google Cloud Spanner Database ID");
     databaseid.setRequired(true);
     options.addOption(databaseid);
