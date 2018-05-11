@@ -275,6 +275,13 @@ public class EndToEndHelper {
       String gcsBucketName,
       String gcsFolderPath) {
     deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
+
+    if (gcsFolderPath.charAt(0) == '/') {
+      gcsFolderPath = gcsFolderPath.substring(1);
+    }
+    if (gcsFolderPath.charAt(gcsFolderPath.length() - 1) == '/') {
+      gcsFolderPath = gcsFolderPath.substring(0, gcsFolderPath.length() - 1);
+    }
     deleteGcsFolder(projectId, gcsBucketName, gcsFolderPath);
   }
 
@@ -293,7 +300,7 @@ public class EndToEndHelper {
         projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
   }
 
-  private static void deleteCloudSpannerDatabase(
+  public static void deleteCloudSpannerDatabase(
       String projectId, String instanceId, String databaseId) {
     LOG.info("Beginning deletion of Cloud Spanner database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
@@ -324,20 +331,12 @@ public class EndToEndHelper {
     LOG.info("End deletion of Cloud Spanner database " + databaseId);
   }
 
-  private static void deleteGcsFolder(
-      String projectId, String gcsBucketName, String gcsFolderPath) {
+  public static void deleteGcsFolder(String projectId, String gcsBucketName, String gcsFolderPath) {
     LOG.info("Begin deletion of content in GCS bucket " + gcsBucketName);
     LOG.info("Begin deletion of GCS folder " + gcsFolderPath);
     StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
     StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
     Storage storage = storageOptions.getService();
-
-    if (gcsFolderPath.charAt(0) == '/') {
-      gcsFolderPath = gcsFolderPath.substring(1);
-    }
-    if (gcsFolderPath.charAt(gcsFolderPath.length() - 1) == '/') {
-      gcsFolderPath = gcsFolderPath.substring(0, gcsFolderPath.length() - 1);
-    }
 
     Iterable<Blob> blobs =
         storage.list(gcsBucketName, Storage.BlobListOption.prefix(gcsFolderPath)).iterateAll();

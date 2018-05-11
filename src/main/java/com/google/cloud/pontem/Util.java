@@ -47,7 +47,6 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import java.math.BigDecimal;
@@ -109,10 +108,14 @@ public class Util {
 
     try {
       Page<Database> page = dbAdminClient.listDatabases(instanceId, Options.pageSize(numDatabases));
-      while (page != null && page.hasNextPage()) {
-        Database db = Iterables.getOnlyElement(page.getValues());
-        databaseNames.add(db.getId().getName());
-        page = page.getNextPage();
+      Iterable<Database> allDatabases = page.iterateAll();
+
+      for (Database database : allDatabases) {
+        // projects/project-name/instances/my-cloud-spanner-instance/databases/myDbName
+        String fullDatabasePathName = database.getId().getName();
+        String databaseName =
+            fullDatabasePathName.substring(fullDatabasePathName.lastIndexOf("/") + 1);
+        databaseNames.add(databaseName);
       }
     } finally {
       spanner.close();
