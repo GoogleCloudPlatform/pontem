@@ -87,6 +87,9 @@ import org.apache.beam.sdk.values.PCollection;
  *    --tablesToIncludeInRestore=seven_words" \
  *  -Pdataflow-runner
  * </pre>
+ *
+ * <p>To minimize costs and backup time, you should seek to avoid cross-region network traffic. See
+ * https://cloud.google.com/dataflow/docs/concepts/regional-endpoints
  */
 public class CloudSpannerDatabaseRestore {
   private static final Logger LOG = Logger.getLogger(CloudSpannerDatabaseRestore.class.getName());
