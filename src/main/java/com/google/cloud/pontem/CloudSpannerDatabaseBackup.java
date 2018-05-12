@@ -117,6 +117,9 @@ import org.apache.beam.sdk.values.PCollectionView;
  *                --tablesToIncludeInBackup=Sales" \
  *   -Pdataflow-runner
  * </pre>
+ *
+ * <p>To minimize costs and backup time, you should seek to avoid cross-region network traffic. See
+ * https://cloud.google.com/dataflow/docs/concepts/regional-endpoints
  */
 public class CloudSpannerDatabaseBackup {
   private static final Logger LOG = Logger.getLogger(CloudSpannerDatabaseBackup.class.getName());
