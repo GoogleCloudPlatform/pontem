@@ -153,6 +153,13 @@ public class CloudSpannerDatabaseBackup {
 
     void setOutputFolder(String value);
 
+    /** Whether to overwrite existing GCS file contents (if any contents exist). */
+    @Description("Whether to overwrite GCS file contents.")
+    @Default.Boolean(false)
+    Boolean getWhetherToOverwriteGcsFileBackup();
+
+    void setWhetherToOverwriteGcsFileBackup(Boolean value);
+
     /** Get the Google Cloud project id. */
     @Description("Google Cloud project id")
     @Required
@@ -396,8 +403,22 @@ public class CloudSpannerDatabaseBackup {
             .withInstanceId(options.getInputSpannerInstanceId())
             .withDatabaseId(options.getInputSpannerDatabaseId());
 
-    // STEP 2a: Save DDL to disk
+    // STEP 2a: Check proposed backup location
     final Util util = new Util();
+    if (!options.getWhetherToOverwriteGcsFileBackup()
+        && (util.getNumGcsBlobsInGcsFilePath(
+                options.getProjectId(),
+                Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
+                Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder())))
+            > 0) {
+      throw new Exception(
+          "Attempts to backup to location "
+              + options.getOutputFolder()
+              + " failed as it appears there is already content there. You can either adjust "
+              + " the --whetherToOverwriteGcsFileBackup flag or chose an empty location.");
+    }
+
+    // STEP 2b: Save DDL to disk
     if (options.getShouldBackupDatabaseDdl()) {
       final ImmutableList<String> databaseDdl =
           util.queryDatabaseDdl(
@@ -413,7 +434,7 @@ public class CloudSpannerDatabaseBackup {
           Util.FILE_PATH_FOR_DATABASE_DDL);
     }
 
-    // STEP 2b: Query list of tables in database
+    // STEP 2c: Query list of tables in database
     // Since Beam does not have the ability to materialize query results before the rest of
     // the pipeline runs, we must get the table list from a query using the Cloud Spanner API.
     final ImmutableSet<String> allTableNames =
