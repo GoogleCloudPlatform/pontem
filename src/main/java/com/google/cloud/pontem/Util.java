@@ -247,7 +247,7 @@ public class Util {
     return ImmutableList.copyOf(statements);
   }
 
-  /** Get the contents */
+  /** Get the number of GCS blobs in a file path. */
   public int getNumGcsBlobsInGcsFilePath(
       String projectId, String gcsBucketName, String gcsFolderPath) {
     StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
