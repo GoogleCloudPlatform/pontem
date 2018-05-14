@@ -153,12 +153,15 @@ public class CloudSpannerDatabaseBackup {
 
     void setOutputFolder(String value);
 
-    /** Whether to overwrite existing GCS file contents (if any contents exist). */
+    /**
+     * Whether to overwrite existing GCS file contents (if any contents exist).
+     * This prevents unintended overwriting.
+     */
     @Description("Whether to overwrite GCS file contents.")
     @Default.Boolean(false)
-    Boolean getWhetherToOverwriteGcsFileBackup();
+    Boolean getShouldOverwriteGcsFileBackup();
 
-    void setWhetherToOverwriteGcsFileBackup(Boolean value);
+    void setShouldOverwriteGcsFileBackup(Boolean value);
 
     /** Get the Google Cloud project id. */
     @Description("Google Cloud project id")
@@ -405,17 +408,19 @@ public class CloudSpannerDatabaseBackup {
 
     // STEP 2a: Check proposed backup location
     final Util util = new Util();
-    if (!options.getWhetherToOverwriteGcsFileBackup()
-        && (util.getNumGcsBlobsInGcsFilePath(
-                options.getProjectId(),
-                Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
-                Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder())))
-            > 0) {
-      throw new Exception(
-          "Attempts to backup to location "
-              + options.getOutputFolder()
-              + " failed as it appears there is already content there. You can either adjust "
-              + " the --whetherToOverwriteGcsFileBackup flag or chose an empty location.");
+    if (!options.getShouldOverwriteGcsFileBackup()) {
+      int numBlobs =
+          util.getNumGcsBlobsInGcsFilePath(
+              options.getProjectId(),
+              Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
+              Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()));
+      if (numBlobs > 0) {
+        throw new Exception(
+            "Attempts to backup to location "
+                + options.getOutputFolder()
+                + " failed as it appears there is already content there. You can either adjust "
+                + " the --whetherToOverwriteGcsFileBackup flag or chose an empty location.");
+      }
     }
 
     // STEP 2b: Save DDL to disk
