@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.FileBasedSink;
@@ -43,8 +44,6 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Perform a backup of an entire Cloud Spanner database.
@@ -118,9 +117,12 @@ import org.slf4j.LoggerFactory;
  *                --tablesToIncludeInBackup=Sales" \
  *   -Pdataflow-runner
  * </pre>
+ *
+ * <p>To minimize costs and backup time, you should seek to avoid cross-region network traffic. See
+ * https://cloud.google.com/dataflow/docs/concepts/regional-endpoints
  */
 public class CloudSpannerDatabaseBackup {
-  private static final Logger LOG = LoggerFactory.getLogger(CloudSpannerDatabaseBackup.class);
+  private static final Logger LOG = Logger.getLogger(CloudSpannerDatabaseBackup.class.getName());
 
   /**
    * Dataflow job configuration options. Inherits standard configuration options from {@code
@@ -150,6 +152,16 @@ public class CloudSpannerDatabaseBackup {
     String getOutputFolder();
 
     void setOutputFolder(String value);
+
+    /**
+     * Whether to overwrite existing GCS file contents (if any contents exist).
+     * This prevents unintended overwriting.
+     */
+    @Description("Whether to overwrite GCS file contents.")
+    @Default.Boolean(false)
+    Boolean getShouldOverwriteGcsFileBackup();
+
+    void setShouldOverwriteGcsFileBackup(Boolean value);
 
     /** Get the Google Cloud project id. */
     @Description("Google Cloud project id")
@@ -229,6 +241,13 @@ public class CloudSpannerDatabaseBackup {
     String[] getTablesToExcludeFromBackup();
 
     void setTablesToExcludeFromBackup(String[] value);
+
+    @Description("Cloud Spanner host")
+    @Required
+    @Default.String(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
+    String getSpannerHost();
+
+    void setSpannerHost(String value);
   }
 
   /** Get path to write output of backup to. */
@@ -383,11 +402,28 @@ public class CloudSpannerDatabaseBackup {
 
     final SpannerConfig spannerConfig =
         SpannerConfig.create()
+            .withHost(options.getSpannerHost())
             .withInstanceId(options.getInputSpannerInstanceId())
             .withDatabaseId(options.getInputSpannerDatabaseId());
 
-    // STEP 2a: Save DDL to disk
+    // STEP 2a: Check proposed backup location
     final Util util = new Util();
+    if (!options.getShouldOverwriteGcsFileBackup()) {
+      int numBlobs =
+          util.getNumGcsBlobsInGcsFilePath(
+              options.getProjectId(),
+              Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
+              Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()));
+      if (numBlobs > 0) {
+        throw new Exception(
+            "Attempts to backup to location "
+                + options.getOutputFolder()
+                + " failed as it appears there is already content there. You can either adjust "
+                + " the --whetherToOverwriteGcsFileBackup flag or chose an empty location.");
+      }
+    }
+
+    // STEP 2b: Save DDL to disk
     if (options.getShouldBackupDatabaseDdl()) {
       final ImmutableList<String> databaseDdl =
           util.queryDatabaseDdl(
@@ -403,7 +439,7 @@ public class CloudSpannerDatabaseBackup {
           Util.FILE_PATH_FOR_DATABASE_DDL);
     }
 
-    // STEP 2b: Query list of tables in database
+    // STEP 2c: Query list of tables in database
     // Since Beam does not have the ability to materialize query results before the rest of
     // the pipeline runs, we must get the table list from a query using the Cloud Spanner API.
     final ImmutableSet<String> allTableNames =

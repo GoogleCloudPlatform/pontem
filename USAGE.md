@@ -209,3 +209,5 @@ The costs involved in performing a backup and restore include:
 For example, if you backup 2TB and use an additional 10 Cloud Spanner nodes with 750 Dataflow workers and 250TB of Dataflow storage and 2TB of Google Cloud Storage, the cost for a day will be about $300.
 
 To compute a sample cost for you, use the [Google Cloud pricing tool](https://cloud.google.com/products/calculator/).
+
+Please note especially that to minimize costs and backup time, you should seek to avoid cross-region network traffic. You can specify the backup [bucket region](https://cloud.google.com/storage/docs/bucket-locations) and [dataflow region](https://cloud.google.com/dataflow/docs/concepts/regional-endpoints).

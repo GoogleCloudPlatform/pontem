@@ -24,6 +24,7 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.gax.paging.Page;
 import com.google.api.services.dataflow.Dataflow;
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.api.services.dataflow.model.MetricStructuredName;
@@ -33,6 +34,7 @@ import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
 import com.google.cloud.spanner.Operation;
+import com.google.cloud.spanner.Options;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerException;
@@ -45,6 +47,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import java.math.BigDecimal;
@@ -57,12 +60,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /** Utility function for Cloud Spanner backup and restore. */
 public class Util {
-  private static final Logger LOG = LoggerFactory.getLogger(Util.class);
+  private static final Logger LOG = Logger.getLogger(Util.class.getName());
 
   public static final String READ_DATA_TRANSFORM_NODE_NAME = "Read_Data";
   public static final String WRITE_DATA_TRANSFORM_NODE_NAME = "Write_Data";
@@ -84,6 +86,45 @@ public class Util {
   // Use a delimeter to delinate the statements in a database DDL.
   public static final String DDL_DELIMITER = "\n##\n";
 
+  public static final String CLOUD_SPANNER_API_ENDPOINT_HOSTNAME = "https://spanner.googleapis.com";
+
+  public static SpannerOptions.Builder getSpannerOptionsBuilder() {
+    SpannerOptions.Builder options =
+        SpannerOptions.newBuilder()
+            .setHost(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
+            .setUserAgentPrefix(Util.USER_AGENT_PREFIX);
+    return options;
+  }
+
+  /** Fetch a list of all database names. */
+  public static ImmutableList<String> getListOfDatabaseNames(
+      String projectId, String instanceId, int numDatabases) {
+    LOG.info("Begin getting list of database names");
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
+    Spanner spanner = options.getService();
+
+    DatabaseAdminClient dbAdminClient = spanner.getDatabaseAdminClient();
+
+    List<String> databaseNames = new ArrayList<>();
+
+    try {
+      Page<Database> page = dbAdminClient.listDatabases(instanceId, Options.pageSize(numDatabases));
+      Iterable<Database> allDatabases = page.iterateAll();
+
+      for (Database database : allDatabases) {
+        // projects/project-name/instances/my-cloud-spanner-instance/databases/myDbName
+        String fullDatabasePathName = database.getId().getName();
+        String databaseName =
+            fullDatabasePathName.substring(fullDatabasePathName.lastIndexOf("/") + 1);
+        databaseNames.add(databaseName);
+      }
+    } finally {
+      spanner.close();
+    }
+    LOG.info("End getting list of database names, size: " + databaseNames.size());
+    return ImmutableList.copyOf(databaseNames);
+  }
+
   /**
    * Fetch the DDL for the database. See https://bit.ly/2qVpToj for more.
    *
@@ -91,8 +132,8 @@ public class Util {
    */
   public ImmutableList<String> queryDatabaseDdl(
       String projectId, String instance, String databaseId) {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    LOG.info("Query database DDL for database " + databaseId);
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
     List<String> ddl = Lists.newArrayList();
@@ -116,8 +157,8 @@ public class Util {
    */
   public ImmutableList<Struct> performSingleSpannerQuery(
       String projectId, String instance, String databaseId, String querySql) {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    LOG.info("Begin performing single Spanner query on database " + databaseId);
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
 
     List<Struct> resultsAsStruct = Lists.newArrayList();
@@ -143,8 +184,8 @@ public class Util {
   public void createDatabaseAndTables(
       String projectId, String instanceId, String databaseId, ImmutableList<String> databaseDdl)
       throws Exception {
-    SpannerOptions options =
-        SpannerOptions.newBuilder().setUserAgentPrefix(Util.USER_AGENT_PREFIX).build();
+    LOG.info("Begin creating Cloud Spanner database " + databaseId);
+    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
@@ -173,12 +214,21 @@ public class Util {
                 + projectId
                 + "'");
       }
+      LOG.info(
+          "Successfully created database named '"
+              + databaseId
+              + "' in instance '"
+              + instanceId
+              + "' and project '"
+              + projectId
+              + "'");
     } catch (SpannerException e) {
       LOG.info("Error creating database " + databaseId + ":\n" + e.toString());
       throw e;
     } finally {
       spanner.close();
     }
+    LOG.info("End creating Cloud Spanner database " + databaseId);
   }
 
   public static String convertDdlListIntoRawText(ImmutableList<String> ddlStatements) {
@@ -195,6 +245,35 @@ public class Util {
   public static ImmutableList<String> convertRawDdlIntoDdlList(String rawDdl) {
     List<String> statements = new ArrayList<String>(Arrays.asList(rawDdl.split(DDL_DELIMITER)));
     return ImmutableList.copyOf(statements);
+  }
+
+  /** Get the number of GCS blobs in a file path. */
+  public int getNumGcsBlobsInGcsFilePath(
+      String projectId, String gcsBucketName, String gcsFolderPath) {
+    StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
+    StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
+    Storage storage = storageOptions.getService();
+
+    // Prefix cannot have "/" at beginning or end.
+    if (gcsFolderPath.charAt(0) == '/') {
+      gcsFolderPath = gcsFolderPath.substring(1);
+    }
+    if (gcsFolderPath.charAt(gcsFolderPath.length() - 1) == '/') {
+      gcsFolderPath = gcsFolderPath.substring(0, gcsFolderPath.length() - 1);
+    }
+
+    Iterable<Blob> blobs =
+        storage.list(gcsBucketName, Storage.BlobListOption.prefix(gcsFolderPath)).iterateAll();
+
+    int numGcsBlobs = Iterables.size(blobs);
+    LOG.info(
+        "Number of GCS blobs in bucket '"
+            + gcsBucketName
+            + "' and folder '"
+            + gcsFolderPath
+            + "' is: "
+            + numGcsBlobs);
+    return numGcsBlobs;
   }
 
   /**
@@ -346,7 +425,7 @@ public class Util {
     if (metadataMap.size() != lines.length) {
       throw new Exception("Mismatch parsing metadata");
     }
-    LOG.error("Found " + metadataMap.size() + " tables in metadata");
+    LOG.warning("Found " + metadataMap.size() + " tables in metadata");
     return metadataMap;
   }
 
@@ -460,7 +539,7 @@ public class Util {
     }
 
     if (tableRowCounts.size() == 0) {
-      LOG.error(
+      LOG.warning(
           "Found 0 tables when parsing Job Metrics." + " Likely an error parsing Job Metrics.");
     }
     return tableRowCounts;
