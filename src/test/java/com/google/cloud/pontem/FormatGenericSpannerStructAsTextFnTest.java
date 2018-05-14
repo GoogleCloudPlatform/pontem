@@ -31,6 +31,8 @@ public final class FormatGenericSpannerStructAsTextFnTest {
         new FormatGenericSpannerStructAsTextFn(TestHelper.TABLE_NAME);
     assertEquals(TestHelper.STRUCT_1_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_1));
     assertEquals(TestHelper.STRUCT_2_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_2));
+    assertEquals(TestHelper.STRUCT_3_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_3));
+    assertEquals(TestHelper.STRUCT_4_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_4));
   }
 
   @Test

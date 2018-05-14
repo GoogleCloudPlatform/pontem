@@ -85,6 +85,23 @@ public class FormatTextAsGenericSpannerMutationFn extends SimpleFunction<String,
           mutationBuilder.set(name).to((Timestamp) struct.getTimestamp(name));
         } else if (type.getCode() == Code.INT64) {
           mutationBuilder.set(name).to((long) struct.getLong(name));
+        } else if (type.getCode() == Code.ARRAY) {
+          // Go through different types of arrays.
+          if (type.getArrayElementType().getCode() == Code.STRING) {
+            mutationBuilder.set(name).toStringArray(struct.getStringList(name));
+          } else if (type.getArrayElementType().getCode() == Code.BOOL) {
+            mutationBuilder.set(name).toBoolArray(struct.getBooleanList(name));
+          } else if (type.getArrayElementType().getCode() == Code.BYTES) {
+            mutationBuilder.set(name).toBytesArray(struct.getBytesList(name));
+          } else if (type.getArrayElementType().getCode() == Code.DATE) {
+            mutationBuilder.set(name).toDateArray(struct.getDateList(name));
+          } else if (type.getArrayElementType().getCode() == Code.FLOAT64) {
+            mutationBuilder.set(name).toFloat64Array(struct.getDoubleList(name));
+          } else if (type.getArrayElementType().getCode() == Code.INT64) {
+            mutationBuilder.set(name).toInt64Array(struct.getLongArray(name));
+          } else if (type.getArrayElementType().getCode() == Code.TIMESTAMP) {
+            mutationBuilder.set(name).toTimestampArray(struct.getTimestampList(name));
+          }
         } else {
           throw new RuntimeException(
               "Not handling type for field '" + name + "' of type " + type.getCode());
