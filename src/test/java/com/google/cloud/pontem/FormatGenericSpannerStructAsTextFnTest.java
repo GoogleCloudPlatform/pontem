@@ -32,7 +32,14 @@ public final class FormatGenericSpannerStructAsTextFnTest {
     assertEquals(TestHelper.STRUCT_1_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_1));
     assertEquals(TestHelper.STRUCT_2_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_2));
     assertEquals(TestHelper.STRUCT_3_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_3));
+  }
+
+  @Test
+  public void testFormatGenericSpannerStructAsTextFnTest_arrays() throws Exception {
+    FormatGenericSpannerStructAsTextFn simpleFn =
+        new FormatGenericSpannerStructAsTextFn(TestHelper.TABLE_NAME);
     assertEquals(TestHelper.STRUCT_4_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_4));
+    assertEquals(TestHelper.STRUCT_5_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_5));
   }
 
   @Test

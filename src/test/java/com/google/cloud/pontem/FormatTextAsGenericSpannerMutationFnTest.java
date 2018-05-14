@@ -43,5 +43,6 @@ public final class FormatTextAsGenericSpannerMutationFnTest {
     assertEquals(TestHelper.MUTATION_2, simpleFn.apply(TestHelper.STRUCT_2_BASE64_SERIALIZED));
     assertEquals(TestHelper.MUTATION_3, simpleFn.apply(TestHelper.STRUCT_3_BASE64_SERIALIZED));
     assertEquals(TestHelper.MUTATION_4, simpleFn.apply(TestHelper.STRUCT_4_BASE64_SERIALIZED));
+    assertEquals(TestHelper.MUTATION_5, simpleFn.apply(TestHelper.STRUCT_5_BASE64_SERIALIZED));
   }
 }
