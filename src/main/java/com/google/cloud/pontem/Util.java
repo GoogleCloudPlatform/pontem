@@ -47,6 +47,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import java.math.BigDecimal;
@@ -244,6 +245,35 @@ public class Util {
   public static ImmutableList<String> convertRawDdlIntoDdlList(String rawDdl) {
     List<String> statements = new ArrayList<String>(Arrays.asList(rawDdl.split(DDL_DELIMITER)));
     return ImmutableList.copyOf(statements);
+  }
+
+  /** Get the number of GCS blobs in a file path. */
+  public int getNumGcsBlobsInGcsFilePath(
+      String projectId, String gcsBucketName, String gcsFolderPath) {
+    StorageOptions.Builder optionsBuilder = StorageOptions.newBuilder();
+    StorageOptions storageOptions = optionsBuilder.setProjectId(projectId).build();
+    Storage storage = storageOptions.getService();
+
+    // Prefix cannot have "/" at beginning or end.
+    if (gcsFolderPath.charAt(0) == '/') {
+      gcsFolderPath = gcsFolderPath.substring(1);
+    }
+    if (gcsFolderPath.charAt(gcsFolderPath.length() - 1) == '/') {
+      gcsFolderPath = gcsFolderPath.substring(0, gcsFolderPath.length() - 1);
+    }
+
+    Iterable<Blob> blobs =
+        storage.list(gcsBucketName, Storage.BlobListOption.prefix(gcsFolderPath)).iterateAll();
+
+    int numGcsBlobs = Iterables.size(blobs);
+    LOG.info(
+        "Number of GCS blobs in bucket '"
+            + gcsBucketName
+            + "' and folder '"
+            + gcsFolderPath
+            + "' is: "
+            + numGcsBlobs);
+    return numGcsBlobs;
   }
 
   /**
