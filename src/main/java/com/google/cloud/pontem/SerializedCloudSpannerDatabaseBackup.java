@@ -145,7 +145,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             "Attempts to backup to location "
                 + options.getOutputFolder()
                 + " failed as it appears there is already content there. You can either adjust "
-                + " the --whetherToOverwriteGcsFileBackup flag or chose an empty location.");
+                + " the --shouldOverwriteGcsFileBackup flag or chose an empty location.");
       }
     }
 
