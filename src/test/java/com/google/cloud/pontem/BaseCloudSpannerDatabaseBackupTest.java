@@ -27,26 +27,13 @@ import static org.mockito.Mockito.when;
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import org.apache.beam.sdk.testing.PAssert;
-import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.PCollection;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link CloudSpannerDatabaseBackup}. */
+/** Tests for {@link BaseCloudSpannerDatabaseBackup}. */
 @RunWith(JUnit4.class)
-public class CloudSpannerDatabaseBackupTest {
-  @Rule public final transient TestPipeline pipeline = TestPipeline.create();
-
-  @Test
-  public void testGetOutputPath() {
-    assertEquals("foo/bar/", CloudSpannerDatabaseBackup.getOutputPath("foo/bar"));
-    assertEquals("foo/bar/", CloudSpannerDatabaseBackup.getOutputPath("foo/bar/"));
-  }
+public class BaseCloudSpannerDatabaseBackupTest {
 
   @Test
   public void testGetSqlQueryForTablesToBackup() {
@@ -55,7 +42,7 @@ public class CloudSpannerDatabaseBackupTest {
             + "WHERE t.table_catalog = '' and t.table_schema = '' and "
             + "table_name IN (\"tableName1\",\"tableName2\") ORDER BY parent_table_name DESC";
     String actual =
-        CloudSpannerDatabaseBackup.getSqlQueryForTablesToBackup(
+        BaseCloudSpannerDatabaseBackup.getSqlQueryForTablesToBackup(
             ImmutableList.of("tableName1", "tableName2"));
     assertEquals(expected, actual);
   }
@@ -71,15 +58,16 @@ public class CloudSpannerDatabaseBackupTest {
             eq(projectId),
             eq(instance),
             eq(databaseId),
-            eq(CloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
+            eq(BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
         .thenReturn(
             ImmutableList.of(
                 Struct.newBuilder().set("table_name").to("tableName1").build(),
                 Struct.newBuilder().set("table_name").to("tableName2").build()));
 
     ImmutableSet<String> expected = ImmutableSet.of("tableName1", "tableName2");
-    ImmutableSet<String> actual = CloudSpannerDatabaseBackup.queryListOfAllTablesInDatabase(
-        projectId, instance, databaseId, mockUtil);
+    ImmutableSet<String> actual =
+        BaseCloudSpannerDatabaseBackup.queryListOfAllTablesInDatabase(
+            projectId, instance, databaseId, mockUtil);
     assertEquals(expected, actual);
   }
 
@@ -89,7 +77,7 @@ public class CloudSpannerDatabaseBackupTest {
     String[] emptyTableNamesToExcludeFromBackup = new String[0];
 
     ImmutableList<String> tablesToBackup =
-        CloudSpannerDatabaseBackup.getListOfTablesToBackup(
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
             ImmutableSet.of("Table0", "Table1"),
             emptyTableNamesToIncludeInBackup,
             emptyTableNamesToExcludeFromBackup);
@@ -104,7 +92,7 @@ public class CloudSpannerDatabaseBackupTest {
     String[] emptyTableNamesToExcludeFromBackup = {"Table0"};
 
     ImmutableList<String> tablesToBackup =
-        CloudSpannerDatabaseBackup.getListOfTablesToBackup(
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
             ImmutableSet.of("Table0", "Table1"),
             emptyTableNamesToIncludeInBackup,
             emptyTableNamesToExcludeFromBackup);
@@ -116,29 +104,11 @@ public class CloudSpannerDatabaseBackupTest {
     String[] emptyTableNamesToExcludeFromBackup = new String[0];
 
     ImmutableList<String> tablesToBackup =
-        CloudSpannerDatabaseBackup.getListOfTablesToBackup(
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
             ImmutableSet.of("Table0", "Table1", "Table2"),
             emptyTableNamesToIncludeInBackup,
             emptyTableNamesToExcludeFromBackup);
     assertEquals("number of tables to back is wrong", 1, tablesToBackup.size());
     assertEquals("Table1", tablesToBackup.get(0));
-  }
-
-  @Test
-  public void testPipelineCanRunSuccessfully() throws Exception {
-    // Create an input PCollection.
-    PCollection<Struct> input = pipeline.apply(Create.of(TestHelper.STRUCT_1, TestHelper.STRUCT_2));
-
-    // Apply the Count transform under test.
-    PCollection<String> structDataAsString =
-        input.apply(MapElements.via(new FormatGenericSpannerStructAsTextFn(TestHelper.TABLE_NAME)));
-
-    // Assert on the results.
-    PAssert.that(structDataAsString)
-        .containsInAnyOrder(
-            TestHelper.STRUCT_1_BASE64_SERIALIZED, TestHelper.STRUCT_2_BASE64_SERIALIZED);
-
-    // Run the pipeline.
-    pipeline.run().waitUntilFinish();
   }
 }

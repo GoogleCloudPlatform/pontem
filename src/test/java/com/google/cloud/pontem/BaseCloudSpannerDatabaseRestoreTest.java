@@ -26,23 +26,15 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.cloud.spanner.Mutation;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import org.apache.beam.sdk.testing.PAssert;
-import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.PCollection;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link CloudSpannerDatabaseRestore}. */
+/** Tests for {@link BaseCloudSpannerDatabaseRestore}. */
 @RunWith(JUnit4.class)
-public class CloudSpannerDatabaseRestoreTest {
-  @Rule public final transient TestPipeline pipeline = TestPipeline.create();
+public class BaseCloudSpannerDatabaseRestoreTest {
 
   @Test
   public void testQueryListOfTablesToRestore_validWithSimpleTableSchema() throws Exception {
@@ -60,7 +52,7 @@ public class CloudSpannerDatabaseRestoreTest {
         .thenReturn("MyTableName1,\nMyTableName2,\nMyTableName3,");
 
     LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
-        CloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
@@ -89,7 +81,7 @@ public class CloudSpannerDatabaseRestoreTest {
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nChildTable2,ChildTable1");
 
     LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
-        CloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
@@ -124,7 +116,7 @@ public class CloudSpannerDatabaseRestoreTest {
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nChildTable2,ChildTable1");
 
     LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
-        CloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
@@ -157,7 +149,7 @@ public class CloudSpannerDatabaseRestoreTest {
         .thenReturn("RootTable1,\nRootTable2,\nRootTable3,\nRootTable4,\nChildTable1,RootTable4");
 
     LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
-        CloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
@@ -189,7 +181,7 @@ public class CloudSpannerDatabaseRestoreTest {
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nRootTable2,");
 
     LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
-        CloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
@@ -213,28 +205,11 @@ public class CloudSpannerDatabaseRestoreTest {
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nRootTable2,");
 
     LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
-        CloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
             mockUtil);
-  }
-
-  @Test
-  public void testPipelineCanRunSuccessfully() throws Exception {
-    PCollection<String> rows =
-        pipeline.apply(
-            Create.of(
-                TestHelper.STRUCT_1_BASE64_SERIALIZED, TestHelper.STRUCT_2_BASE64_SERIALIZED));
-
-    PCollection<Mutation> structDataAsMutation =
-        rows.apply(
-            MapElements.via(new FormatTextAsGenericSpannerMutationFn(TestHelper.TABLE_NAME)));
-
-    PAssert.that(structDataAsMutation)
-        .containsInAnyOrder(TestHelper.MUTATION_1, TestHelper.MUTATION_2);
-
-    pipeline.run().waitUntilFinish();
   }
 }

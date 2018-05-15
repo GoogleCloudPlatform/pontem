@@ -51,7 +51,7 @@ A simple run that backs up a database:
 
 ```bash
 mvn compile exec:java \
-  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup \
+  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -66,7 +66,7 @@ A sample run that queries and saves the table row counts while not saving table 
 
 ```bash
 mvn compile exec:java \
-  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup \
+  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -106,7 +106,7 @@ A simple restore of a database:
 
 ```bash
 mvn compile exec:java \
-  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestore \
+  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -123,7 +123,7 @@ to comply with [Spanner's limits](https://cloud.google.com/spanner/quotas):
 
 ```bash
 mvn compile exec:java \
-  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestore \
+  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \

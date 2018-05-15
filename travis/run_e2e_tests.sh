@@ -101,7 +101,7 @@ sleep 20s
 
 ## Backup
 echo "BEGIN backup."
-mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
+mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
  --inputSpannerInstanceId=${DATABASE_INSTANCE} \
@@ -139,7 +139,7 @@ sleep 20s
 
 ## Restore From Backup
 echo "BEGIN restore from backup."
-mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
+mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
  --gcpTempLocation=gs://${GCP_BUCKET}/tmp \
  --outputSpannerInstanceId=${DATABASE_INSTANCE} \
