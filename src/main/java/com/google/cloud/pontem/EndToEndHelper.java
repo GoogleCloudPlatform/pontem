@@ -40,6 +40,7 @@ import com.google.cloud.storage.StorageOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -70,44 +71,87 @@ public class EndToEndHelper {
   public static final String CHILD_TABLE_NAME = "child_table";
   public static final ImmutableSet<String> TABLE_NAMES =
       ImmutableSet.of(FOO_TABLE_NAME, PARENT_TABLE_NAME, CHILD_TABLE_NAME);
+
+  private static final double FOO_TABLE_MUTATION_0__COL_FLOAT = 32.53829d;
+  private static final Timestamp FOO_TABLE_MUTATION_0__COL_TIMESTAMP =
+      Timestamp.parseTimestamp("2017-09-15T00:00:00.111111Z");
+  private static final Date FOO_TABLE_MUTATION_0__COL_DATE = Date.fromYearMonthDay(2017, 11, 11);
+  private static final String FOO_TABLE_MUTATION_0__COL_STRING = "helloString";
+  private static final Integer FOO_TABLE_MUTATION_0__COL_INT = 102;
+  public static final Mutation FOO_TABLE_MUTATION_0 =
+      Mutation.newInsertBuilder(FOO_TABLE_NAME)
+          .set("colFloat")
+          .to(FOO_TABLE_MUTATION_0__COL_FLOAT)
+          .set("colTimestamp")
+          .to(FOO_TABLE_MUTATION_0__COL_TIMESTAMP)
+          .set("colDate")
+          .to(FOO_TABLE_MUTATION_0__COL_DATE)
+          .set("colString")
+          .to(FOO_TABLE_MUTATION_0__COL_STRING)
+          .set("colInt")
+          .to(FOO_TABLE_MUTATION_0__COL_INT)
+          .build();
+
+  private static final double FOO_TABLE_MUTATION_1__COL_FLOAT = 309.53829d;
+  private static final Timestamp FOO_TABLE_MUTATION_1__COL_TIMESTAMP =
+      Timestamp.parseTimestamp("2018-01-21T00:00:00.111111Z");
+  private static final Date FOO_TABLE_MUTATION_1__COL_DATE = Date.fromYearMonthDay(2018, 1, 21);
+  private static final String FOO_TABLE_MUTATION_1__COL_STRING = "helloString2";
   public static final Mutation FOO_TABLE_MUTATION_1 =
       Mutation.newInsertBuilder(FOO_TABLE_NAME)
           .set("colFloat")
-          .to(32.53829d)
+          .to(FOO_TABLE_MUTATION_1__COL_FLOAT)
           .set("colTimestamp")
-          .to(Timestamp.parseTimestamp("2017-09-15T00:00:00.111111Z"))
+          .to(FOO_TABLE_MUTATION_1__COL_TIMESTAMP)
           .set("colDate")
-          .to(Date.fromYearMonthDay(2017, 11, 11))
+          .to(FOO_TABLE_MUTATION_1__COL_DATE)
           .set("colString")
-          .to("helloString")
-          .set("colInt")
-          .to(102)
+          .to(FOO_TABLE_MUTATION_1__COL_STRING)
           .build();
+
+  private static final double FOO_TABLE_MUTATION_2__COL_FLOAT = 3009.53829d;
+  private static final Timestamp FOO_TABLE_MUTATION_2__COL_TIMESTAMP =
+      Timestamp.parseTimestamp("2017-09-15T00:00:00.111111Z");
+  private static final Date FOO_TABLE_MUTATION_2__COL_DATE = Date.fromYearMonthDay(2017, 9, 15);
+  private static final String FOO_TABLE_MUTATION_2__COL_STRING = "helloString3";
+  private static final List<Long> FOO_TABLE_MUTATION_2__COL_ARRAY_INT =
+      ImmutableList.of(329L, 2329302L);
+  private static final List<Boolean> FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL =
+      ImmutableList.of(true, false, true, true);
+  private static final Integer FOO_TABLE_MUTATION_2__COL_INT = 10232;
   public static final Mutation FOO_TABLE_MUTATION_2 =
       Mutation.newInsertBuilder(FOO_TABLE_NAME)
           .set("colFloat")
-          .to(34.35d)
-          .set("colTimestamp")
-          .to(Timestamp.parseTimestamp("2016-09-15T00:00:00.111111Z"))
-          .set("colDate")
-          .to(Date.fromYearMonthDay(2018, 11, 11))
+          .to(FOO_TABLE_MUTATION_2__COL_FLOAT)
           .set("colString")
-          .to("hello world")
+          .to(FOO_TABLE_MUTATION_2__COL_STRING)
+          .set("colTimestamp")
+          .to(FOO_TABLE_MUTATION_2__COL_TIMESTAMP)
+          .set("colDate")
+          .to(FOO_TABLE_MUTATION_2__COL_DATE)
+          .set("colArrayInt")
+          .toInt64Array(FOO_TABLE_MUTATION_2__COL_ARRAY_INT)
+          .set("colArrayBool")
+          .toBoolArray(FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL)
+          .set("colInt")
+          .to(FOO_TABLE_MUTATION_2__COL_INT)
           .build();
-  public static final Mutation PARENT_TABLE_MUTATION_1 =
+
+  public static final Mutation PARENT_TABLE_MUTATION_0 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
           .to(10L)
           .set("bar_string")
           .to("hello")
           .build();
-  public static final Mutation PARENT_TABLE_MUTATION_2 =
+  public static final Mutation PARENT_TABLE_MUTATION_1 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
           .to(100L)
           .set("bar_string")
           .to("hello_2")
           .build();
+
   public static final Mutation CHILD_TABLE_MUTATION =
       Mutation.newInsertBuilder(CHILD_TABLE_NAME)
           .set("foo_id")
@@ -115,25 +159,40 @@ public class EndToEndHelper {
           .set("child_bar_string")
           .to("child_hello")
           .build();
+
   public static final ImmutableList<Mutation> MUTATIONS =
       ImmutableList.of(
+          FOO_TABLE_MUTATION_0,
           FOO_TABLE_MUTATION_1,
           FOO_TABLE_MUTATION_2,
+          PARENT_TABLE_MUTATION_0,
           PARENT_TABLE_MUTATION_1,
-          PARENT_TABLE_MUTATION_2,
           CHILD_TABLE_MUTATION);
   public static final ImmutableList<Struct> FOO_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("colFloat", Value.float64(32.53829d))
-              .add("colString", Value.string("helloString"))
-              .add("colTimestamp", Value.date(Date.fromYearMonthDay(2018, 10, 1)))
+              .add("colFloat", Value.float64(FOO_TABLE_MUTATION_0__COL_FLOAT))
+              .add("colTimestamp", Value.timestamp(FOO_TABLE_MUTATION_0__COL_TIMESTAMP))
+              .add("colDate", Value.date(FOO_TABLE_MUTATION_0__COL_DATE))
+              .add("colString", Value.string(FOO_TABLE_MUTATION_0__COL_STRING))
+              .add("colInt", Value.int64(FOO_TABLE_MUTATION_0__COL_INT))
               .build(),
           Struct.newBuilder()
-              .add("colFloat", Value.float64(34.35d))
-              .add("colString", Value.string("hello world"))
-              .add("colTimestamp", Value.date(Date.fromYearMonthDay(2017, 10, 1)))
+              .add("colFloat", Value.float64(FOO_TABLE_MUTATION_1__COL_FLOAT))
+              .add("colString", Value.string(FOO_TABLE_MUTATION_1__COL_STRING))
+              .add("colTimestamp", Value.timestamp(FOO_TABLE_MUTATION_1__COL_TIMESTAMP))
+              .add("colDate", Value.date(FOO_TABLE_MUTATION_1__COL_DATE))
+              .build(),
+          Struct.newBuilder()
+              .add("colFloat", Value.float64(FOO_TABLE_MUTATION_2__COL_FLOAT))
+              .add("colString", Value.string(FOO_TABLE_MUTATION_2__COL_STRING))
+              .add("colTimestamp", Value.timestamp(FOO_TABLE_MUTATION_2__COL_TIMESTAMP))
+              .add("colDate", Value.date(FOO_TABLE_MUTATION_2__COL_DATE))
+              .add("colArrayInt", Value.int64Array(FOO_TABLE_MUTATION_2__COL_ARRAY_INT))
+              .add("colArrayBool", Value.boolArray(FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL))
+              .add("colInt", Value.int64(FOO_TABLE_MUTATION_2__COL_INT))
               .build());
+
   public static final ImmutableList<Struct> PARENT_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
@@ -155,13 +214,14 @@ public class EndToEndHelper {
       ImmutableList.of(
           "CREATE TABLE foo_table (\n"
               + "  colFloat FLOAT64 NOT NULL,\n"
-              + "  colArray ARRAY<INT64>,\n"
+              + "  colArrayInt ARRAY<INT64>,\n"
               + "  colBool BOOL,\n"
               + "  colBytes BYTES(MAX),\n"
               + "  colDate DATE NOT NULL,\n"
               + "  colString STRING(MAX) NOT NULL,\n"
               + "  colTimestamp TIMESTAMP NOT NULL,\n"
               + "  colInt INT64,\n"
+              + "  colArrayBool ARRAY<BOOL>,\n"
               + ") PRIMARY KEY(colFloat)",
           "CREATE TABLE parent_table (\n"
               + "  foo_id INT64 NOT NULL,\n"
@@ -491,20 +551,70 @@ public class EndToEndHelper {
               + MUTATIONS.size());
     }
     // STEP 3b: Check content
-    if (!fooResultSet.get(0).getString("colString").equals("helloString")) {
-      throw new Exception("Contents of foo string do not match");
+    if (!fooResultSet.get(0).getString("colString").equals(FOO_TABLE_MUTATION_0__COL_STRING)) {
+      throw new Exception("Contents of colString do not match");
     }
-    if (fooResultSet.get(0).getDouble("colFloat") != 32.53829d) {
-      throw new Exception("Contents of col float do not match");
+    if (fooResultSet.get(0).getDouble("colFloat") != FOO_TABLE_MUTATION_0__COL_FLOAT) {
+      throw new Exception("Contents of colFloat do not match");
     }
-    if (!fooResultSet.get(1).getString("colString").equals("hello world")) {
-      throw new Exception("Contents of foo string do not match");
+    if (!fooResultSet
+        .get(0)
+        .getTimestamp("colTimestamp")
+        .equals(FOO_TABLE_MUTATION_0__COL_TIMESTAMP)) {
+      throw new Exception("Contents of colTimestamp do not match");
     }
+    if (fooResultSet.get(0).getLong("colInt") != FOO_TABLE_MUTATION_0__COL_INT) {
+      throw new Exception("Contents of colInt do not match");
+    }
+    if (!fooResultSet.get(0).getDate("colDate").equals(FOO_TABLE_MUTATION_0__COL_DATE)) {
+      throw new Exception("Contents of colDate do not match");
+    }
+
+    if (!Double.valueOf(fooResultSet.get(1).getDouble("colFloat"))
+        .equals(FOO_TABLE_MUTATION_1__COL_FLOAT)) {
+      throw new Exception("Contents of colFloat do not match.");
+    }
+    if (!fooResultSet.get(1).getString("colString").equals(FOO_TABLE_MUTATION_1__COL_STRING)) {
+      throw new Exception("Contents of colString do not match");
+    }
+    if (!fooResultSet
+        .get(1)
+        .getTimestamp("colTimestamp")
+        .equals(FOO_TABLE_MUTATION_1__COL_TIMESTAMP)) {
+      throw new Exception("Contents of colTimestamp do not match");
+    }
+
+    if (!Double.valueOf(fooResultSet.get(2).getDouble("colFloat"))
+        .equals(FOO_TABLE_MUTATION_2__COL_FLOAT)) {
+      throw new Exception("Contents of colFloat do not match.");
+    }
+    if (!fooResultSet.get(2).getString("colString").equals(FOO_TABLE_MUTATION_2__COL_STRING)) {
+      throw new Exception("Contents of colString do not match");
+    }
+    if (!fooResultSet
+        .get(2)
+        .getTimestamp("colTimestamp")
+        .equals(FOO_TABLE_MUTATION_2__COL_TIMESTAMP)) {
+      throw new Exception("Contents of colTimestamp do not match");
+    }
+    if (!fooResultSet
+        .get(2)
+        .getLongList("colArrayInt")
+        .equals(FOO_TABLE_MUTATION_2__COL_ARRAY_INT)) {
+      throw new Exception("Contents of colArrayInt do not match");
+    }
+    if (!fooResultSet
+        .get(2)
+        .getBooleanList("colArrayBool")
+        .equals(FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL)) {
+      throw new Exception("Contents of colArrayBool do not match");
+    }
+
     if (!childResultSet.get(0).getString("child_bar_string").equals("child_hello")) {
-      throw new Exception("Contents of child string do not match");
+      throw new Exception("Contents of child_bar_string do not match");
     }
     if (!parentResultSet.get(0).getString("bar_string").equals("hello")) {
-      throw new Exception("Contents of parent string do not match");
+      throw new Exception("Contents of parent bar_string do not match");
     }
   }
 }
