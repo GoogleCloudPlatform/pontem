@@ -54,6 +54,7 @@ mvn compile exec:java \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
+               --region=us-central1 \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
                --inputSpannerInstanceId=my-cloud-spanner-project-db \
                --inputSpannerDatabaseId=words2 \
@@ -69,6 +70,7 @@ mvn compile exec:java \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
+               --region=us-central1 \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
                --inputSpannerInstanceId=my-cloud-spanner-project-db \
                --inputSpannerDatabaseId=words2 \
@@ -109,6 +111,7 @@ mvn compile exec:java \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
+               --region=us-central1 \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
                --outputSpannerInstanceId=my-cloud-spanner-project-db \
                --outputSpannerDatabaseId=words2 \
@@ -126,6 +129,7 @@ mvn compile exec:java \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
+               --region=us-central1 \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
                --outputSpannerInstanceId=my-cloud-spanner-project-db \
                --outputSpannerDatabaseId=words2 \
@@ -175,18 +179,24 @@ mvn compile exec:java \
 
 # Performance
 ## General Performance Tips
-1. Examine the [Google Cloud IAM Quotas page](https://console.cloud.google.com/iam-admin/quotas)
-Look in particular for quotas that are maxed-out (i.e., showing in deep orange). If you have maxed out your Dataflow worker count, you will need more "CPUs (all regions)", "In-use IP addresses", and "CPUs".
+1. Examine the [Google Cloud IAM Quotas page](https://console.cloud.google.com/iam-admin/quotas).
 
-Look also for "Persistent Disk Standard (GB)".
+    Look in particular for quotas that are maxed-out (i.e., showing in deep orange). If you have maxed out your Dataflow worker count, you will need more "CPUs (all regions)", "In-use IP addresses", and "CPUs".
 
-2. Examine your Cloud Spanner CPU
-If the CPU usage is over 75%, it is likely worth increasing your [node count](https://cloud.google.com/spanner/docs/instances#node_count). Otherwise, the limiting factor is likely somewhere else.
+    Look also for "Persistent Disk Standard (GB)".
 
-3. Optimizing Dataflow Worker Count
-In general, the more Dataflow workers you use for a backup, the better.
-In restoring a database, if you're Cloud Spanner CPU is above 75% and you cannot increase your Cloud Spanner node count,
-consider limiting the Dataflow worker count using the ``--maxNumWorkers`` flag.
+2. Examine your Cloud Spanner CPU.
+
+    If the CPU usage is over 75%, it is likely worth increasing your [node count](https://cloud.google.com/spanner/docs/instances#node_count). Otherwise, the limiting factor is likely somewhere else.
+
+
+3. Optimizing Dataflow Worker Count.
+
+    In general, the more Dataflow workers you use for a backup, the better. In restoring a database, if you're Cloud Spanner CPU is above 75% and you cannot increase your Cloud Spanner node count, consider limiting the Dataflow worker count using the ``--maxNumWorkers`` flag.
+
+4. Run Everything in the Same Region.
+
+    Ensure that the Cloud Spanner database instance, Dataflow workers and Cloud Storage bucket are all in the sam region to prevent any cross-region traffic.
 
 ## Benchmarks
 The times to perform backup and restore will vary dramatically based upon on Cloud Spanner node count, Dataflow worker count, persistent disk available to Dataflow, and the number of parent-child tables. For example, if you have a parent-child table, the parent will need to be restored first before the child can even begin being restored.
