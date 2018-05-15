@@ -46,6 +46,6 @@ public final class FormatGenericSpannerStructAsTextFnTest {
   public void testFormatGenericSpannerStructAsTextFnTest_nullValue() throws Exception {
     FormatGenericSpannerStructAsTextFn simpleFn =
         new FormatGenericSpannerStructAsTextFn(TestHelper.TABLE_NAME);
-      assertEquals(TestHelper.STRUCT_3_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_3));
+    assertEquals(TestHelper.STRUCT_3_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_3));
   }
 }

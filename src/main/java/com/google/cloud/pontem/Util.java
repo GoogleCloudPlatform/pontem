@@ -276,6 +276,15 @@ public class Util {
     return numGcsBlobs;
   }
 
+  /** Get path to write output of backup to. */
+  public static String getFormattedOutputPath(String baseFolderPath) {
+    if (baseFolderPath.endsWith("/")) {
+      return baseFolderPath;
+    } else {
+      return baseFolderPath + "/";
+    }
+  }
+
   /**
    * Fetch the contents of a text file from Google Cloud Storage and return it as a string.
    *

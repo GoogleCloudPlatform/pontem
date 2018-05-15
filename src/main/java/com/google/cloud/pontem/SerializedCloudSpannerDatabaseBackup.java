@@ -21,11 +21,7 @@ import com.google.cloud.spanner.TimestampBound;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.FileBasedSink;
@@ -33,11 +29,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.Transaction;
-import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.options.Validation.Required;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -46,13 +38,13 @@ import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
 
 /**
- * Perform a backup of an entire Cloud Spanner database.
+ * Perform a backup of an entire Cloud Spanner database using serialization.
  *
  * <p>A sample backup:
  *
  * <pre>
  * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup \
+ *   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
  *   -Dexec.args="--runner=DataflowRunner \
  *                --project=my-cloud-spanner-project \
  *                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -67,7 +59,7 @@ import org.apache.beam.sdk.values.PCollectionView;
  *
  * <pre>
  * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup \
+ *   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
  *   -Dexec.args="--runner=DataflowRunner \
  *                --project=my-cloud-spanner-project \
  *                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -85,7 +77,7 @@ import org.apache.beam.sdk.values.PCollectionView;
  *
  * <pre>
  * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup \
+ *   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
  *   -Dexec.args="--runner=DataflowRunner \
  *                --project=my-cloud-spanner-project \
  *                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -104,7 +96,7 @@ import org.apache.beam.sdk.values.PCollectionView;
  *
  * <pre>
  * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackup \
+ *   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
  *   -Dexec.args="--runner=DataflowRunner \
  *                --project=my-cloud-spanner-project \
  *                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
@@ -121,279 +113,13 @@ import org.apache.beam.sdk.values.PCollectionView;
  * <p>To minimize costs and backup time, you should seek to avoid cross-region network traffic. See
  * https://cloud.google.com/dataflow/docs/concepts/regional-endpoints
  */
-public class CloudSpannerDatabaseBackup {
-  private static final Logger LOG = Logger.getLogger(CloudSpannerDatabaseBackup.class.getName());
-
-  /**
-   * Dataflow job configuration options. Inherits standard configuration options from {@code
-   * PipelineOptions}.
-   */
-  public interface SpannerBackupOptions extends PipelineOptions {
-    /** Get the Spanner instance id to read data from. */
-    @Description("The Spanner instance id to write into")
-    @Required
-    String getInputSpannerInstanceId();
-
-    void setInputSpannerInstanceId(String value);
-
-    /** Get the Spanner database name to read from. */
-    @Description("Name of the Spanner database to read from")
-    @Required
-    String getInputSpannerDatabaseId();
-
-    void setInputSpannerDatabaseId(String value);
-
-    /**
-     * Where to write the backup output to. This should be a GCS bucket and it could also include a
-     * subpath folder such as "gs://my-cloud-spanner-project/backup-location"
-     */
-    @Description("Full path of the GCS folder to write backup to")
-    @Required
-    String getOutputFolder();
-
-    void setOutputFolder(String value);
-
-    /**
-     * Whether to overwrite existing GCS file contents (if any contents exist).
-     * This prevents unintended overwriting.
-     */
-    @Description("Whether to overwrite GCS file contents.")
-    @Default.Boolean(false)
-    Boolean getShouldOverwriteGcsFileBackup();
-
-    void setShouldOverwriteGcsFileBackup(Boolean value);
-
-    /** Get the Google Cloud project id. */
-    @Description("Google Cloud project id")
-    @Required
-    String getProjectId();
-
-    void setProjectId(String value);
-
-    /**
-     * Whether to query table row counts.
-     *
-     * <p>If the table row counts are queried, an additional level of data-integrity verification
-     * can be provided (i.e., we can ensure that the number of rows in each table equals the number
-     * of rows backed up for each table). However, querying the table row counts requires triggering
-     * a table-scan which can be very time and resource consuming.
-     */
-    @Description("Whether to query table row counts")
-    @Default.Boolean(false)
-    Boolean getShouldQueryTableRowCounts();
-
-    void setShouldQueryTableRowCounts(Boolean value);
-
-    /**
-     * Whether to backup DDL.
-     *
-     * <p>Cloud Spanner creates tables and indexes within a database using DDL (Data Definition
-     * Language). This is the series of CREATE TABLE and CREATE INDEX commands that can be run. We
-     * can backup these statements so the tables can be re-created.
-     *
-     * <p>WARNING: The backup of DDL relies on a Cloud Spanner API method and not a SQL query run in
-     * Dataflow's SpannerIO.read() connector. Consequently, the Cloud Spanner API query to fetch the
-     * DDL will not run at the exact same time as the backup of the underlying contents.
-     * Consequently, it is possible that a database admin could alter the schema of the table
-     * between the time the DDL is backed-up using the Cloud Spanner API and the time Dataflow takes
-     * a snapshot of the database for use by SpannerIO.read(). This is highly unlikely but it is
-     * theoritically possible.
-     *
-     * <p>WARNING: Since the SpannerAPI provides only for fetching the entire database's DDL, the
-     * entire database DDL will be saved even if the flag to only backup a specific table is set.
-     *
-     * <p>@see
-     * https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/getDdl
-     *
-     * <p>@see https://cloud.google.com/spanner/docs/data-definition-language
-     */
-    @Description("Whether to backup the Data Definition Language (DDL)")
-    @Default.Boolean(true)
-    Boolean getShouldBackupDatabaseDdl();
-
-    void setShouldBackupDatabaseDdl(Boolean value);
-
-    /**
-     * Get whether to query table schema. If the table schema is queried, it will be written to disk
-     * in GCS. This preserves a snapshot of what the database schema looked like at backup time.
-     */
-    @Description("Whether to query table schema")
-    @Default.Boolean(false)
-    Boolean getShouldQueryTableSchema();
-
-    void setShouldQueryTableSchema(Boolean value);
-
-    /**
-     * List of tables to include in the backup. If this is set, only these tables will be included
-     * in the database backup. This value cannot be set if tablesToExcludeFromBackup is also set.
-     */
-    @Description("List of tables to include in backup. If set, only these tables included.")
-    String[] getTablesToIncludeInBackup();
-
-    void setTablesToIncludeInBackup(String[] value);
-
-    /**
-     * List of tables to exclude from the backup. If this is set, all tables in the database except
-     * these tables will be included in the database backup. This value cannot be set if
-     * tablesToIncludeInBackup is also set.
-     */
-    @Description("List of tables to exclude from backup. If set, all tables but these included.")
-    String[] getTablesToExcludeFromBackup();
-
-    void setTablesToExcludeFromBackup(String[] value);
-
-    @Description("Cloud Spanner host")
-    @Required
-    @Default.String(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
-    String getSpannerHost();
-
-    void setSpannerHost(String value);
-  }
-
-  /** Get path to write output of backup to. */
-  public static String getOutputPath(String baseFolderPath) {
-    if (baseFolderPath.endsWith("/")) {
-      return baseFolderPath;
-    } else {
-      return baseFolderPath + "/";
-    }
-  }
-
-  public static final String LIST_ALL_TABLES_SQL_QUERY =
-      "SELECT table_name, parent_table_name FROM information_schema.tables AS t WHERE t"
-          + ".table_catalog = '' and t.table_schema = '' ORDER BY"
-          + " parent_table_name, table_name DESC";
-
-  /**
-   * Fetch all the table names in a specific cloud spanner database.
-   *
-   * @return all table names in a database.
-   */
-  public static ImmutableSet<String> queryListOfAllTablesInDatabase(
-      String projectId, String instance, String databaseId, Util util) {
-    ImmutableList<Struct> resultSet =
-        util.performSingleSpannerQuery(projectId, instance, databaseId, LIST_ALL_TABLES_SQL_QUERY);
-    Set<String> tableNames = Sets.newHashSet();
-    for (Struct row : resultSet) {
-      tableNames.add(row.getString(0));
-    }
-    LOG.info(
-        "Finished querying list of all table names in database "
-            + databaseId
-            + ". Returned ("
-            + tableNames.size()
-            + ")"
-            + " tables.");
-    return ImmutableSet.copyOf(tableNames);
-  }
-
-  /**
-   * Get list of tables to backup.
-   *
-   * <p>If the user specified a list of tables to include in backup, return only these tables after
-   * verifying their name is valid in the database. No other tables will be returned.
-   *
-   * <p>If the user specified a list of tables to exclude from backup, return all tables except for
-   * these excluded tables.
-   *
-   * <p>{@param tableNamesToIncludeInBackup} and {@param tableNamesToExcludeFromBackup} cannot both
-   * be set and populated.
-   *
-   * @return List of tables to perform a backup on.
-   */
-  public static ImmutableList<String> getListOfTablesToBackup(
-      ImmutableSet<String> allTableNames,
-      String[] tableNamesToIncludeInBackup,
-      String[] tableNamesToExcludeFromBackup)
-      throws Exception {
-    if (allTableNames.size() == 0) {
-      throw new Exception("Database has no tables.");
-    }
-
-    boolean isTablesToIncludeSet =
-        (tableNamesToIncludeInBackup != null && tableNamesToIncludeInBackup.length > 0);
-    boolean isTablesToExcludeSet =
-        (tableNamesToExcludeFromBackup != null && tableNamesToExcludeFromBackup.length > 0);
-    if (isTablesToIncludeSet && isTablesToExcludeSet) {
-      throw new Exception("Cannot set a table inclusion list AND a table exclusion list");
-    }
-
-    if (isTablesToIncludeSet) {
-      LOG.info("Tables to include set with " + tableNamesToIncludeInBackup.length + " values");
-      // User has specified a list of tables to include, so only include these tables.
-      // Check each table name to ensure it is valid.
-      for (String tableNameToIncludeInBackup : tableNamesToIncludeInBackup) {
-        if (!allTableNames.contains(tableNameToIncludeInBackup)) {
-          throw new Exception(
-              "Table "
-                  + tableNameToIncludeInBackup
-                  + " required in backup but not found in database.");
-        }
-      }
-      return ImmutableList.copyOf(tableNamesToIncludeInBackup);
-    }
-
-    if (isTablesToExcludeSet) {
-      LOG.info("Tables to exclude set with " + tableNamesToExcludeFromBackup.length + " values");
-      // User has specified a list of tables to exclude, so remove those tables.
-      for (String tableToExcludeFromBackup : tableNamesToExcludeFromBackup) {
-        if (allTableNames.contains(tableToExcludeFromBackup)) {
-          allTableNames.remove(tableToExcludeFromBackup);
-        } else {
-          throw new Exception(
-              "Table "
-                  + tableToExcludeFromBackup
-                  + " listed to exclude from backup yet table was not found in database");
-        }
-      }
-    }
-
-    return ImmutableList.copyOf(allTableNames);
-  }
-
-  /**
-   * Form a SQL query for Spanner getting table information about the tables to backup.
-   *
-   * @param tablesToBackup List of tables to backup.
-   * @return SQL query.
-   */
-  public static String getSqlQueryForTablesToBackup(ImmutableList<String> tablesToBackup) {
-    String query =
-        "SELECT table_name, parent_table_name FROM information_schema.tables AS t "
-            + "WHERE t.table_catalog = '' and t.table_schema = '' and "
-            + "table_name IN (";
-    for (String tableToBackup : tablesToBackup) {
-      query += "\"" + tableToBackup + "\",";
-    }
-    query = query.substring(0, query.length() - 1);
-    query += ") ORDER BY parent_table_name DESC";
-    return query;
-  }
-
-  /**
-   * Temporary workaround put in until https://github.com/apache/beam/pull/4946 is live. Gets the
-   * list of tables to backup.
-   */
-  public static ImmutableList<String> getTableNamesBeingBackedUp(
-      String projectId, String instance, String databaseId, String tableNamesQuery, Util util) {
-    ImmutableList<Struct> tableNames =
-        util.performSingleSpannerQuery(projectId, instance, databaseId, tableNamesQuery);
-    ArrayList<String> tableNamesAsStrings = new ArrayList<String>();
-    for (Struct inputRow : tableNames) {
-      String parentTableName = "";
-      if (!inputRow.isNull("parent_table_name")) {
-        parentTableName = inputRow.getString("parent_table_name");
-      }
-      tableNamesAsStrings.add(inputRow.getString("table_name") + "," + parentTableName);
-    }
-
-    return ImmutableList.copyOf(tableNamesAsStrings);
-  }
-
+public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBackup {
   public static void main(String[] args) throws Exception {
     // STEP 1: Setup pipeline and Spanner configuration
-    final SpannerBackupOptions options =
-        PipelineOptionsFactory.fromArgs(args).withValidation().as(SpannerBackupOptions.class);
+    final BaseCloudSpannerBackupOptions options =
+        PipelineOptionsFactory.fromArgs(args)
+            .withValidation()
+            .as(BaseCloudSpannerBackupOptions.class);
 
     final String newUserAgent = Util.USER_AGENT_PREFIX + options.getUserAgent();
     options.setUserAgent(newUserAgent);
@@ -500,7 +226,9 @@ public class CloudSpannerDatabaseBackup {
     collectionOfTableNames.apply(
         "Write Table Names",
         TextIO.write()
-            .to(getOutputPath(options.getOutputFolder()) + Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)
+            .to(
+                Util.getFormattedOutputPath(options.getOutputFolder())
+                    + Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)
             .withoutSharding());
     LOG.info("Read list of table names and wrote them to disk");
 
@@ -532,7 +260,7 @@ public class CloudSpannerDatabaseBackup {
                 "Write Table Schema " + tableName,
                 TextIO.write()
                     .to(
-                        getOutputPath(options.getOutputFolder())
+                        Util.getFormattedOutputPath(options.getOutputFolder())
                             + Util.FILE_PATH_FOR_DATABASE_TABLE_SCHEMAS_FOLDER
                             + tableName
                             + "--schema.txt")
@@ -577,7 +305,7 @@ public class CloudSpannerDatabaseBackup {
               "Write Table Names and Num Rows",
               TextIO.write()
                   .to(
-                      getOutputPath(options.getOutputFolder())
+                      Util.getFormattedOutputPath(options.getOutputFolder())
                           + Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES_ROW_COUNTS)
                   .withoutSharding());
       LOG.info("Read list of table names and rows and wrote them to disk");
@@ -612,7 +340,11 @@ public class CloudSpannerDatabaseBackup {
                   + Util.TRANSFORM_NODE_NAME_DELIMITER
                   + entry.getKey(),
               TextIO.write()
-                  .to(getOutputPath(options.getOutputFolder()) + "tables/" + entry.getKey() + "/")
+                  .to(
+                      Util.getFormattedOutputPath(options.getOutputFolder())
+                          + "tables/"
+                          + entry.getKey()
+                          + "/")
                   .withWritableByteChannelFactory(FileBasedSink.CompressionType.GZIP));
     }
 

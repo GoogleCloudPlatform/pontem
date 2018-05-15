@@ -57,6 +57,12 @@ public class UtilTest {
       "CREATE INDEX wordWordsIndex ON two_hundred_million_words(word, words)";
 
   @Test
+  public void testGetOutputPath() {
+    assertEquals("foo/bar/", Util.getFormattedOutputPath("foo/bar"));
+    assertEquals("foo/bar/", Util.getFormattedOutputPath("foo/bar/"));
+  }
+
+  @Test
   public void testGetGcsBucketNameFromDatabaseBackupLocation() throws Exception {
     assertEquals(
         "Bucket name parsing failed",
