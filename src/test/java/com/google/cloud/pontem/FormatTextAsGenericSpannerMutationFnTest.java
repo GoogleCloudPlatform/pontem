@@ -44,5 +44,13 @@ public final class FormatTextAsGenericSpannerMutationFnTest {
     assertEquals(TestHelper.MUTATION_3, simpleFn.apply(TestHelper.STRUCT_3_BASE64_SERIALIZED));
     assertEquals(TestHelper.MUTATION_4, simpleFn.apply(TestHelper.STRUCT_4_BASE64_SERIALIZED));
     assertEquals(TestHelper.MUTATION_5, simpleFn.apply(TestHelper.STRUCT_5_BASE64_SERIALIZED));
+    assertEquals(TestHelper.MUTATION_6, simpleFn.apply(TestHelper.STRUCT_6_BASE64_SERIALIZED));
+  }
+
+  @Test(expected = Exception.class)
+  public void methodUnderTest_emptyAndException() throws Exception {
+    FormatTextAsGenericSpannerMutationFn simpleFn =
+        new FormatTextAsGenericSpannerMutationFn(TestHelper.TABLE_NAME);
+    assertEquals(TestHelper.MUTATION_1, simpleFn.apply("sfkfjsk"));
   }
 }
