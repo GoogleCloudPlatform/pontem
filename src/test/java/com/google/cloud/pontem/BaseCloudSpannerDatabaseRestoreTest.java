@@ -104,7 +104,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
   public void testQueryListOfTablesToRestore_validWithIncludeList() throws Exception {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
-    String[] emptyTableNamesToIncludeInRestore = {"RootTable1", "ChildTable1"};
+    String[] tableNamesToIncludeInRestore = {"RootTable1", "ChildTable1"};
     String[] emptyTableNamesToExcludeFromRestore = new String[0];
 
     Util mockUtil = mock(Util.class);
@@ -119,7 +119,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
         BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
-            emptyTableNamesToIncludeInRestore,
+            tableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
             mockUtil);
     assertEquals("Number of root tables to restore is invalid", 1, parsedTablesToRestore.size());
@@ -138,7 +138,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
     String[] emptyTableNamesToIncludeInRestore = new String[0];
-    String[] emptyTableNamesToExcludeFromRestore = {"RootTable1", "RootTable2", "RootTable3"};
+    String[] tableNamesToExcludeFromRestore = {"RootTable1", "RootTable2", "RootTable3"};
 
     Util mockUtil = mock(Util.class);
     when(mockUtil.getContentsOfFileFromGcs(
@@ -153,7 +153,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
-            emptyTableNamesToExcludeFromRestore,
+            tableNamesToExcludeFromRestore,
             mockUtil);
     assertEquals("Number of root tables to restore is invalid", 1, parsedTablesToRestore.size());
     assertTrue("Root table is not present", parsedTablesToRestore.containsKey("RootTable4"));
@@ -166,11 +166,35 @@ public class BaseCloudSpannerDatabaseRestoreTest {
   }
 
   @Test(expected = Exception.class)
+  public void testQueryListOfTablesToRestore_includeAndExcludeSet() throws Exception {
+    String projectId = "cloud-project-id";
+    String inputGcsPath = "gs://my-bucket/myPath";
+    String[] tableNamesToIncludeInRestore = {"RootTable2"};
+    String[] tableNamesToExcludeFromRestore = {"RootTable1"};
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.getContentsOfFileFromGcs(
+            eq(projectId),
+            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
+        .thenReturn("RootTable1,\nChildTable1,RootTable1\nRootTable2,");
+
+    LinkedHashMap<String, LinkedList<String>> parsedTablesToRestore =
+        BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
+            projectId,
+            inputGcsPath,
+            tableNamesToIncludeInRestore,
+            tableNamesToExcludeFromRestore,
+            mockUtil);
+  }
+
+  @Test(expected = Exception.class)
   public void testQueryListOfTablesToRestore_invalidExcludeList() throws Exception {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
     String[] emptyTableNamesToIncludeInRestore = new String[0];
-    String[] emptyTableNamesToExcludeFromRestore = {"RootTable1"};
+    String[] tableNamesToExcludeFromRestore = {"RootTable1"};
 
     Util mockUtil = mock(Util.class);
     when(mockUtil.getContentsOfFileFromGcs(
@@ -185,7 +209,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             projectId,
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
-            emptyTableNamesToExcludeFromRestore,
+            tableNamesToExcludeFromRestore,
             mockUtil);
   }
 
@@ -193,7 +217,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
   public void testQueryListOfTablesToRestore_invalidIncludeList() throws Exception {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
-    String[] emptyTableNamesToIncludeInRestore = {"ChildTable1"};
+    String[] tableNamesToIncludeInRestore = {"ChildTable1"};
     String[] emptyTableNamesToExcludeFromRestore = new String[0];
 
     Util mockUtil = mock(Util.class);
@@ -208,8 +232,26 @@ public class BaseCloudSpannerDatabaseRestoreTest {
         BaseCloudSpannerDatabaseRestore.queryListOfTablesToRestore(
             projectId,
             inputGcsPath,
-            emptyTableNamesToIncludeInRestore,
+            tableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
             mockUtil);
+  }
+
+  @Test(expected = Exception.class)
+  public void testCreateDatabaseAndTables_noDdlPresent() throws Exception {
+    String projectId = "cloud-project-id";
+    String inputGcsPath = "gs://my-bucket/myPath";
+    String instanceId = "instanceId";
+    String databaseId = "databaseId";
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.getContentsOfFileFromGcs(
+            eq(projectId),
+            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(Util.FILE_PATH_FOR_DATABASE_DDL)))
+        .thenReturn("");
+    BaseCloudSpannerDatabaseRestore.createDatabaseAndTables(
+        projectId, instanceId, databaseId, inputGcsPath, mockUtil);
   }
 }

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -113,5 +114,18 @@ public final class EndToEndHelperTest {
 
     EndToEndHelper.verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, mockUtil);
     assertTrue("Verification of database structure succeeded", true);
+  }
+
+  @Test(expected = Exception.class)
+  public void testVerifyDatabaseStructureAndContent_DdlNotMatching() throws Exception {
+    String projectId = "cloud-project-id";
+    String instanceId = "instance-id";
+    String databaseId = "database-id";
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
+        .thenReturn(ImmutableList.of("CREATE TABLE FooTable {}"));
+
+    EndToEndHelper.verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, mockUtil);
   }
 }
