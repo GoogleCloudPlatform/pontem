@@ -19,7 +19,6 @@
  */
 package com.google.cloud.pontem;
 
-
 import com.google.cloud.spanner.Mutation;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
