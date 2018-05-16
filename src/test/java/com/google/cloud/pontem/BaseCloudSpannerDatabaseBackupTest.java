@@ -88,25 +88,55 @@ public class BaseCloudSpannerDatabaseBackupTest {
 
   @Test(expected = Exception.class)
   public void testGetListOfTablesToBackup_exclusionAndInclusionSet() throws Exception {
-    String[] emptyTableNamesToIncludeInBackup = {"Table0"};
-    String[] emptyTableNamesToExcludeFromBackup = {"Table0"};
+    String[] tableNamesToIncludeInBackup = {"Table0"};
+    String[] tableNamesToExcludeFromBackup = {"Table0"};
 
     ImmutableList<String> tablesToBackup =
         BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
             ImmutableSet.of("Table0", "Table1"),
-            emptyTableNamesToIncludeInBackup,
-            emptyTableNamesToExcludeFromBackup);
+            tableNamesToIncludeInBackup,
+            tableNamesToExcludeFromBackup);
+  }
+
+  @Test(expected = Exception.class)
+  public void testGetListOfTablesToBackup_emptyTables() throws Exception {
+    String[] tableNamesToIncludeInBackup = {"Table0"};
+    String[] tableNamesToExcludeFromBackup = {"Table0"};
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
+            ImmutableSet.of(), tableNamesToIncludeInBackup, tableNamesToExcludeFromBackup);
+  }
+
+  @Test(expected = Exception.class)
+  public void testGetListOfTablesToBackup_excludeTableMissing() throws Exception {
+    String[] tableNamesToIncludeInBackup = {"Table1"};
+    String[] tableNamesToExcludeFromBackup = {"Table0"};
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
+            ImmutableSet.of("Table1"), tableNamesToIncludeInBackup, tableNamesToExcludeFromBackup);
+  }
+
+  @Test(expected = Exception.class)
+  public void testGetListOfTablesToBackup_includeTableMissing() throws Exception {
+    String[] tableNamesToIncludeInBackup = {"Table1"};
+    String[] tableNamesToExcludeFromBackup = {"Table0"};
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
+            ImmutableSet.of("Table0"), tableNamesToIncludeInBackup, tableNamesToExcludeFromBackup);
   }
 
   @Test
   public void testGetListOfTablesToBackup_inclusionListSet() throws Exception {
-    String[] emptyTableNamesToIncludeInBackup = {"Table1"};
+    String[] tableNamesToIncludeInBackup = {"Table1"};
     String[] emptyTableNamesToExcludeFromBackup = new String[0];
 
     ImmutableList<String> tablesToBackup =
         BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
             ImmutableSet.of("Table0", "Table1", "Table2"),
-            emptyTableNamesToIncludeInBackup,
+            tableNamesToIncludeInBackup,
             emptyTableNamesToExcludeFromBackup);
     assertEquals("number of tables to back is wrong", 1, tablesToBackup.size());
     assertEquals("Table1", tablesToBackup.get(0));

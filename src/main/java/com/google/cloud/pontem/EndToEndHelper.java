@@ -137,27 +137,34 @@ public class EndToEndHelper {
           .to(FOO_TABLE_MUTATION_2__COL_INT)
           .build();
 
+  private static final Long PARENT_TABLE_MUTATION_0__COL_FOO_ID = 10l;
+  private static final String PARENT_TABLE_MUTATION_0__COL_BAR_STRING = "hello";
   public static final Mutation PARENT_TABLE_MUTATION_0 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
-          .to(10L)
+          .to(PARENT_TABLE_MUTATION_0__COL_FOO_ID)
           .set("bar_string")
-          .to("hello")
+          .to(PARENT_TABLE_MUTATION_0__COL_BAR_STRING)
           .build();
+
+  private static final Long PARENT_TABLE_MUTATION_1__COL_FOO_ID = Long.MAX_VALUE;
+  private static final String PARENT_TABLE_MUTATION_1__COL_BAR_STRING = "hello_2";
   public static final Mutation PARENT_TABLE_MUTATION_1 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
-          .to(100L)
+          .to(PARENT_TABLE_MUTATION_1__COL_FOO_ID)
           .set("bar_string")
-          .to("hello_2")
+          .to(PARENT_TABLE_MUTATION_1__COL_BAR_STRING)
           .build();
 
-  public static final Mutation CHILD_TABLE_MUTATION =
+  private static final Long CHILD_TABLE_MUTATION_0__COL_FOO_ID = 10l;
+  private static final String CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING = "child_hello";
+  public static final Mutation CHILD_TABLE_MUTATION_0 =
       Mutation.newInsertBuilder(CHILD_TABLE_NAME)
           .set("foo_id")
-          .to(10L)
+          .to(CHILD_TABLE_MUTATION_0__COL_FOO_ID)
           .set("child_bar_string")
-          .to("child_hello")
+          .to(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING)
           .build();
 
   public static final ImmutableList<Mutation> MUTATIONS =
@@ -167,7 +174,7 @@ public class EndToEndHelper {
           FOO_TABLE_MUTATION_2,
           PARENT_TABLE_MUTATION_0,
           PARENT_TABLE_MUTATION_1,
-          CHILD_TABLE_MUTATION);
+          CHILD_TABLE_MUTATION_0);
   public static final ImmutableList<Struct> FOO_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
@@ -196,18 +203,18 @@ public class EndToEndHelper {
   public static final ImmutableList<Struct> PARENT_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("foo_id", Value.int64(10L))
-              .add("bar_string", Value.string("hello"))
+              .add("foo_id", Value.int64(PARENT_TABLE_MUTATION_0__COL_FOO_ID))
+              .add("bar_string", Value.string(PARENT_TABLE_MUTATION_0__COL_BAR_STRING))
               .build(),
           Struct.newBuilder()
-              .add("foo_id", Value.int64(100L))
-              .add("bar_string", Value.string("hello_2"))
+              .add("foo_id", Value.int64(PARENT_TABLE_MUTATION_1__COL_FOO_ID))
+              .add("bar_string", Value.string(PARENT_TABLE_MUTATION_1__COL_BAR_STRING))
               .build());
   public static final ImmutableList<Struct> CHILD_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("foo_id", Value.int64(10L))
-              .add("child_bar_string", Value.string("child_hello"))
+              .add("foo_id", Value.int64(CHILD_TABLE_MUTATION_0__COL_FOO_ID))
+              .add("child_bar_string", Value.string(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING))
               .build());
 
   public static final ImmutableList<String> GOOGLE_CLOUD_SPANNER_DDL =
@@ -610,10 +617,16 @@ public class EndToEndHelper {
       throw new Exception("Contents of colArrayBool do not match");
     }
 
-    if (!childResultSet.get(0).getString("child_bar_string").equals("child_hello")) {
+    if (!childResultSet
+        .get(0)
+        .getString("child_bar_string")
+        .equals(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING)) {
       throw new Exception("Contents of child_bar_string do not match");
     }
-    if (!parentResultSet.get(0).getString("bar_string").equals("hello")) {
+    if (!parentResultSet
+        .get(0)
+        .getString("bar_string")
+        .equals(PARENT_TABLE_MUTATION_0__COL_BAR_STRING)) {
       throw new Exception("Contents of parent bar_string do not match");
     }
   }
