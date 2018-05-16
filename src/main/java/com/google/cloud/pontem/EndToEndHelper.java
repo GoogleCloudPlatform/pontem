@@ -558,24 +558,6 @@ public class EndToEndHelper {
               + MUTATIONS.size());
     }
     // STEP 3b: Check content
-    // STEP 3b1: Check object equality
-    for (int i = 0; i < fooResultSet.size(); i++) {
-      if (!fooResultSet.get(i).equals(FOO_TABLE_STRUCTS.get(i))) {
-        throw new Exception("fooResultSet(" + i + ") does not match expected");
-      }
-    }
-    for (int i = 0; i < parentResultSet.size(); i++) {
-      if (!parentResultSet.get(i).equals(PARENT_TABLE_STRUCTS.get(i))) {
-        throw new Exception("parentResultSet(" + i + ") does not match expected");
-      }
-    }
-    for (int i = 0; i < childResultSet.size(); i++) {
-      if (!childResultSet.get(i).equals(CHILD_TABLE_STRUCTS.get(i))) {
-        throw new Exception("childResultSet(" + i + ") does not match expected");
-      }
-    }
-
-    // Step 3b2: Check equality of some object contents to be extra safe
     if (!fooResultSet.get(0).getString("colString").equals(FOO_TABLE_MUTATION_0__COL_STRING)) {
       throw new Exception("Contents of colString do not match");
     }
