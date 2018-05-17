@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -103,11 +104,15 @@ public abstract class BaseCloudSpannerDatabaseBackup {
     }
 
     if (isTablesToExcludeSet) {
+      // Since we're going to need to exclude some tables, this is going to involve
+      // mutating the set
+      Set<String> modifiedTableNamesWithExclusions = new HashSet<String>(allTableNames);
+
       LOG.info("Tables to exclude set with " + tableNamesToExcludeFromBackup.length + " values");
       // User has specified a list of tables to exclude, so remove those tables.
       for (String tableToExcludeFromBackup : tableNamesToExcludeFromBackup) {
         if (allTableNames.contains(tableToExcludeFromBackup)) {
-          allTableNames.remove(tableToExcludeFromBackup);
+          modifiedTableNamesWithExclusions.remove(tableToExcludeFromBackup);
         } else {
           throw new Exception(
               "Table "
@@ -115,6 +120,7 @@ public abstract class BaseCloudSpannerDatabaseBackup {
                   + " listed to exclude from backup yet table was not found in database");
         }
       }
+      return ImmutableList.copyOf(modifiedTableNamesWithExclusions);
     }
 
     return ImmutableList.copyOf(allTableNames);

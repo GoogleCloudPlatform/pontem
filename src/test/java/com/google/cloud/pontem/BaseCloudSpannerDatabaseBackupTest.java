@@ -20,6 +20,7 @@
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -121,7 +122,7 @@ public class BaseCloudSpannerDatabaseBackupTest {
   @Test(expected = Exception.class)
   public void testGetListOfTablesToBackup_includeTableMissing() throws Exception {
     String[] tableNamesToIncludeInBackup = {"Table1"};
-    String[] tableNamesToExcludeFromBackup = {"Table0"};
+    String[] tableNamesToExcludeFromBackup = new String[0];
 
     ImmutableList<String> tablesToBackup =
         BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
@@ -138,7 +139,21 @@ public class BaseCloudSpannerDatabaseBackupTest {
             ImmutableSet.of("Table0", "Table1", "Table2"),
             tableNamesToIncludeInBackup,
             emptyTableNamesToExcludeFromBackup);
-    assertEquals("number of tables to back is wrong", 1, tablesToBackup.size());
+    assertEquals("number of tables to backup is wrong", 1, tablesToBackup.size());
     assertEquals("Table1", tablesToBackup.get(0));
+  }
+
+  @Test
+  public void testGetListOfTablesToBackup_exclusionListSet() throws Exception {
+    String[] emptyTableNamesToIncludeInBackup = new String[0];
+    String[] tableNamesToExcludeFromBackup = {"Table1"};
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
+            ImmutableSet.of("Table0", "Table1", "Table2"),
+            emptyTableNamesToIncludeInBackup,
+            tableNamesToExcludeFromBackup);
+    assertEquals("number of tables to backup is wrong", 2, tablesToBackup.size());
+    assertFalse("Table1 not excluded", tablesToBackup.contains("Table1"));
   }
 }
