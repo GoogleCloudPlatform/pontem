@@ -20,7 +20,6 @@
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -66,6 +65,35 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
   }
 
   @Test
+  public void testPerformDatabaseBackupIntegrityCheck_gcsMetaDataValid() throws Exception {
+    String projectId = "cloud-spanner-successful-backup";
+    String jobId = "dataflow-backup-job-id";
+    String gcsBucketName = "cloud-spanner-backup-bucket-success";
+    String gcsFolderPath = "subFolder/";
+    boolean shouldCheckRowCountsAgainstGcsMetadataFile = true;
+    boolean shouldSkipWriteRowCountsOfVerifiedBackupToGcs = true;
+
+    Map<String, Long> tableRowCounts = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
+
+    JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
+    String rawTableData = "MyTable100,100\ntableName2,2";
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+        .thenReturn(rawTableData);
+    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
+
+    assertTrue(
+        CloudSpannerDatabaseBackupIntegrityCheck.performDatabaseBackupIntegrityCheck(
+            projectId,
+            jobId,
+            gcsBucketName,
+            gcsFolderPath,
+            shouldCheckRowCountsAgainstGcsMetadataFile,
+            shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+            mockUtil));
+  }
+
+  @Test(expected = DataIntegrityErrorException.class)
   public void testPerformDatabaseBackupIntegrityCheck_invalid() throws Exception {
     String projectId = "cloud-spanner-successful-backup";
     String jobId = "dataflow-backup-job-id";
@@ -82,18 +110,13 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
         .thenReturn("MyTable100\ntableName2\nExtraTable");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
 
-    try {
-      CloudSpannerDatabaseBackupIntegrityCheck.performDatabaseBackupIntegrityCheck(
-          projectId,
-          jobId,
-          gcsBucketName,
-          gcsFolderPath,
-          shouldCheckRowCountsAgainstGcsMetadataFile,
-          shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
-          mockUtil);
-      fail("Invalid data did not throw exception");
-    } catch (DataIntegrityErrorException e) {
-      assertTrue("Invalid data exception thrown", true);
-    }
+    CloudSpannerDatabaseBackupIntegrityCheck.performDatabaseBackupIntegrityCheck(
+        projectId,
+        jobId,
+        gcsBucketName,
+        gcsFolderPath,
+        shouldCheckRowCountsAgainstGcsMetadataFile,
+        shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+        mockUtil);
   }
 }
