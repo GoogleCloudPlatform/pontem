@@ -20,6 +20,7 @@
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -121,7 +122,7 @@ public class BaseCloudSpannerDatabaseBackupTest {
   @Test(expected = Exception.class)
   public void testGetListOfTablesToBackup_includeTableMissing() throws Exception {
     String[] tableNamesToIncludeInBackup = {"Table1"};
-    String[] tableNamesToExcludeFromBackup = {"Table0"};
+    String[] tableNamesToExcludeFromBackup = new String[0];
 
     ImmutableList<String> tablesToBackup =
         BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
@@ -138,7 +139,59 @@ public class BaseCloudSpannerDatabaseBackupTest {
             ImmutableSet.of("Table0", "Table1", "Table2"),
             tableNamesToIncludeInBackup,
             emptyTableNamesToExcludeFromBackup);
-    assertEquals("number of tables to back is wrong", 1, tablesToBackup.size());
+    assertEquals("number of tables to backup is wrong", 1, tablesToBackup.size());
     assertEquals("Table1", tablesToBackup.get(0));
+  }
+
+  @Test
+  public void testGetListOfTablesToBackup_exclusionListSet() throws Exception {
+    String[] emptyTableNamesToIncludeInBackup = new String[0];
+    String[] tableNamesToExcludeFromBackup = {"Table1"};
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getListOfTablesToBackup(
+            ImmutableSet.of("Table0", "Table1", "Table2"),
+            emptyTableNamesToIncludeInBackup,
+            tableNamesToExcludeFromBackup);
+    assertEquals("number of tables to backup is wrong", 2, tablesToBackup.size());
+    assertFalse("Table1 not excluded", tablesToBackup.contains("Table1"));
+  }
+
+  @Test
+  public void testGetTableNamesBeingBackedUp() throws Exception {
+    String projectId = "";
+    String instance = "";
+    String databaseId = "";
+    String tableNamesQuery = "";
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.performSingleSpannerQuery(
+            eq(projectId),
+            eq(instance),
+            eq(databaseId),
+            eq(BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
+        .thenReturn(
+            ImmutableList.of(
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName1")
+                    .set("parent_table_name")
+                    .to("")
+                    .build(),
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName2")
+                    .set("parent_table_name")
+                    .to("")
+                    .build()));
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getTableNamesBeingBackedUp(
+            projectId,
+            instance,
+            databaseId,
+            BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY,
+            mockUtil);
+    assertEquals("Wrong number of tables backuped up", 2, tablesToBackup.size());
   }
 }

@@ -81,6 +81,11 @@ public class UtilTest {
         Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName2/"));
   }
 
+  @Test(expected = Exception.class)
+  public void testGetGcsBucketNameFromDatabaseBackupLocation_invalidScheme() throws Exception {
+    Util.getGcsBucketNameFromDatabaseBackupLocation("cs://cloud-spanner-backup-test/multi-backup");
+  }
+
   @Test
   public void testGetGcsFolderPathFromDatabaseBackupLocation() throws Exception {
     assertEquals(
@@ -91,6 +96,15 @@ public class UtilTest {
         "Folder path parsing failed",
         "/multi-backup/",
         Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/"));
+    assertEquals(
+        "Folder path parsing failed",
+        "/",
+        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName"));
+  }
+
+  @Test(expected = Exception.class)
+  public void testGetGcsFolderPathFromDatabaseBackupLocation_invalid() throws Exception {
+    Util.getGcsFolderPathFromDatabaseBackupLocation("cs://bucketName/multi-backup/djskd");
   }
 
   @Test
@@ -121,6 +135,12 @@ public class UtilTest {
             "MyTable100", 100L, "THEseven_words", 79L, "two_hundred_million_words", 200000000L),
         Util.convertTableMetadataContentsToMap(
             "MyTable100,100\nTHEseven_words,79\ntwo_hundred_million_words,200000000"));
+  }
+
+  @Test(expected = Exception.class)
+  public void testConvertTableMetadataContentsToMap_invalidFormat() throws Exception {
+    Util.convertTableMetadataContentsToMap(
+        "AlbumPromotions\nseven_words,7\ntwo_hundred_million_words,200000000");
   }
 
   @Test
