@@ -114,6 +114,7 @@ import org.apache.beam.sdk.values.PCollectionView;
  * https://cloud.google.com/dataflow/docs/concepts/regional-endpoints
  */
 public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBackup {
+
   public static void main(String[] args) throws Exception {
     // STEP 1: Setup pipeline and Spanner configuration
     final BaseCloudSpannerBackupOptions options =
@@ -132,8 +133,19 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             .withInstanceId(options.getInputSpannerInstanceId())
             .withDatabaseId(options.getInputSpannerDatabaseId());
 
-    // STEP 2a: Check proposed backup location
     final Util util = new Util();
+    constructPipeline(p, options, spannerConfig, util);
+
+    // STEP 9: Trigger pipeline
+    PipelineResult pipelineResult = p.run();
+    pipelineResult.waitUntilFinish();
+  }
+
+  public static void constructPipeline(
+      Pipeline p, BaseCloudSpannerBackupOptions options, SpannerConfig spannerConfig, Util util)
+      throws Exception {
+
+    // STEP 2a: Check proposed backup location
     if (!options.getShouldOverwriteGcsFileBackup()) {
       int numBlobs =
           util.getNumGcsBlobsInGcsFilePath(
@@ -347,9 +359,5 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
                           + "/")
                   .withWritableByteChannelFactory(FileBasedSink.CompressionType.GZIP));
     }
-
-    // STEP 9: Trigger pipeline
-    PipelineResult pipelineResult = p.run();
-    pipelineResult.waitUntilFinish();
   }
 }
