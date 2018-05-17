@@ -45,7 +45,7 @@ import org.apache.commons.cli.ParseException;
 public class EndToEndCleanupUtil {
   private static final Logger LOG = Logger.getLogger(EndToEndCleanupUtil.class.getName());
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud Storage Bucket. */

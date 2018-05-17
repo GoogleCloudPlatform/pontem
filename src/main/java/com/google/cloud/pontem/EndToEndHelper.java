@@ -241,7 +241,7 @@ public class EndToEndHelper {
               + ") PRIMARY KEY(foo_id, child_bar_string DESC),\n"
               + "  INTERLEAVE IN PARENT parent_table ON DELETE CASCADE");
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud Storage Absolute Path to Backup Folder. */
