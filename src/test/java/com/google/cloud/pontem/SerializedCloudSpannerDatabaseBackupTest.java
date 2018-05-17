@@ -19,7 +19,17 @@
  */
 package com.google.cloud.pontem;
 
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.google.cloud.spanner.Struct;
+import com.google.common.collect.ImmutableList;
+import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
@@ -51,5 +61,72 @@ public class SerializedCloudSpannerDatabaseBackupTest {
 
     // Run the pipeline.
     pipeline.run().waitUntilFinish();
+  }
+
+  @Test
+  public void testConstructPipeline() throws Exception {
+    String projectId = "fooP";
+    String instanceId = "fooI";
+    String databaseId = "fooD";
+    String outputFolder = "gs://foo/myPath";
+
+    BaseCloudSpannerBackupOptions options =
+        PipelineOptionsFactory.fromArgs(
+                "--projectId=" + projectId,
+                "--inputSpannerInstanceId=" + instanceId,
+                "--inputSpannerDatabaseId=" + databaseId,
+                "--outputFolder=" + outputFolder,
+                "--shouldBackupDatabaseDdl=false")
+            .withValidation()
+            .as(BaseCloudSpannerBackupOptions.class);
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.performSingleSpannerQuery(
+            eq(projectId),
+            eq(instanceId),
+            eq(databaseId),
+            eq(BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
+        .thenReturn(
+            ImmutableList.of(
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName1")
+                    .set("parent_table_name")
+                    .to("")
+                    .build(),
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName2")
+                    .set("parent_table_name")
+                    .to("")
+                    .build()));
+
+    String tableNamesBeingBackedUp =
+        "SELECT table_name, parent_table_name FROM information_schema.tables AS t WHERE t.table_catalog = '' and t.table_schema = '' and table_name IN (\"tableName2\",\"tableName1\") ORDER BY parent_table_name DESC";
+    when(mockUtil.performSingleSpannerQuery(
+            eq(projectId), eq(instanceId), eq(databaseId), eq(tableNamesBeingBackedUp)))
+        .thenReturn(
+            ImmutableList.of(
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName1")
+                    .set("parent_table_name")
+                    .to("")
+                    .build(),
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName2")
+                    .set("parent_table_name")
+                    .to("")
+                    .build()));
+
+    SpannerConfig mockSpannerConfig = mock(SpannerConfig.class);
+
+    TestPipeline testPipeline = TestPipeline.create();
+    SerializedCloudSpannerDatabaseBackup.constructPipeline(
+        testPipeline, options, mockSpannerConfig, mockUtil);
+
+    verify(mockUtil, times(2))
+        .performSingleSpannerQuery(anyString(), anyString(), anyString(), anyString());
   }
 }
