@@ -156,4 +156,42 @@ public class BaseCloudSpannerDatabaseBackupTest {
     assertEquals("number of tables to backup is wrong", 2, tablesToBackup.size());
     assertFalse("Table1 not excluded", tablesToBackup.contains("Table1"));
   }
+
+  @Test
+  public void testGetTableNamesBeingBackedUp() throws Exception {
+    String projectId = "";
+    String instance = "";
+    String databaseId = "";
+    String tableNamesQuery = "";
+
+    Util mockUtil = mock(Util.class);
+    when(mockUtil.performSingleSpannerQuery(
+            eq(projectId),
+            eq(instance),
+            eq(databaseId),
+            eq(BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
+        .thenReturn(
+            ImmutableList.of(
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName1")
+                    .set("parent_table_name")
+                    .to("")
+                    .build(),
+                Struct.newBuilder()
+                    .set("table_name")
+                    .to("tableName2")
+                    .set("parent_table_name")
+                    .to("")
+                    .build()));
+
+    ImmutableList<String> tablesToBackup =
+        BaseCloudSpannerDatabaseBackup.getTableNamesBeingBackedUp(
+            projectId,
+            instance,
+            databaseId,
+            BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY,
+            mockUtil);
+    assertEquals("Wrong number of tables backuped up", 2, tablesToBackup.size());
+  }
 }

@@ -83,8 +83,7 @@ public class UtilTest {
 
   @Test(expected = Exception.class)
   public void testGetGcsBucketNameFromDatabaseBackupLocation_invalidScheme() throws Exception {
-    Util.getGcsBucketNameFromDatabaseBackupLocation(
-        "cs://cloud-spanner-backup-test/multi-backup");
+    Util.getGcsBucketNameFromDatabaseBackupLocation("cs://cloud-spanner-backup-test/multi-backup");
   }
 
   @Test
@@ -140,9 +139,8 @@ public class UtilTest {
 
   @Test(expected = Exception.class)
   public void testConvertTableMetadataContentsToMap_invalidFormat() throws Exception {
-        Util.convertTableMetadataContentsToMap(
-            "AlbumPromotions\nseven_words,7\ntwo_hundred_million_words,200000000");
-
+    Util.convertTableMetadataContentsToMap(
+        "AlbumPromotions\nseven_words,7\ntwo_hundred_million_words,200000000");
   }
 
   @Test

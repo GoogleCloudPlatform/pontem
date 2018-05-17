@@ -28,9 +28,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.cli.Option;
 import java.util.Collection;
 import java.util.Map;
+import org.apache.commons.cli.Option;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
