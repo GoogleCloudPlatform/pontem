@@ -58,7 +58,7 @@ import org.apache.commons.cli.ParseException;
  */
 public class CloudSpannerDatabaseBackupIntegrityCheck {
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud project ID. */
