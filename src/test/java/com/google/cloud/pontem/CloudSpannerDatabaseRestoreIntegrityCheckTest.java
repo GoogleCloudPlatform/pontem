@@ -19,6 +19,7 @@
  */
 package com.google.cloud.pontem;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
@@ -27,6 +28,8 @@ import static org.mockito.Mockito.when;
 
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.cli.Option;
+import java.util.Collection;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -112,5 +115,12 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
         gcsFolderPath,
         requireAllTablesRestored,
         mockUtil);
+  }
+
+  @Test
+  public void testConfigureCommandlineOptions() throws Exception {
+    Collection<Option> options =
+        CloudSpannerDatabaseRestoreIntegrityCheck.configureCommandlineOptions().getOptions();
+    assertEquals("All options present", 5, options.size());
   }
 }
