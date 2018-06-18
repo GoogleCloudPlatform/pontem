@@ -30,7 +30,7 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.Transaction;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.options.ValueProvider.StaticValueProvider;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
@@ -129,9 +129,9 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
 
     final SpannerConfig spannerConfig =
         SpannerConfig.create()
-            .withHost(options.getSpannerHost())
-            .withInstanceId(options.getInputSpannerInstanceId())
-            .withDatabaseId(options.getInputSpannerDatabaseId());
+            .withHost(StaticValueProvider.of(options.getSpannerHost()))
+            .withInstanceId(StaticValueProvider.of(options.getInputSpannerInstanceId()))
+            .withDatabaseId(StaticValueProvider.of(options.getInputSpannerDatabaseId()));
 
     final Util util = new Util();
     constructPipeline(p, options, spannerConfig, util);
@@ -207,30 +207,18 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
     // it is possible a table could be missed or added to the backup OR parent-child table
     // relationships could change during run-time.
 
-    // Remove when https://github.com/apache/beam/pull/4946 is live
-    //    final PCollection<Struct> collectionOfTableNamesAsStruct =
-    //        p.apply(
-    //            "Read Table List To Backup",
-    //            SpannerIO.read()
-    //                .withSpannerConfig(spannerConfig)
-    //                .withQuery(getSqlQueryForTablesToBackup(tableNamesToBackup))
-    //                .withTransaction(transaction));
-
-    // This is done as meta-data about the backup is stored for both verification and for
-    // restoration.
-    final PCollection<String> collectionOfTableNames =
+    final PCollection<Struct> collectionOfTableNamesAsStruct =
         p.apply(
-            Create.of(
-                getTableNamesBeingBackedUp(
-                    options.getProjectId(),
-                    options.getInputSpannerInstanceId(),
-                    options.getInputSpannerDatabaseId(),
-                    getSqlQueryForTablesToBackup(tableNamesToBackup),
-                    util)));
+            "Read Table List To Backup",
+            SpannerIO.read()
+                .withSpannerConfig(spannerConfig)
+                .withQuery(getSqlQueryForTablesToBackup(tableNamesToBackup))
+                .withTransaction(transaction)
+                .withBatching(false));
 
-    // Remove when https://github.com/apache/beam/pull/4946 is live
-    //        collectionOfTableNamesAsStruct.apply(
-    //            "Map Table Names", MapElements.via(new FormatSpannerTablesListStructAsTextFn()));
+    final PCollection<String> collectionOfTableNames =
+        collectionOfTableNamesAsStruct.apply(
+            "Map Table Names", MapElements.via(new FormatSpannerTablesListStructAsTextFn()));
 
     // Contents can be safely written to one file as contents
     // would not be more than a hundred rows in normal cases
