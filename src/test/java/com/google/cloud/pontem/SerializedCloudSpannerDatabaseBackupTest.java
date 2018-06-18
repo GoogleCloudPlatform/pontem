@@ -126,7 +126,7 @@ public class SerializedCloudSpannerDatabaseBackupTest {
     SerializedCloudSpannerDatabaseBackup.constructPipeline(
         testPipeline, options, mockSpannerConfig, mockUtil);
 
-    verify(mockUtil, times(2))
+    verify(mockUtil, times(1))
         .performSingleSpannerQuery(anyString(), anyString(), anyString(), anyString());
   }
 }
