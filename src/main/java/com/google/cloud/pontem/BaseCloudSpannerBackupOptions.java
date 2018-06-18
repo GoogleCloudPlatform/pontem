@@ -67,30 +67,6 @@ public interface BaseCloudSpannerBackupOptions extends PipelineOptions {
   void setShouldOverwriteGcsFileBackup(Boolean value);
 
   /**
-   * Whether to query table row counts.
-   *
-   * <p>If the table row counts are queried, an additional level of data-integrity verification can
-   * be provided (i.e., we can ensure that the number of rows in each table equals the number of
-   * rows backed up for each table). However, querying the table row counts requires triggering a
-   * table-scan which can be very time and resource consuming.
-   */
-  @Description("Whether to query table row counts")
-  @Default.Boolean(false)
-  Boolean getShouldQueryTableRowCounts();
-
-  void setShouldQueryTableRowCounts(Boolean value);
-
-  /**
-   * Get whether to query table schema. If the table schema is queried, it will be written to disk
-   * in GCS. This preserves a snapshot of what the database schema looked like at backup time.
-   */
-  @Description("Whether to query table schema")
-  @Default.Boolean(false)
-  Boolean getShouldQueryTableSchema();
-
-  void setShouldQueryTableSchema(Boolean value);
-
-  /**
    * Whether to backup DDL.
    *
    * <p>Cloud Spanner creates tables and indexes within a database using DDL (Data Definition

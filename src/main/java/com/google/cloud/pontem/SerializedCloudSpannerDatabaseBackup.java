@@ -31,10 +31,8 @@ import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.io.gcp.spanner.Transaction;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.ValueProvider.StaticValueProvider;
-import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.PCollectionView;
 
 /**
@@ -134,16 +132,6 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             .withDatabaseId(StaticValueProvider.of(options.getInputSpannerDatabaseId()));
 
     final Util util = new Util();
-    constructPipeline(p, options, spannerConfig, util);
-
-    // STEP 9: Trigger pipeline
-    PipelineResult pipelineResult = p.run();
-    pipelineResult.waitUntilFinish();
-  }
-
-  public static void constructPipeline(
-      Pipeline p, BaseCloudSpannerBackupOptions options, SpannerConfig spannerConfig, Util util)
-      throws Exception {
 
     // STEP 2a: Check proposed backup location
     if (!options.getShouldOverwriteGcsFileBackup()) {
@@ -193,6 +181,21 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             options.getTablesToExcludeFromBackup());
     LOG.info("Final list of tables to backup includes (" + tableNamesToBackup.size() + ") tables.");
 
+    constructPipeline(p, options, spannerConfig, util, tableNamesToBackup);
+
+    // STEP 7: Trigger pipeline
+    PipelineResult pipelineResult = p.run();
+    pipelineResult.waitUntilFinish();
+  }
+
+  public static void constructPipeline(
+      Pipeline p,
+      BaseCloudSpannerBackupOptions options,
+      SpannerConfig spannerConfig,
+      Util util,
+      ImmutableList<String> tableNamesToBackup)
+      throws Exception {
+
     // STEP 3: Setup single transaction for all queries of Spanner.
     // This ensures a consistent view of the data.
     final PCollectionView<Transaction> transaction =
@@ -232,86 +235,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             .withoutSharding());
     LOG.info("Read list of table names and wrote them to disk");
 
-    // STEP 5: Get schema for tables to backup, and save to disk.
-    // Table info https://cloud.google.com/spanner/docs/information-schema#table_columns
-    if (options.getShouldQueryTableSchema()) {
-      for (String tableName : tableNamesToBackup) {
-        p.apply(
-                "Read Table Schema " + tableName,
-                SpannerIO.read()
-                    .withSpannerConfig(spannerConfig)
-                    .withQuery(
-                        "SELECT t.table_catalog, t.table_schema, t.table_name, t.column_name, "
-                            + "t.ordinal_position, t.column_default, t.data_type, t.is_nullable, "
-                            + "t.spanner_type FROM information_schema.columns AS t "
-                            + "WHERE t.table_name = '"
-                            + tableName
-                            + "' "
-                            + "ORDER BY t.table_catalog, t.table_schema, t.table_name, "
-                            + "t.ordinal_position")
-                    .withTransaction(transaction))
-            .apply(
-                "Map Table Schema " + tableName,
-                MapElements.via(new FormatSpannerTableSchemaStructAsTextFn()))
-            // Contents can be safely written to one file as contents
-            // would not be more than a hundred rows in normal cases
-            // and a few thousand rows in extreme cases
-            .apply(
-                "Write Table Schema " + tableName,
-                TextIO.write()
-                    .to(
-                        Util.getFormattedOutputPath(options.getOutputFolder())
-                            + Util.FILE_PATH_FOR_DATABASE_TABLE_SCHEMAS_FOLDER
-                            + tableName
-                            + "--schema.txt")
-                    .withoutSharding());
-      }
-    }
-
-    // STEP 6: Retrieve and store the number of rows per table at transaction time.
-    if (options.getShouldQueryTableRowCounts()) {
-      // STEP 6a: Get number of rows per table at transaction time.
-      final Map<String, PCollection<Struct>> mapOfTableNamesToNumRows = Maps.newHashMap();
-      PCollectionList<Struct> collections = PCollectionList.empty(p);
-      for (String tableName : tableNamesToBackup) {
-        mapOfTableNamesToNumRows.put(
-            tableName,
-            p.apply(
-                "Read Row Count " + tableName,
-                SpannerIO.read()
-                    .withSpannerConfig(spannerConfig)
-                    .withQuery(
-                        "SELECT COUNT(*) as num_rows, '"
-                            + tableName
-                            + "' as table_name FROM "
-                            + tableName
-                            + ";")
-                    .withTransaction(transaction)));
-        collections = collections.and(mapOfTableNamesToNumRows.get(tableName));
-      }
-
-      PCollection<Struct> tableNamesAndNumRows = collections.apply(Flatten.<Struct>pCollections());
-
-      // STEP 6b: Write table name and number of rows to disk.
-      // This is used for verification purposes later in another file.
-      tableNamesAndNumRows
-          .apply(
-              "Map table names and row counts",
-              MapElements.via(new FormatSpannerTableRowCountsStructAsTextFn()))
-          // Contents can be safely written to one file as contents
-          // would not be more than a hundred rows in normal cases
-          // and a few thousand rows in extreme cases
-          .apply(
-              "Write Table Names and Num Rows",
-              TextIO.write()
-                  .to(
-                      Util.getFormattedOutputPath(options.getOutputFolder())
-                          + Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES_ROW_COUNTS)
-                  .withoutSharding());
-      LOG.info("Read list of table names and rows and wrote them to disk");
-    }
-
-    // STEP 7: Read underlying Spanner data from database
+    // STEP 5: Read underlying Spanner data from database
     // Using a for-loop since query results containing table names cannot be materialized
     // halfway through the pipeline.
     final Map<String, PCollection<Struct>> mapOfTableNamesToPCollections = Maps.newHashMap();
@@ -326,7 +250,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
                   .withTransaction(transaction)));
     }
 
-    // STEP 8: Write underlying Spanner data to disk
+    // STEP 6: Write underlying Spanner data to disk
     for (Map.Entry<String, PCollection<Struct>> entry : mapOfTableNamesToPCollections.entrySet()) {
       entry
           .getValue()
