@@ -62,7 +62,6 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
             jobId,
             gcsBucketName,
             gcsFolderPath,
-            shouldCheckRowCountsAgainstGcsMetadataFile,
             shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
             mockUtil));
   }
@@ -91,7 +90,6 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
             jobId,
             gcsBucketName,
             gcsFolderPath,
-            shouldCheckRowCountsAgainstGcsMetadataFile,
             shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
             mockUtil));
   }
@@ -118,7 +116,6 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
         jobId,
         gcsBucketName,
         gcsFolderPath,
-        shouldCheckRowCountsAgainstGcsMetadataFile,
         shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
         mockUtil);
   }
@@ -127,6 +124,6 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
   public void testConfigureCommandlineOptions() throws Exception {
     Collection<Option> options =
         CloudSpannerDatabaseBackupIntegrityCheck.configureCommandlineOptions().getOptions();
-    assertEquals("All options present", 5, options.size());
+    assertEquals("All options present", 4, options.size());
   }
 }

@@ -92,17 +92,6 @@ mvn compile exec:java \
                   --job=2017-10-25_11_18_28-6233650047978038157"
 ```
 
-A sample run that requires checking row counts against the meta-data file:
-
-```bash
-mvn compile exec:java \
-     -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackupIntegrityCheck \
-     -Dexec.args="--project=my-cloud-spanner-project \
-                  --databaseBackupLocation=gs://my-cloud-spanner-project/multi-backup \
-                  --job=2017-10-25_11_18_28-6233650047978038157 \
-                  --checkRowCountsAgainstGcsMetadataFile=true"
-```
-
 ## Restore
 A simple restore of a database:
 
