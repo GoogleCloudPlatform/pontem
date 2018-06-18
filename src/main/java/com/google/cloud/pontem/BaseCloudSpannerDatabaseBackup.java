@@ -19,7 +19,6 @@ import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -143,25 +142,5 @@ public abstract class BaseCloudSpannerDatabaseBackup {
     query = query.substring(0, query.length() - 1);
     query += ") ORDER BY parent_table_name DESC";
     return query;
-  }
-
-  /**
-   * Temporary workaround put in until https://github.com/apache/beam/pull/4946 is live. Gets the
-   * list of tables to backup.
-   */
-  public static ImmutableList<String> getTableNamesBeingBackedUp(
-      String projectId, String instance, String databaseId, String tableNamesQuery, Util util) {
-    ImmutableList<Struct> tableNames =
-        util.performSingleSpannerQuery(projectId, instance, databaseId, tableNamesQuery);
-    ArrayList<String> tableNamesAsStrings = new ArrayList<String>();
-    for (Struct inputRow : tableNames) {
-      String parentTableName = "";
-      if (!inputRow.isNull("parent_table_name")) {
-        parentTableName = inputRow.getString("parent_table_name");
-      }
-      tableNamesAsStrings.add(inputRow.getString("table_name") + "," + parentTableName);
-    }
-
-    return ImmutableList.copyOf(tableNamesAsStrings);
   }
 }

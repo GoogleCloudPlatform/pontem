@@ -25,6 +25,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.ValueProvider.StaticValueProvider;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
 
@@ -94,9 +95,9 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
     // STEP 1b: Setup Spanner configuration
     final SpannerConfig spannerConfig =
         SpannerConfig.create()
-            .withHost(options.getSpannerHost())
-            .withInstanceId(options.getOutputSpannerInstanceId())
-            .withDatabaseId(options.getOutputSpannerDatabaseId());
+            .withHost(StaticValueProvider.of(options.getSpannerHost()))
+            .withInstanceId(StaticValueProvider.of(options.getOutputSpannerInstanceId()))
+            .withDatabaseId(StaticValueProvider.of(options.getOutputSpannerDatabaseId()));
 
     // STEP 2: Check whether to re-create database and tables
     if (options.getShouldCreateDatabaseAndTables()) {
