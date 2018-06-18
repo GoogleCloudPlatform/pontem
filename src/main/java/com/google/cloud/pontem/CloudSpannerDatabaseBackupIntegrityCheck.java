@@ -152,7 +152,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
         util.getContentsOfFileFromGcs(
             projectId, gcsBucketName, gcsFolderPath, Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
 
-    // STEP 2c: Parse table names file into Set
+    // STEP 2b: Parse table names file into Set
     Set<String> tableNamesFromGcs = Util.convertTablenamesIntoSet(rawContentsOfTableNames);
 
     // STEP 3: Perform rudamentary check to ensure table names match
