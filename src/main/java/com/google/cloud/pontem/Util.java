@@ -155,7 +155,7 @@ public class Util {
 
   /**
    * Return structs from a single query. Result structs must fit into memory, so these cannot be
-   * huge queries.)
+   * huge queries.
    */
   public ImmutableList<Struct> performSingleSpannerReadQuery(
       String projectId, String instance, String databaseId, String querySql) {
