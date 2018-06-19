@@ -149,6 +149,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
       }
     }
 
+    final Timestamp timestampForDb = Timestamp.now();
     // STEP 2b: Save DDL to disk
     if (options.getShouldBackupDatabaseDdl()) {
       final ImmutableList<String> databaseDdl =
@@ -173,7 +174,8 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             options.getProjectId(),
             options.getInputSpannerInstanceId(),
             options.getInputSpannerDatabaseId(),
-            util);
+            util,
+            timestampForDb);
     final ImmutableList<String> tableNamesToBackup =
         getListOfTablesToBackup(
             allTableNames,
@@ -181,7 +183,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             options.getTablesToExcludeFromBackup());
     LOG.info("Final list of tables to backup includes (" + tableNamesToBackup.size() + ") tables.");
 
-    constructPipeline(p, options, spannerConfig, util, tableNamesToBackup);
+    constructPipeline(p, options, spannerConfig, util, tableNamesToBackup, timestampForDb);
 
     // STEP 7: Trigger pipeline
     PipelineResult pipelineResult = p.run();
@@ -193,7 +195,8 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
       BaseCloudSpannerBackupOptions options,
       SpannerConfig spannerConfig,
       Util util,
-      ImmutableList<String> tableNamesToBackup)
+      ImmutableList<String> tableNamesToBackup,
+      Timestamp timestampForDb)
       throws Exception {
 
     // STEP 3: Setup single transaction for all queries of Spanner.
@@ -202,7 +205,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
         p.apply(
             SpannerIO.createTransaction()
                 .withSpannerConfig(spannerConfig)
-                .withTimestampBound(TimestampBound.ofReadTimestamp(Timestamp.now())));
+                .withTimestampBound(TimestampBound.ofReadTimestamp(timestampForDb)));
     LOG.info("Created consistent transaction for querying Cloud Spanner instance");
 
     // STEP 4: Query list of tables at read-time. This is done to ensure that the table

@@ -15,6 +15,7 @@
  */
 package com.google.cloud.pontem;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,9 +40,10 @@ public abstract class BaseCloudSpannerDatabaseBackup {
    * @return all table names in a database.
    */
   public static ImmutableSet<String> queryListOfAllTablesInDatabase(
-      String projectId, String instance, String databaseId, Util util) {
+      String projectId, String instance, String databaseId, Util util, Timestamp timestampForDb) {
     ImmutableList<Struct> resultSet =
-        util.performSingleSpannerQuery(projectId, instance, databaseId, LIST_ALL_TABLES_SQL_QUERY);
+        util.performSingleSpannerReadQueryAtTimestamp(
+            projectId, instance, databaseId, LIST_ALL_TABLES_SQL_QUERY, timestampForDb);
     Set<String> tableNames = Sets.newHashSet();
     for (Struct row : resultSet) {
       tableNames.add(row.getString(0));
