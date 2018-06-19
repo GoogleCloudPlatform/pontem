@@ -94,21 +94,21 @@ public final class EndToEndHelperTest {
     when(mockUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
         .thenReturn(EndToEndHelper.GOOGLE_CLOUD_SPANNER_DDL);
 
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.FOO_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.FOO_TABLE_STRUCTS);
 
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.PARENT_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.PARENT_TABLE_STRUCTS);
 
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,12 +55,14 @@ public class BaseCloudSpannerDatabaseBackupTest {
     String instance = "gs://my-bucket/myPath";
     String databaseId = "";
 
+    Timestamp readTimestamp = Timestamp.now();
     Util mockUtil = mock(Util.class);
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockUtil.performSingleSpannerReadQueryAtTimestamp(
             eq(projectId),
             eq(instance),
             eq(databaseId),
-            eq(BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY)))
+            eq(BaseCloudSpannerDatabaseBackup.LIST_ALL_TABLES_SQL_QUERY),
+            eq(readTimestamp)))
         .thenReturn(
             ImmutableList.of(
                 Struct.newBuilder().set("table_name").to("tableName1").build(),
@@ -68,7 +71,7 @@ public class BaseCloudSpannerDatabaseBackupTest {
     ImmutableSet<String> expected = ImmutableSet.of("tableName1", "tableName2");
     ImmutableSet<String> actual =
         BaseCloudSpannerDatabaseBackup.queryListOfAllTablesInDatabase(
-            projectId, instance, databaseId, mockUtil);
+            projectId, instance, databaseId, mockUtil, readTimestamp);
     assertEquals(expected, actual);
   }
 

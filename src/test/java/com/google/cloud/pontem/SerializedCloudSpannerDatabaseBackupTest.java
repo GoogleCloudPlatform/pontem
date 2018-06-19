@@ -21,6 +21,7 @@ package com.google.cloud.pontem;
 
 import static org.mockito.Mockito.mock;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
@@ -79,9 +80,11 @@ public class SerializedCloudSpannerDatabaseBackupTest {
 
     SpannerConfig mockSpannerConfig = mock(SpannerConfig.class);
 
+    Timestamp readTimestamp = Timestamp.now();
+
     ImmutableList<String> tablesToBackup = ImmutableList.of("tableName1", "tableName2");
     TestPipeline testPipeline = TestPipeline.create();
     SerializedCloudSpannerDatabaseBackup.constructPipeline(
-        testPipeline, options, mockSpannerConfig, mockUtil, tablesToBackup);
+        testPipeline, options, mockSpannerConfig, mockUtil, tablesToBackup, readTimestamp);
   }
 }

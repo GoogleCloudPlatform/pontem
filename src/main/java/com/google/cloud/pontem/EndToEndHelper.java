@@ -532,17 +532,17 @@ public class EndToEndHelper {
 
     // STEP 2: Check Database Content
     ImmutableList<Struct> fooResultSet =
-        util.performSingleSpannerQuery(
+        util.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + FOO_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + FOO_TABLE_NAME + " = " + fooResultSet.size());
 
     ImmutableList<Struct> parentResultSet =
-        util.performSingleSpannerQuery(
+        util.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + PARENT_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + PARENT_TABLE_NAME + " = " + parentResultSet.size());
 
     ImmutableList<Struct> childResultSet =
-        util.performSingleSpannerQuery(
+        util.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + CHILD_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + CHILD_TABLE_NAME + " = " + childResultSet.size());
 

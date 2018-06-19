@@ -29,6 +29,7 @@ import com.google.api.services.dataflow.Dataflow;
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.api.services.dataflow.model.MetricStructuredName;
 import com.google.api.services.dataflow.model.MetricUpdate;
+import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Database;
 import com.google.cloud.spanner.DatabaseAdminClient;
 import com.google.cloud.spanner.DatabaseClient;
@@ -41,6 +42,7 @@ import com.google.cloud.spanner.SpannerException;
 import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Statement;
 import com.google.cloud.spanner.Struct;
+import com.google.cloud.spanner.TimestampBound;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -153,10 +155,24 @@ public class Util {
 
   /**
    * Return structs from a single query. Result structs must fit into memory, so these cannot be
-   * huge queries.
+   * huge queries. If you want to just use the current timestamp, pass Timestamp.now()
    */
-  public ImmutableList<Struct> performSingleSpannerQuery(
+  public ImmutableList<Struct> performSingleSpannerReadQuery(
       String projectId, String instance, String databaseId, String querySql) {
+    return performSingleSpannerReadQueryAtTimestamp(
+        projectId, instance, databaseId, querySql, Timestamp.now());
+  }
+
+  /**
+   * Return structs from a single query. Result structs must fit into memory, so these cannot be
+   * huge queries. If you want to just use the current timestamp, pass Timestamp.now()
+   */
+  public ImmutableList<Struct> performSingleSpannerReadQueryAtTimestamp(
+      String projectId,
+      String instance,
+      String databaseId,
+      String querySql,
+      Timestamp readTimestamp) {
     LOG.info("Begin performing single Spanner query on database " + databaseId);
     SpannerOptions options = Util.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
@@ -166,7 +182,10 @@ public class Util {
       DatabaseId db = DatabaseId.of(projectId, instance, databaseId);
       DatabaseClient dbClient = spanner.getDatabaseClient(db);
 
-      ResultSet resultSet = dbClient.singleUse().executeQuery(Statement.of(querySql));
+      ResultSet resultSet =
+          dbClient
+              .singleUse(TimestampBound.ofReadTimestamp(readTimestamp))
+              .executeQuery(Statement.of(querySql));
       while (resultSet.next()) {
         resultsAsStruct.add(resultSet.getCurrentRowAsStruct());
       }
