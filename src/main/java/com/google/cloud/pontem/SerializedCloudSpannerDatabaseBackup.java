@@ -53,7 +53,7 @@ import org.apache.beam.sdk.values.PCollectionView;
  *   -Pdataflow-runner
  * </pre>
  *
- * <p>A sample backup that queries and saves the table row counts while not saving table schemas:
+ * <p>A sample backup that only includes "Sales" -- meaning only the "Sales" table will be backed-up.
  *
  * <pre>
  * mvn compile exec:java \
@@ -65,45 +65,6 @@ import org.apache.beam.sdk.values.PCollectionView;
  *                --inputSpannerDatabaseId=words2 \
  *                --outputFolder=gs://my-cloud-spanner-project/backup_today \
  *                --projectId=my-cloud-spanner-project \
- *                --shouldQueryTableRowCounts=true \
- *                --shouldQueryTableSchema=false" \
- *   -Pdataflow-runner
- * </pre>
- *
- * <p>A sample backup that queries and saves the table row counts while not saving table schemas and
- * also exclude table name "Sales" -- meaning all tables will be backed-up except "Sales":
- *
- * <pre>
- * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
- *   -Dexec.args="--runner=DataflowRunner \
- *                --project=my-cloud-spanner-project \
- *                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
- *                --inputSpannerInstanceId=my-cloud-spanner-project-db \
- *                --inputSpannerDatabaseId=words2 \
- *                --outputFolder=gs://my-cloud-spanner-project/backup_today \
- *                --projectId=my-cloud-spanner-project \
- *                --shouldQueryTableRowCounts=true \
- *                --shouldQueryTableSchema=false \
- *                --tablesToExcludeFromBackup=Sales" \
- *   -Pdataflow-runner
- * </pre>
- *
- * <p>A sample backup that queries and saves the table row counts while not saving table schemas and
- * only includes "Sales" -- meaning only the "Sales" table will be backed-up.
- *
- * <pre>
- * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
- *   -Dexec.args="--runner=DataflowRunner \
- *                --project=my-cloud-spanner-project \
- *                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
- *                --inputSpannerInstanceId=my-cloud-spanner-project-db \
- *                --inputSpannerDatabaseId=words2 \
- *                --outputFolder=gs://my-cloud-spanner-project/backup_today \
- *                --projectId=my-cloud-spanner-project \
- *                --shouldQueryTableRowCounts=true \
- *                --shouldQueryTableSchema=false \
  *                --tablesToIncludeInBackup=Sales" \
  *   -Pdataflow-runner
  * </pre>
