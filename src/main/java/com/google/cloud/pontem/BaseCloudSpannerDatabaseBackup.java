@@ -40,9 +40,13 @@ public abstract class BaseCloudSpannerDatabaseBackup {
    * @return all table names in a database.
    */
   public static ImmutableSet<String> queryListOfAllTablesInDatabase(
-      String projectId, String instance, String databaseId, Util util, Timestamp timestampForDb) {
+      String projectId,
+      String instance,
+      String databaseId,
+      SpannerUtil spannerUtil,
+      Timestamp timestampForDb) {
     ImmutableList<Struct> resultSet =
-        util.performSingleSpannerReadQueryAtTimestamp(
+        spannerUtil.performSingleSpannerReadQueryAtTimestamp(
             projectId, instance, databaseId, LIST_ALL_TABLES_SQL_QUERY, timestampForDb);
     Set<String> tableNames = Sets.newHashSet();
     for (Struct row : resultSet) {

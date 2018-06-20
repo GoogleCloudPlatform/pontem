@@ -91,6 +91,7 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
             .withValidation()
             .as(BaseCloudSpannerRestoreOptions.class);
     final Util util = new Util();
+    final SpannerUtil spannerUtil = new SpannerUtil();
 
     // STEP 1b: Setup Spanner configuration
     final SpannerConfig spannerConfig =
@@ -106,7 +107,8 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
           options.getOutputSpannerInstanceId(),
           options.getOutputSpannerDatabaseId(),
           options.getInputFolder(),
-          util);
+          util,
+          spannerUtil);
     }
 
     // STEP 3: Query list of tables to restore

@@ -90,32 +90,33 @@ public final class EndToEndHelperTest {
     String instanceId = "instance-id";
     String databaseId = "database-id";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
+    SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
+    when(mockSpannerUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
         .thenReturn(EndToEndHelper.GOOGLE_CLOUD_SPANNER_DDL);
 
-    when(mockUtil.performSingleSpannerReadQuery(
+    when(mockSpannerUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.FOO_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.FOO_TABLE_STRUCTS);
 
-    when(mockUtil.performSingleSpannerReadQuery(
+    when(mockSpannerUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.PARENT_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.PARENT_TABLE_STRUCTS);
 
-    when(mockUtil.performSingleSpannerReadQuery(
+    when(mockSpannerUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.CHILD_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.CHILD_TABLE_STRUCTS);
 
-    EndToEndHelper.verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, mockUtil);
+    EndToEndHelper.verifyDatabaseStructureAndContent(
+        projectId, instanceId, databaseId, mockSpannerUtil);
     assertTrue("Verification of database structure succeeded", true);
   }
 
@@ -125,11 +126,12 @@ public final class EndToEndHelperTest {
     String instanceId = "instance-id";
     String databaseId = "database-id";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
+    SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
+    when(mockSpannerUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
         .thenReturn(ImmutableList.of("CREATE TABLE FooTable {}"));
 
-    EndToEndHelper.verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, mockUtil);
+    EndToEndHelper.verifyDatabaseStructureAndContent(
+        projectId, instanceId, databaseId, mockSpannerUtil);
   }
 
   @Test

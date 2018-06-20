@@ -53,7 +53,8 @@ import org.apache.beam.sdk.values.PCollectionView;
  *   -Pdataflow-runner
  * </pre>
  *
- * <p>A sample backup that only includes "Sales" -- meaning only the "Sales" table will be backed-up.
+ * <p>A sample backup that only includes "Sales" -- meaning only the "Sales" table will be
+ * backed-up.
  *
  * <pre>
  * mvn compile exec:java \
@@ -93,6 +94,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             .withDatabaseId(StaticValueProvider.of(options.getInputSpannerDatabaseId()));
 
     final Util util = new Util();
+    final SpannerUtil spannerUtil = new SpannerUtil();
 
     // STEP 2a: Check proposed backup location
     if (!options.getShouldOverwriteGcsFileBackup()) {
@@ -114,17 +116,17 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
     // STEP 2b: Save DDL to disk
     if (options.getShouldBackupDatabaseDdl()) {
       final ImmutableList<String> databaseDdl =
-          util.queryDatabaseDdl(
+          spannerUtil.queryDatabaseDdl(
               options.getProjectId(),
               options.getInputSpannerInstanceId(),
               options.getInputSpannerDatabaseId());
-      String databaseDdlAsString = Util.convertDdlListIntoRawText(databaseDdl);
+      String databaseDdlAsString = SpannerUtil.convertDdlListIntoRawText(databaseDdl);
       util.writeContentsToGcs(
           databaseDdlAsString,
           options.getProjectId(),
           Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
           Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()),
-          Util.FILE_PATH_FOR_DATABASE_DDL);
+          SpannerUtil.FILE_PATH_FOR_DATABASE_DDL);
     }
 
     // STEP 2c: Query list of tables in database
@@ -135,7 +137,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             options.getProjectId(),
             options.getInputSpannerInstanceId(),
             options.getInputSpannerDatabaseId(),
-            util,
+            spannerUtil,
             timestampForDb);
     final ImmutableList<String> tableNamesToBackup =
         getListOfTablesToBackup(

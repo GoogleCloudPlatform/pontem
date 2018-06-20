@@ -165,7 +165,12 @@ public abstract class BaseCloudSpannerDatabaseRestore {
   }
 
   public static void createDatabaseAndTables(
-      String projectId, String instanceId, String databaseId, String inputFolderPath, Util util)
+      String projectId,
+      String instanceId,
+      String databaseId,
+      String inputFolderPath,
+      Util util,
+      SpannerUtil spannerUtil)
       throws Exception {
     // STEP 1: Check whether DDL is backed-up in GCS. If not, fail out.
     String backedUpDdlFromGcs =
@@ -173,13 +178,13 @@ public abstract class BaseCloudSpannerDatabaseRestore {
             projectId,
             Util.getGcsBucketNameFromDatabaseBackupLocation(inputFolderPath),
             Util.getGcsFolderPathFromDatabaseBackupLocation(inputFolderPath),
-            Util.FILE_PATH_FOR_DATABASE_DDL);
+            SpannerUtil.FILE_PATH_FOR_DATABASE_DDL);
     if (backedUpDdlFromGcs.length() < 1) {
       throw new Exception("Serious error. Unable to fetch backed-up DDL in: " + inputFolderPath);
     }
-    ImmutableList<String> backedupDdl = Util.convertRawDdlIntoDdlList(backedUpDdlFromGcs);
+    ImmutableList<String> backedupDdl = SpannerUtil.convertRawDdlIntoDdlList(backedUpDdlFromGcs);
 
     // STEP 2: Re-create database and apply DDL.
-    util.createDatabaseAndTables(projectId, instanceId, databaseId, backedupDdl);
+    spannerUtil.createDatabaseAndTables(projectId, instanceId, databaseId, backedupDdl);
   }
 }

@@ -244,14 +244,15 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String instanceId = "instanceId";
     String databaseId = "databaseId";
 
+    SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
     Util mockUtil = mock(Util.class);
     when(mockUtil.getContentsOfFileFromGcs(
             eq(projectId),
             eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.FILE_PATH_FOR_DATABASE_DDL)))
+            eq(SpannerUtil.FILE_PATH_FOR_DATABASE_DDL)))
         .thenReturn("");
     BaseCloudSpannerDatabaseRestore.createDatabaseAndTables(
-        projectId, instanceId, databaseId, inputGcsPath, mockUtil);
+        projectId, instanceId, databaseId, inputGcsPath, mockUtil, mockSpannerUtil);
   }
 }

@@ -105,7 +105,7 @@ public interface BaseCloudSpannerRestoreOptions extends PipelineOptions {
 
   @Description("Cloud Spanner host")
   @Required
-  @Default.String(Util.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
+  @Default.String(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
   String getSpannerHost();
 
   void setSpannerHost(String value);
