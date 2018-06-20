@@ -305,26 +305,29 @@ public class EndToEndHelper {
       final String gcsRootBackupFolderPath = cmd.getOptionValue("gcsRootBackupFolderPath");
       final boolean shouldFailIfContentAlreadyExists =
           Boolean.valueOf(cmd.getOptionValue("shouldFailIfContentAlreadyExists", "false"));
-      final Util util = new Util();
+
+      final GcsUtil gcsUtil = new GcsUtil();
       final SpannerUtil spannerUtil = new SpannerUtil();
+
       if (operation.equals("setup")) {
         setupEnvironmentForEndToEndTests(
             projectId,
             instanceId,
             databaseId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            shouldFailIfContentAlreadyExists);
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            shouldFailIfContentAlreadyExists,
+            spannerUtil);
       } else if (operation.equals("teardown")) {
         tearDownEnvironmentForEndToEndTests(
             projectId,
             instanceId,
             databaseId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath));
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath));
       } else if (operation.equals("verifyDatabase")) {
         verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, spannerUtil);
       } else if (operation.equals("verifyGcsBackup")) {
-        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, util);
+        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, gcsUtil);
       } else if (operation.equals("teardownDatabase")) {
         deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
       } else {
@@ -358,12 +361,13 @@ public class EndToEndHelper {
       String instanceId,
       String databaseId,
       String gcsBucketName,
-      boolean shouldFailIfAlreadyExists)
+      boolean shouldFailIfAlreadyExists,
+      SpannerUtil spannerUtil)
       throws Exception {
     createGcsBucket(projectId, gcsBucketName, shouldFailIfAlreadyExists);
 
     createCloudSpannerDatabaseAndTableStructure(
-        projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
+        projectId, instanceId, databaseId, shouldFailIfAlreadyExists, spannerUtil);
     populateCloudSpannerDatabaseWithBasicContent(
         projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
   }
@@ -417,10 +421,13 @@ public class EndToEndHelper {
   }
 
   private static void createCloudSpannerDatabaseAndTableStructure(
-      String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyCreated)
+      String projectId,
+      String instanceId,
+      String databaseId,
+      boolean shouldFailIfAlreadyCreated,
+      SpannerUtil spannerUtil)
       throws Exception {
     LOG.info("Begin creation of Cloud Spanner database " + databaseId);
-    SpannerUtil spannerUtil = new SpannerUtil();
     try {
       spannerUtil.createDatabaseAndTables(
           projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
@@ -486,13 +493,13 @@ public class EndToEndHelper {
   }
 
   public static void verifyGcsBackupMetaData(
-      String projectId, String gcsRootBackupFolderPath, Util util) throws Exception {
+      String projectId, String gcsRootBackupFolderPath, GcsUtil gcsUtil) throws Exception {
     LOG.info("Begin verify of GCS backup");
     String rawFileContentsOfTableList =
-        util.getContentsOfFileFromGcs(
+        gcsUtil.getContentsOfFileFromGcs(
             projectId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
     String tables[] = rawFileContentsOfTableList.split("\\r?\\n");
     if (tables.length != TABLE_NAMES.size()) {

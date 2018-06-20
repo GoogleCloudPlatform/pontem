@@ -51,8 +51,9 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
     Map<String, Long> tableRowCounts = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
 
     JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
 
@@ -63,6 +64,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
             gcsBucketName,
             gcsFolderPath,
             shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+            mockGcsUtil,
             mockUtil));
   }
 
@@ -79,8 +81,9 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
 
     JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
     String rawTableData = "MyTable100,100\ntableName2,2";
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn(rawTableData);
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
 
@@ -91,6 +94,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
             gcsBucketName,
             gcsFolderPath,
             shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+            mockGcsUtil,
             mockUtil));
   }
 
@@ -106,8 +110,9 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
     Map<String, Long> tableRowCounts = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
 
     JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2\nExtraTable");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
 
@@ -117,6 +122,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
         gcsBucketName,
         gcsFolderPath,
         shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+        mockGcsUtil,
         mockUtil);
   }
 

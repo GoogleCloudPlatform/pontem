@@ -34,57 +34,6 @@ import org.junit.runners.JUnit4;
 public class UtilTest {
 
   @Test
-  public void testGetOutputPath() {
-    assertEquals("foo/bar/", Util.getFormattedOutputPath("foo/bar"));
-    assertEquals("foo/bar/", Util.getFormattedOutputPath("foo/bar/"));
-  }
-
-  @Test
-  public void testGetGcsBucketNameFromDatabaseBackupLocation() throws Exception {
-    assertEquals(
-        "Bucket name parsing failed",
-        "cloud-spanner-backup-test",
-        Util.getGcsBucketNameFromDatabaseBackupLocation(
-            "gs://cloud-spanner-backup-test/multi-backup"));
-
-    assertEquals(
-        "Bucket name parsing failed",
-        "bucketName",
-        Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName/multi-backup/djskd"));
-
-    assertEquals(
-        "Bucket name parsing failed",
-        "bucketName2",
-        Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName2/"));
-  }
-
-  @Test(expected = Exception.class)
-  public void testGetGcsBucketNameFromDatabaseBackupLocation_invalidScheme() throws Exception {
-    Util.getGcsBucketNameFromDatabaseBackupLocation("cs://cloud-spanner-backup-test/multi-backup");
-  }
-
-  @Test
-  public void testGetGcsFolderPathFromDatabaseBackupLocation() throws Exception {
-    assertEquals(
-        "Folder path parsing failed",
-        "/multi-backup/djskd/",
-        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/djskd"));
-    assertEquals(
-        "Folder path parsing failed",
-        "/multi-backup/",
-        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/"));
-    assertEquals(
-        "Folder path parsing failed",
-        "/",
-        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName"));
-  }
-
-  @Test(expected = Exception.class)
-  public void testGetGcsFolderPathFromDatabaseBackupLocation_invalid() throws Exception {
-    Util.getGcsFolderPathFromDatabaseBackupLocation("cs://bucketName/multi-backup/djskd");
-  }
-
-  @Test
   public void testConvertTablenamesIntoSet() throws Exception {
     assertEquals(
         "Parsing table names into Set failed",

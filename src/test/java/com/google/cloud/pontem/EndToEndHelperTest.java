@@ -41,11 +41,11 @@ public final class EndToEndHelperTest {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn(
             EndToEndHelper.CHILD_TABLE_NAME
@@ -57,7 +57,7 @@ public final class EndToEndHelperTest {
                 + EndToEndHelper.FOO_TABLE_NAME
                 + ",");
 
-    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockUtil);
+    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockGcsUtil);
     assertTrue("Verification of GCS backup succeeded", true);
   }
 
@@ -66,11 +66,11 @@ public final class EndToEndHelperTest {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn(
             "Foo"
@@ -81,7 +81,7 @@ public final class EndToEndHelperTest {
                 + EndToEndHelper.PARENT_TABLE_NAME
                 + ",");
 
-    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockUtil);
+    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockGcsUtil);
   }
 
   @Test

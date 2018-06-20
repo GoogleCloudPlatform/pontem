@@ -43,11 +43,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] emptyTableNamesToIncludeInRestore = new String[0];
     String[] emptyTableNamesToExcludeFromRestore = new String[0];
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("MyTableName1,\nMyTableName2,\nMyTableName3,");
 
@@ -57,7 +57,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
     assertEquals("Number of root tables to restore is invalid", 3, parsedTablesToRestore.size());
     assertTrue("Root table is not present", parsedTablesToRestore.containsKey("MyTableName1"));
     assertTrue("Root table is not present", parsedTablesToRestore.containsKey("MyTableName2"));
@@ -72,11 +72,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] emptyTableNamesToIncludeInRestore = new String[0];
     String[] emptyTableNamesToExcludeFromRestore = new String[0];
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nChildTable2,ChildTable1");
 
@@ -86,7 +86,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
     assertEquals("Number of root tables to restore is invalid", 1, parsedTablesToRestore.size());
     assertTrue("Root table is not present", parsedTablesToRestore.containsKey("RootTable1"));
     assertFalse("Child table is present as root", parsedTablesToRestore.containsKey("ChildTable1"));
@@ -107,11 +107,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] tableNamesToIncludeInRestore = {"RootTable1", "ChildTable1"};
     String[] emptyTableNamesToExcludeFromRestore = new String[0];
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nChildTable2,ChildTable1");
 
@@ -121,7 +121,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             tableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
     assertEquals("Number of root tables to restore is invalid", 1, parsedTablesToRestore.size());
     assertTrue("Root table is not present", parsedTablesToRestore.containsKey("RootTable1"));
     assertFalse("Child table is present as root", parsedTablesToRestore.containsKey("ChildTable1"));
@@ -140,11 +140,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] emptyTableNamesToIncludeInRestore = new String[0];
     String[] tableNamesToExcludeFromRestore = {"RootTable1", "RootTable2", "RootTable3"};
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("RootTable1,\nRootTable2,\nRootTable3,\nRootTable4,\nChildTable1,RootTable4");
 
@@ -154,7 +154,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
             tableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
     assertEquals("Number of root tables to restore is invalid", 1, parsedTablesToRestore.size());
     assertTrue("Root table is not present", parsedTablesToRestore.containsKey("RootTable4"));
     assertFalse("Root table is not present", parsedTablesToRestore.containsKey("RootTable5"));
@@ -172,11 +172,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] tableNamesToIncludeInRestore = {"RootTable2"};
     String[] tableNamesToExcludeFromRestore = {"RootTable1"};
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nRootTable2,");
 
@@ -186,7 +186,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             tableNamesToIncludeInRestore,
             tableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
   }
 
   @Test(expected = Exception.class)
@@ -196,11 +196,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] emptyTableNamesToIncludeInRestore = new String[0];
     String[] tableNamesToExcludeFromRestore = {"RootTable1"};
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nRootTable2,");
 
@@ -210,7 +210,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             emptyTableNamesToIncludeInRestore,
             tableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
   }
 
   @Test(expected = Exception.class)
@@ -220,11 +220,11 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String[] tableNamesToIncludeInRestore = {"ChildTable1"};
     String[] emptyTableNamesToExcludeFromRestore = new String[0];
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn("RootTable1,\nChildTable1,RootTable1\nRootTable2,");
 
@@ -234,7 +234,7 @@ public class BaseCloudSpannerDatabaseRestoreTest {
             inputGcsPath,
             tableNamesToIncludeInRestore,
             emptyTableNamesToExcludeFromRestore,
-            mockUtil);
+            mockGcsUtil);
   }
 
   @Test(expected = Exception.class)
@@ -245,14 +245,14 @@ public class BaseCloudSpannerDatabaseRestoreTest {
     String databaseId = "databaseId";
 
     SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(SpannerUtil.FILE_PATH_FOR_DATABASE_DDL)))
         .thenReturn("");
-    BaseCloudSpannerDatabaseRestore.createDatabaseAndTables(
-        projectId, instanceId, databaseId, inputGcsPath, mockUtil, mockSpannerUtil);
+    BaseCloudSpannerDatabaseRestore.createDatabaseAndTablesFromStoredDdl(
+        projectId, instanceId, databaseId, inputGcsPath, mockGcsUtil, mockSpannerUtil);
   }
 }

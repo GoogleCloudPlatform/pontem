@@ -76,8 +76,7 @@ public class SerializedCloudSpannerDatabaseBackupTest {
             .withValidation()
             .as(BaseCloudSpannerBackupOptions.class);
 
-    Util mockUtil = mock(Util.class);
-
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     SpannerConfig mockSpannerConfig = mock(SpannerConfig.class);
 
     Timestamp readTimestamp = Timestamp.now();
@@ -85,6 +84,6 @@ public class SerializedCloudSpannerDatabaseBackupTest {
     ImmutableList<String> tablesToBackup = ImmutableList.of("tableName1", "tableName2");
     TestPipeline testPipeline = TestPipeline.create();
     SerializedCloudSpannerDatabaseBackup.constructPipeline(
-        testPipeline, options, mockSpannerConfig, mockUtil, tablesToBackup, readTimestamp);
+        testPipeline, options, mockSpannerConfig, mockGcsUtil, tablesToBackup, readTimestamp);
   }
 }
