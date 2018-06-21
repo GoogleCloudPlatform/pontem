@@ -224,7 +224,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
               Util.MAP_DATA_TRANSFORM_NODE_NAME
                   + Util.TRANSFORM_NODE_NAME_DELIMITER
                   + entry.getKey(),
-              MapElements.via(new FormatGenericSpannerStructAsTextFn(entry.getKey())))
+              MapElements.via(new FormatSpannerStructAsStringFn(entry.getKey())))
           .apply(
               Util.WRITE_DATA_TRANSFORM_NODE_NAME
                   + Util.TRANSFORM_NODE_NAME_DELIMITER

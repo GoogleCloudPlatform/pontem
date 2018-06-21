@@ -222,7 +222,7 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
                 Util.MAP_DATA_TRANSFORM_NODE_NAME
                     + Util.TRANSFORM_NODE_NAME_DELIMITER
                     + childTableName,
-                MapElements.via(new FormatTextAsGenericSpannerMutationFn(childTableName)));
+                MapElements.via(new FormatStringAsSpannerMutationFn(childTableName)));
         mutations.apply(
             Util.WRITE_DATA_TRANSFORM_NODE_NAME
                 + Util.TRANSFORM_NODE_NAME_DELIMITER
