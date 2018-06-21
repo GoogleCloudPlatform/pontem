@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 
 /** Utility function for GCS calls in Cloud Spanner backup and restore. */
 public class GcsUtil {
-  private static final Logger LOG = Logger.getLogger(Util.class.getName());
+  private static final Logger LOG = Logger.getLogger(GcsUtil.class.getName());
   /** Get the number of GCS blobs in a file path. */
   public int getNumGcsBlobsInGcsFilePath(
       String projectId, String gcsBucketName, String gcsFolderPath) {
