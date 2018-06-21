@@ -25,20 +25,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link FormatTextAsGenericSpannerMutationFnTest}. */
+/** Tests for {@link FormatStringAsSpannerMutationFnTest}. */
 @RunWith(JUnit4.class)
-public final class FormatTextAsGenericSpannerMutationFnTest {
+public final class FormatStringAsSpannerMutationFnTest {
   @Test
   public void methodUnderTest_nullValue() throws Exception {
-    FormatTextAsGenericSpannerMutationFn simpleFn =
-        new FormatTextAsGenericSpannerMutationFn(TestHelper.TABLE_NAME);
+    FormatStringAsSpannerMutationFn simpleFn =
+        new FormatStringAsSpannerMutationFn(TestHelper.TABLE_NAME);
     assertEquals(TestHelper.MUTATION_3, simpleFn.apply(TestHelper.STRUCT_3_BASE64_SERIALIZED));
   }
 
   @Test
   public void methodUnderTest_expectedResult() throws Exception {
-    FormatTextAsGenericSpannerMutationFn simpleFn =
-        new FormatTextAsGenericSpannerMutationFn(TestHelper.TABLE_NAME);
+    FormatStringAsSpannerMutationFn simpleFn =
+        new FormatStringAsSpannerMutationFn(TestHelper.TABLE_NAME);
     assertEquals(TestHelper.MUTATION_1, simpleFn.apply(TestHelper.STRUCT_1_BASE64_SERIALIZED));
     assertEquals(TestHelper.MUTATION_2, simpleFn.apply(TestHelper.STRUCT_2_BASE64_SERIALIZED));
     assertEquals(TestHelper.MUTATION_3, simpleFn.apply(TestHelper.STRUCT_3_BASE64_SERIALIZED));
@@ -49,8 +49,8 @@ public final class FormatTextAsGenericSpannerMutationFnTest {
 
   @Test(expected = Exception.class)
   public void methodUnderTest_emptyAndException() throws Exception {
-    FormatTextAsGenericSpannerMutationFn simpleFn =
-        new FormatTextAsGenericSpannerMutationFn(TestHelper.TABLE_NAME);
+    FormatStringAsSpannerMutationFn simpleFn =
+        new FormatStringAsSpannerMutationFn(TestHelper.TABLE_NAME);
     assertEquals(TestHelper.MUTATION_1, simpleFn.apply("sfkfjsk"));
   }
 }

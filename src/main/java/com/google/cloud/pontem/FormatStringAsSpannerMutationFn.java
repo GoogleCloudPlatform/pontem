@@ -31,13 +31,13 @@ import org.apache.beam.sdk.transforms.SimpleFunction;
  *
  * <p>See https://cloud.google.com/spanner/docs/data-types
  */
-public class FormatTextAsGenericSpannerMutationFn extends SimpleFunction<String, Mutation> {
+public class FormatStringAsSpannerMutationFn extends SimpleFunction<String, Mutation> {
   private final Counter tableRowsReadCounter;
   private final String tableName;
 
-  FormatTextAsGenericSpannerMutationFn(final String tableName) {
+  FormatStringAsSpannerMutationFn(final String tableName) {
     this.tableRowsReadCounter =
-        Metrics.counter(FormatTextAsGenericSpannerMutationFn.class, "rowsRead_" + tableName);
+        Metrics.counter(FormatStringAsSpannerMutationFn.class, "rowsRead_" + tableName);
     this.tableName = tableName;
   }
 
