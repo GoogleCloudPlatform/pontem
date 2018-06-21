@@ -15,13 +15,8 @@
  */
 package com.google.cloud.pontem;
 
-import com.google.cloud.ByteArray;
-import com.google.cloud.Date;
-import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Struct;
-import com.google.cloud.spanner.Type;
-import com.google.cloud.spanner.Type.Code;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import javax.xml.bind.DatatypeConverter;
@@ -55,59 +50,7 @@ public class FormatTextAsGenericSpannerMutationFn extends SimpleFunction<String,
       ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(inputRowBytes));
       Struct struct = (Struct) ois.readObject();
 
-      // STEP 2: Convert a Struct to a Mutation
-      Mutation.WriteBuilder mutationBuilder = Mutation.newInsertOrUpdateBuilder(tableName);
-
-      Type tableType = struct.getType();
-
-      for (Type.StructField field : tableType.getStructFields()) {
-        Type type = field.getType();
-        String name = field.getName();
-
-        // If a column's value is NULL, skip it.
-        if (struct.isNull(name)) {
-          continue;
-        }
-
-        // Using switch produced errors switching on an enum
-        // see https://cloud.google.com/spanner/docs/data-types
-        if (type.getCode() == Code.STRING) {
-          mutationBuilder.set(name).to((String) struct.getString(name));
-        } else if (type.getCode() == Code.BOOL) {
-          mutationBuilder.set(name).to((boolean) struct.getBoolean(name));
-        } else if (type.getCode() == Code.BYTES) {
-          mutationBuilder.set(name).to((ByteArray) struct.getBytes(name));
-        } else if (type.getCode() == Code.DATE) {
-          mutationBuilder.set(name).to((Date) struct.getDate(name));
-        } else if (type.getCode() == Code.FLOAT64) {
-          mutationBuilder.set(name).to((double) struct.getDouble(name));
-        } else if (type.getCode() == Code.TIMESTAMP) {
-          mutationBuilder.set(name).to((Timestamp) struct.getTimestamp(name));
-        } else if (type.getCode() == Code.INT64) {
-          mutationBuilder.set(name).to((long) struct.getLong(name));
-        } else if (type.getCode() == Code.ARRAY) {
-          // Go through different types of arrays.
-          if (type.getArrayElementType().getCode() == Code.STRING) {
-            mutationBuilder.set(name).toStringArray(struct.getStringList(name));
-          } else if (type.getArrayElementType().getCode() == Code.BOOL) {
-            mutationBuilder.set(name).toBoolArray(struct.getBooleanList(name));
-          } else if (type.getArrayElementType().getCode() == Code.BYTES) {
-            mutationBuilder.set(name).toBytesArray(struct.getBytesList(name));
-          } else if (type.getArrayElementType().getCode() == Code.DATE) {
-            mutationBuilder.set(name).toDateArray(struct.getDateList(name));
-          } else if (type.getArrayElementType().getCode() == Code.FLOAT64) {
-            mutationBuilder.set(name).toFloat64Array(struct.getDoubleList(name));
-          } else if (type.getArrayElementType().getCode() == Code.INT64) {
-            mutationBuilder.set(name).toInt64Array(struct.getLongArray(name));
-          } else if (type.getArrayElementType().getCode() == Code.TIMESTAMP) {
-            mutationBuilder.set(name).toTimestampArray(struct.getTimestampList(name));
-          }
-        } else {
-          throw new RuntimeException(
-              "Not handling type for field '" + name + "' of type " + type.getCode());
-        }
-      }
-      return mutationBuilder.build();
+      return SpannerUtil.convertStructToMutation(struct, this.tableName);
     } catch (Exception e) {
       throw new RuntimeException("Serious error:\n" + e);
     }

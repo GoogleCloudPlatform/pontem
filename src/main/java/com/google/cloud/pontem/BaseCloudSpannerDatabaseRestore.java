@@ -56,7 +56,7 @@ public abstract class BaseCloudSpannerDatabaseRestore {
       String inputGcsPath,
       String[] tableNamesToIncludeInRestore,
       String[] tableNamesToExcludeFromRestore,
-      Util util)
+      GcsUtil gcsUtil)
       throws Exception {
 
     boolean isTablesToIncludeSet =
@@ -69,10 +69,10 @@ public abstract class BaseCloudSpannerDatabaseRestore {
 
     // Step 1: Fetch and parse file.
     String rawFileContents =
-        util.getContentsOfFileFromGcs(
+        gcsUtil.getContentsOfFileFromGcs(
             projectId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath),
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
     String lines[] = rawFileContents.split("\\r?\\n");
 
@@ -164,22 +164,27 @@ public abstract class BaseCloudSpannerDatabaseRestore {
     return mapOfParentToAllChildrenTablesInOrderToFetch;
   }
 
-  public static void createDatabaseAndTables(
-      String projectId, String instanceId, String databaseId, String inputFolderPath, Util util)
+  public static void createDatabaseAndTablesFromStoredDdl(
+      String projectId,
+      String instanceId,
+      String databaseId,
+      String inputFolderPath,
+      GcsUtil gcsUtil,
+      SpannerUtil spannerUtil)
       throws Exception {
     // STEP 1: Check whether DDL is backed-up in GCS. If not, fail out.
     String backedUpDdlFromGcs =
-        util.getContentsOfFileFromGcs(
+        gcsUtil.getContentsOfFileFromGcs(
             projectId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(inputFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(inputFolderPath),
-            Util.FILE_PATH_FOR_DATABASE_DDL);
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputFolderPath),
+            SpannerUtil.FILE_PATH_FOR_DATABASE_DDL);
     if (backedUpDdlFromGcs.length() < 1) {
       throw new Exception("Serious error. Unable to fetch backed-up DDL in: " + inputFolderPath);
     }
-    ImmutableList<String> backedupDdl = Util.convertRawDdlIntoDdlList(backedUpDdlFromGcs);
+    ImmutableList<String> backedupDdl = SpannerUtil.convertRawDdlIntoDdlList(backedUpDdlFromGcs);
 
     // STEP 2: Re-create database and apply DDL.
-    util.createDatabaseAndTables(projectId, instanceId, databaseId, backedupDdl);
+    spannerUtil.createDatabaseAndTables(projectId, instanceId, databaseId, backedupDdl);
   }
 }

@@ -53,7 +53,8 @@ import org.apache.beam.sdk.values.PCollectionView;
  *   -Pdataflow-runner
  * </pre>
  *
- * <p>A sample backup that only includes "Sales" -- meaning only the "Sales" table will be backed-up.
+ * <p>A sample backup that only includes "Sales" -- meaning only the "Sales" table will be
+ * backed-up.
  *
  * <pre>
  * mvn compile exec:java \
@@ -92,15 +93,16 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             .withInstanceId(StaticValueProvider.of(options.getInputSpannerInstanceId()))
             .withDatabaseId(StaticValueProvider.of(options.getInputSpannerDatabaseId()));
 
-    final Util util = new Util();
+    final GcsUtil gcsUtil = new GcsUtil();
+    final SpannerUtil spannerUtil = new SpannerUtil();
 
     // STEP 2a: Check proposed backup location
     if (!options.getShouldOverwriteGcsFileBackup()) {
       int numBlobs =
-          util.getNumGcsBlobsInGcsFilePath(
+          gcsUtil.getNumGcsBlobsInGcsFilePath(
               options.getProjectId(),
-              Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
-              Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()));
+              GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
+              GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()));
       if (numBlobs > 0) {
         throw new Exception(
             "Attempts to backup to location "
@@ -114,17 +116,17 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
     // STEP 2b: Save DDL to disk
     if (options.getShouldBackupDatabaseDdl()) {
       final ImmutableList<String> databaseDdl =
-          util.queryDatabaseDdl(
+          spannerUtil.queryDatabaseDdl(
               options.getProjectId(),
               options.getInputSpannerInstanceId(),
               options.getInputSpannerDatabaseId());
-      String databaseDdlAsString = Util.convertDdlListIntoRawText(databaseDdl);
-      util.writeContentsToGcs(
+      String databaseDdlAsString = SpannerUtil.convertDdlListIntoRawText(databaseDdl);
+      gcsUtil.writeContentsToGcs(
           databaseDdlAsString,
           options.getProjectId(),
-          Util.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
-          Util.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()),
-          Util.FILE_PATH_FOR_DATABASE_DDL);
+          GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
+          GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()),
+          SpannerUtil.FILE_PATH_FOR_DATABASE_DDL);
     }
 
     // STEP 2c: Query list of tables in database
@@ -135,7 +137,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             options.getProjectId(),
             options.getInputSpannerInstanceId(),
             options.getInputSpannerDatabaseId(),
-            util,
+            spannerUtil,
             timestampForDb);
     final ImmutableList<String> tableNamesToBackup =
         getListOfTablesToBackup(
@@ -144,7 +146,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
             options.getTablesToExcludeFromBackup());
     LOG.info("Final list of tables to backup includes (" + tableNamesToBackup.size() + ") tables.");
 
-    constructPipeline(p, options, spannerConfig, util, tableNamesToBackup, timestampForDb);
+    constructPipeline(p, options, spannerConfig, gcsUtil, tableNamesToBackup, timestampForDb);
 
     // STEP 7: Trigger pipeline
     PipelineResult pipelineResult = p.run();
@@ -155,7 +157,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
       Pipeline p,
       BaseCloudSpannerBackupOptions options,
       SpannerConfig spannerConfig,
-      Util util,
+      GcsUtil gcsUtil,
       ImmutableList<String> tableNamesToBackup,
       Timestamp timestampForDb)
       throws Exception {
@@ -194,7 +196,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
         "Write Table Names",
         TextIO.write()
             .to(
-                Util.getFormattedOutputPath(options.getOutputFolder())
+                GcsUtil.getFormattedOutputPath(options.getOutputFolder())
                     + Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)
             .withoutSharding());
     LOG.info("Read list of table names and wrote them to disk");
@@ -229,7 +231,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
                   + entry.getKey(),
               TextIO.write()
                   .to(
-                      Util.getFormattedOutputPath(options.getOutputFolder())
+                      GcsUtil.getFormattedOutputPath(options.getOutputFolder())
                           + "tables/"
                           + entry.getKey()
                           + "/")

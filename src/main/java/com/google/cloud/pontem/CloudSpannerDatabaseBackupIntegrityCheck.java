@@ -113,13 +113,14 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
     String projectId = cmd.getOptionValue("project");
     String jobId = cmd.getOptionValue("job");
     String gcsBucketName =
-        Util.getGcsBucketNameFromDatabaseBackupLocation(
+        GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(
             cmd.getOptionValue("databaseBackupLocation"));
     String gcsFolderPath =
-        Util.getGcsFolderPathFromDatabaseBackupLocation(
+        GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(
             cmd.getOptionValue("databaseBackupLocation"));
     boolean shouldSkipWriteRowCountsOfVerifiedBackupToGcs =
         Boolean.valueOf(cmd.getOptionValue("skipWriteRowCountsOfVerifiedBackupToGcs"));
+    GcsUtil gcsUtil = new GcsUtil();
     Util util = new Util();
 
     performDatabaseBackupIntegrityCheck(
@@ -128,6 +129,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
         gcsBucketName,
         gcsFolderPath,
         shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+        gcsUtil,
         util);
 
     System.out.println("Database Backup Integrity Check Complete");
@@ -143,13 +145,14 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
       String gcsBucketName,
       String gcsFolderPath,
       boolean shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+      GcsUtil gcsUtill,
       Util util)
       throws Exception {
 
     // STEP 2: Pull metadata about backup from GCS.
     // STEP 2a: Fetch file from GCS.
     String rawContentsOfTableNames =
-        util.getContentsOfFileFromGcs(
+        gcsUtill.getContentsOfFileFromGcs(
             projectId, gcsBucketName, gcsFolderPath, Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
 
     // STEP 2b: Parse table names file into Set
@@ -182,7 +185,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
         rowCountContents += table.getKey() + "," + table.getValue() + "\n";
       }
       rowCountContents = rowCountContents.trim();
-      util.writeContentsToGcs(
+      gcsUtill.writeContentsToGcs(
           rowCountContents,
           projectId,
           gcsBucketName,

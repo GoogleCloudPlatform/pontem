@@ -56,8 +56,8 @@ public class BaseCloudSpannerDatabaseBackupTest {
     String databaseId = "";
 
     Timestamp readTimestamp = Timestamp.now();
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.performSingleSpannerReadQueryAtTimestamp(
+    SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
+    when(mockSpannerUtil.performSingleSpannerReadQueryAtTimestamp(
             eq(projectId),
             eq(instance),
             eq(databaseId),
@@ -71,7 +71,7 @@ public class BaseCloudSpannerDatabaseBackupTest {
     ImmutableSet<String> expected = ImmutableSet.of("tableName1", "tableName2");
     ImmutableSet<String> actual =
         BaseCloudSpannerDatabaseBackup.queryListOfAllTablesInDatabase(
-            projectId, instance, databaseId, mockUtil, readTimestamp);
+            projectId, instance, databaseId, mockSpannerUtil, readTimestamp);
     assertEquals(expected, actual);
   }
 

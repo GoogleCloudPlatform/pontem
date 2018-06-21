@@ -22,7 +22,6 @@ package com.google.cloud.pontem;
 import static org.junit.Assert.assertEquals;
 
 import com.google.api.services.dataflow.model.JobMetrics;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -33,79 +32,6 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link Util}. */
 @RunWith(JUnit4.class)
 public class UtilTest {
-  private String basicDdl1 =
-      "CREATE TABLE Singers (\n"
-          + "  SingerId INT64 NOT NULL,\n"
-          + "  FirstName STRING(1024),\n"
-          + "  LastName STRING(1024),\n"
-          + ") PRIMARY KEY(SingerId)";
-  private String basicDdl2 =
-      "CREATE TABLE Albums (\n"
-          + "  SingerId INT64 NOT NULL,\n"
-          + "  AlbumId INT64 NOT NULL,\n"
-          + "  AlbumTitle STRING(MAX),\n"
-          + ") PRIMARY KEY(SingerId, AlbumId),\n"
-          + "  INTERLEAVE IN PARENT Singers ON DELETE CASCADE";
-  private String basicDdl3 =
-      "CREATE TABLE AlbumPromitions (\n"
-          + "  AlbumId INT64 NOT NULL,\n"
-          + "  SingerId INT64 NOT NULL,\n"
-          + "  PromotionDescription STRING(MAX) NOT NULL,\n"
-          + ") PRIMARY KEY(SingerId, AlbumId),\n"
-          + "  INTERLEAVE IN PARENT Albums ON DELETE CASCADE";
-  private String basicDdl4 =
-      "CREATE INDEX wordWordsIndex ON two_hundred_million_words(word, words)";
-
-  @Test
-  public void testGetOutputPath() {
-    assertEquals("foo/bar/", Util.getFormattedOutputPath("foo/bar"));
-    assertEquals("foo/bar/", Util.getFormattedOutputPath("foo/bar/"));
-  }
-
-  @Test
-  public void testGetGcsBucketNameFromDatabaseBackupLocation() throws Exception {
-    assertEquals(
-        "Bucket name parsing failed",
-        "cloud-spanner-backup-test",
-        Util.getGcsBucketNameFromDatabaseBackupLocation(
-            "gs://cloud-spanner-backup-test/multi-backup"));
-
-    assertEquals(
-        "Bucket name parsing failed",
-        "bucketName",
-        Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName/multi-backup/djskd"));
-
-    assertEquals(
-        "Bucket name parsing failed",
-        "bucketName2",
-        Util.getGcsBucketNameFromDatabaseBackupLocation("gs://bucketName2/"));
-  }
-
-  @Test(expected = Exception.class)
-  public void testGetGcsBucketNameFromDatabaseBackupLocation_invalidScheme() throws Exception {
-    Util.getGcsBucketNameFromDatabaseBackupLocation("cs://cloud-spanner-backup-test/multi-backup");
-  }
-
-  @Test
-  public void testGetGcsFolderPathFromDatabaseBackupLocation() throws Exception {
-    assertEquals(
-        "Folder path parsing failed",
-        "/multi-backup/djskd/",
-        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/djskd"));
-    assertEquals(
-        "Folder path parsing failed",
-        "/multi-backup/",
-        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName/multi-backup/"));
-    assertEquals(
-        "Folder path parsing failed",
-        "/",
-        Util.getGcsFolderPathFromDatabaseBackupLocation("gs://bucketName"));
-  }
-
-  @Test(expected = Exception.class)
-  public void testGetGcsFolderPathFromDatabaseBackupLocation_invalid() throws Exception {
-    Util.getGcsFolderPathFromDatabaseBackupLocation("cs://bucketName/multi-backup/djskd");
-  }
 
   @Test
   public void testConvertTablenamesIntoSet() throws Exception {
@@ -155,47 +81,5 @@ public class UtilTest {
         "Parsing table names and num rows into Map failed",
         expectedParsedJobMetricsMap,
         actualParsedJobMetricsMap);
-  }
-
-  @Test
-  public void testConvertDdlListIntoRawText() {
-    String actualText =
-        Util.convertDdlListIntoRawText(
-            ImmutableList.of(basicDdl1, basicDdl2, basicDdl3, basicDdl4));
-    String expectedText =
-        basicDdl1
-            + Util.DDL_DELIMITER
-            + basicDdl2
-            + Util.DDL_DELIMITER
-            + basicDdl3
-            + Util.DDL_DELIMITER
-            + basicDdl4;
-    assertEquals(expectedText, actualText);
-  }
-
-  @Test
-  public void testConvertRawDdlIntoDdlList() {
-    String rawText =
-        basicDdl1
-            + Util.DDL_DELIMITER
-            + basicDdl2
-            + Util.DDL_DELIMITER
-            + basicDdl3
-            + Util.DDL_DELIMITER
-            + basicDdl4;
-    ImmutableList<String> expected = ImmutableList.of(basicDdl1, basicDdl2, basicDdl3, basicDdl4);
-    ImmutableList<String> actual = Util.convertRawDdlIntoDdlList(rawText);
-    assertEquals(expected, actual);
-  }
-
-  @Test
-  public void testConvertDdlBetweenStringAndList() {
-    ImmutableList<String> ddlStatementsAsList =
-        ImmutableList.of(basicDdl1, basicDdl2, basicDdl3, basicDdl4);
-    String ddlStatementsAsString = Util.convertDdlListIntoRawText(ddlStatementsAsList);
-    assertEquals(ddlStatementsAsList, Util.convertRawDdlIntoDdlList(ddlStatementsAsString));
-    assertEquals(
-        ddlStatementsAsString,
-        Util.convertDdlListIntoRawText(Util.convertRawDdlIntoDdlList(ddlStatementsAsString)));
   }
 }

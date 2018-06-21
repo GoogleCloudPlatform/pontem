@@ -305,25 +305,29 @@ public class EndToEndHelper {
       final String gcsRootBackupFolderPath = cmd.getOptionValue("gcsRootBackupFolderPath");
       final boolean shouldFailIfContentAlreadyExists =
           Boolean.valueOf(cmd.getOptionValue("shouldFailIfContentAlreadyExists", "false"));
-      final Util util = new Util();
+
+      final GcsUtil gcsUtil = new GcsUtil();
+      final SpannerUtil spannerUtil = new SpannerUtil();
+
       if (operation.equals("setup")) {
         setupEnvironmentForEndToEndTests(
             projectId,
             instanceId,
             databaseId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            shouldFailIfContentAlreadyExists);
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            shouldFailIfContentAlreadyExists,
+            spannerUtil);
       } else if (operation.equals("teardown")) {
         tearDownEnvironmentForEndToEndTests(
             projectId,
             instanceId,
             databaseId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath));
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath));
       } else if (operation.equals("verifyDatabase")) {
-        verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, util);
+        verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, spannerUtil);
       } else if (operation.equals("verifyGcsBackup")) {
-        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, util);
+        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, gcsUtil);
       } else if (operation.equals("teardownDatabase")) {
         deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
       } else {
@@ -357,12 +361,13 @@ public class EndToEndHelper {
       String instanceId,
       String databaseId,
       String gcsBucketName,
-      boolean shouldFailIfAlreadyExists)
+      boolean shouldFailIfAlreadyExists,
+      SpannerUtil spannerUtil)
       throws Exception {
     createGcsBucket(projectId, gcsBucketName, shouldFailIfAlreadyExists);
 
     createCloudSpannerDatabaseAndTableStructure(
-        projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
+        projectId, instanceId, databaseId, shouldFailIfAlreadyExists, spannerUtil);
     populateCloudSpannerDatabaseWithBasicContent(
         projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
   }
@@ -370,7 +375,7 @@ public class EndToEndHelper {
   public static void deleteCloudSpannerDatabase(
       String projectId, String instanceId, String databaseId) {
     LOG.info("Beginning deletion of Cloud Spanner database " + databaseId);
-    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
+    SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
@@ -392,7 +397,8 @@ public class EndToEndHelper {
       LOG.info("Finished deletion of Cloud Spanner database " + databaseId);
       spanner.close();
     }
-    ImmutableList<String> databaseNames = Util.getListOfDatabaseNames(projectId, instanceId, 10);
+    ImmutableList<String> databaseNames =
+        SpannerUtil.getListOfDatabaseNames(projectId, instanceId, 10);
     LOG.info(
         "Database names remaining in instance " + instanceId + ":\n" + databaseNames.toString());
     LOG.info("End deletion of Cloud Spanner database " + databaseId);
@@ -415,12 +421,16 @@ public class EndToEndHelper {
   }
 
   private static void createCloudSpannerDatabaseAndTableStructure(
-      String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyCreated)
+      String projectId,
+      String instanceId,
+      String databaseId,
+      boolean shouldFailIfAlreadyCreated,
+      SpannerUtil spannerUtil)
       throws Exception {
     LOG.info("Begin creation of Cloud Spanner database " + databaseId);
-    Util util = new Util();
     try {
-      util.createDatabaseAndTables(projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
+      spannerUtil.createDatabaseAndTables(
+          projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
     } catch (SpannerException e) {
       if (e.getMessage().contains("ALREADY_EXISTS") && !shouldFailIfAlreadyCreated) {
         LOG.info("Cloud Spanner database already exists.");
@@ -462,7 +472,7 @@ public class EndToEndHelper {
       String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyPopulated)
       throws Exception {
     LOG.info("Begin population of Cloud Spanner database with basic content: " + databaseId);
-    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
+    SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
@@ -483,13 +493,13 @@ public class EndToEndHelper {
   }
 
   public static void verifyGcsBackupMetaData(
-      String projectId, String gcsRootBackupFolderPath, Util util) throws Exception {
+      String projectId, String gcsRootBackupFolderPath, GcsUtil gcsUtil) throws Exception {
     LOG.info("Begin verify of GCS backup");
     String rawFileContentsOfTableList =
-        util.getContentsOfFileFromGcs(
+        gcsUtil.getContentsOfFileFromGcs(
             projectId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
     String tables[] = rawFileContentsOfTableList.split("\\r?\\n");
     if (tables.length != TABLE_NAMES.size()) {
@@ -520,9 +530,10 @@ public class EndToEndHelper {
   }
 
   public static void verifyDatabaseStructureAndContent(
-      String projectId, String instanceId, String databaseId, Util util) throws Exception {
+      String projectId, String instanceId, String databaseId, SpannerUtil spannerUtil)
+      throws Exception {
     // STEP 1: Check DDL
-    ImmutableList<String> ddl = util.queryDatabaseDdl(projectId, instanceId, databaseId);
+    ImmutableList<String> ddl = spannerUtil.queryDatabaseDdl(projectId, instanceId, databaseId);
     LOG.info("DDL in database " + databaseId + " with " + ddl.size() + " statements");
     if (!ddl.equals(GOOGLE_CLOUD_SPANNER_DDL)) {
       LOG.info("Expected:\n" + GOOGLE_CLOUD_SPANNER_DDL.toString());
@@ -532,17 +543,17 @@ public class EndToEndHelper {
 
     // STEP 2: Check Database Content
     ImmutableList<Struct> fooResultSet =
-        util.performSingleSpannerReadQuery(
+        spannerUtil.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + FOO_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + FOO_TABLE_NAME + " = " + fooResultSet.size());
 
     ImmutableList<Struct> parentResultSet =
-        util.performSingleSpannerReadQuery(
+        spannerUtil.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + PARENT_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + PARENT_TABLE_NAME + " = " + parentResultSet.size());
 
     ImmutableList<Struct> childResultSet =
-        util.performSingleSpannerReadQuery(
+        spannerUtil.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + CHILD_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + CHILD_TABLE_NAME + " = " + childResultSet.size());
 

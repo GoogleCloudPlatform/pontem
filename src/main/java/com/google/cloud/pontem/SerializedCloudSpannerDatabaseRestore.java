@@ -90,7 +90,8 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
         PipelineOptionsFactory.fromArgs(args)
             .withValidation()
             .as(BaseCloudSpannerRestoreOptions.class);
-    final Util util = new Util();
+    final GcsUtil gcsUtil = new GcsUtil();
+    final SpannerUtil spannerUtil = new SpannerUtil();
 
     // STEP 1b: Setup Spanner configuration
     final SpannerConfig spannerConfig =
@@ -101,12 +102,13 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
 
     // STEP 2: Check whether to re-create database and tables
     if (options.getShouldCreateDatabaseAndTables()) {
-      createDatabaseAndTables(
+      createDatabaseAndTablesFromStoredDdl(
           options.getProjectId(),
           options.getOutputSpannerInstanceId(),
           options.getOutputSpannerDatabaseId(),
           options.getInputFolder(),
-          util);
+          gcsUtil,
+          spannerUtil);
     }
 
     // STEP 3: Query list of tables to restore
@@ -121,7 +123,7 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
             options.getInputFolder(),
             options.getTablesToIncludeInRestore(),
             options.getTablesToExcludeFromRestore(),
-            util);
+            gcsUtil);
 
     if (mapOfParentToAllChildrenTablesInOrderToFetch.size() == 0) {
       LOG.info(

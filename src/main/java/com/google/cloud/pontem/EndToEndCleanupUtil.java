@@ -115,7 +115,7 @@ public class EndToEndCleanupUtil {
   public static void cleanupDatabase(String projectId, String instanceId) {
     LOG.info("Begin deletion of databases.");
     ImmutableList<String> allDatabaseNames =
-        Util.getListOfDatabaseNames(projectId, instanceId, 1000);
+        SpannerUtil.getListOfDatabaseNames(projectId, instanceId, 1000);
     for (String databaseName : allDatabaseNames) {
       EndToEndHelper.deleteCloudSpannerDatabase(projectId, instanceId, databaseName);
     }

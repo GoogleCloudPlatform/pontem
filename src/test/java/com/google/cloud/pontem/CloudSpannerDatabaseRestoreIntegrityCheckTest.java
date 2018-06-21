@@ -57,8 +57,9 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
     Map<String, Long> tableRowCountsRestore1 = ImmutableMap.of("tableName2", 2L);
     JobMetrics jobMetricsRestore1 = TestHelper.getJobMetrics(tableRowCountsRestore1);
 
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(backupJobId)))
         .thenReturn(jobMetricsBackup);
@@ -75,6 +76,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
             gcsBucketName,
             gcsFolderPath,
             requireAllTablesRestored,
+            mockGcsUtil,
             mockUtil));
   }
 
@@ -97,8 +99,9 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
     Map<String, Long> tableRowCountsRestore1 = ImmutableMap.of("tableName2", 2L);
     JobMetrics jobMetricsRestore1 = TestHelper.getJobMetrics(tableRowCountsRestore1);
 
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(backupJobId)))
         .thenReturn(jobMetricsBackup);
@@ -114,6 +117,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
         gcsBucketName,
         gcsFolderPath,
         requireAllTablesRestored,
+        mockGcsUtil,
         mockUtil);
   }
 
