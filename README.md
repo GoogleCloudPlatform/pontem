@@ -23,7 +23,8 @@ and the number of rows restored. It does not check the cell-level data
 values.
 
 While this is not an officially supported Google product, we encourage you
-to file issues for feature requests and bugs.
+to [file issues](https://github.com/GoogleCloudPlatform/pontem/issues/new)
+for feature requests and bugs.
 
 ## Getting started
 pontem can be run in various modes. Consult the [usage guide](USAGE.md) for
