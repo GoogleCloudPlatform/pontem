@@ -22,6 +22,9 @@ successfully. In particular, this checks the list of tables restored
 and the number of rows restored. It does not check the cell-level data
 values.
 
+While this is not an officially supported Google product, we encourage you
+to file FRs and any bugs.
+
 ## Getting started
 pontem can be run in various modes. Consult the [usage guide](USAGE.md) for
 relevant examples.
