@@ -64,7 +64,7 @@ public final class FormatSpannerStructAsStringFnTest {
   public void testFormatSpannerStructAsStringFnTest_arrays6() throws Exception {
     FormatSpannerStructAsStringFn simpleFn =
         new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_6);
-    assertEquals(TestHelper.STRUCT_5_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_6));
+    assertEquals(TestHelper.STRUCT_6_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_6));
   }
 
   @Test
