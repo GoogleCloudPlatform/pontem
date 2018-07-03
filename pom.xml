@@ -261,6 +261,19 @@
             <version>${google-cloud-storage.version}</version>
         </dependency>
 
+        <!-- Deps added because of https://github.com/google/google-api-java-client/issues/1073
+             and https://github.com/GoogleCloudPlatform/DataflowJavaSDK/issues/607
+             Per https://cloud.google.com/dataflow/docs/concepts/sdk-worker-dependencies
+             Dataflow on Beam 2.5 needs a specific version of google-api-services-storage
+             but google-cloud-storage clobbers that version. We cannot change
+             google-cloud-storage because there will be conflicts with gax version, so we
+             must explicitly include google-api-services-storage -->
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-storage</artifactId>
+            <version>v1-rev124-1.23.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>
