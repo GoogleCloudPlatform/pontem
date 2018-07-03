@@ -32,7 +32,7 @@
         <java.version>1.8</java.version>
         <gax.version>1.1.0</gax.version>
 
-        <!-- Below are deps inherited from the depricated parent-pom -->
+        <!-- Below are deps inherited from the deprecated parent-pom -->
         <apache-beam.version>2.5.0</apache-beam.version>
         <google-cloud-core.version>1.0.2</google-cloud-core.version>
         <spanner.version>0.20.0b-beta</spanner.version>
