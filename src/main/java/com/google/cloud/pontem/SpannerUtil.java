@@ -35,13 +35,19 @@ import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
 import com.google.cloud.spanner.Type;
 import com.google.cloud.spanner.Type.Code;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Utility function for Spanner operations. */
 public class SpannerUtil {
@@ -59,6 +65,71 @@ public class SpannerUtil {
             .setHost(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
             .setUserAgentPrefix(Util.USER_AGENT_PREFIX);
     return options;
+  }
+
+  /**
+   * Convert the Cloud Spanner type from {@type String} to {@type Type}
+   *
+   * @see /google-cloud-java/google-cloud-clients/apidocs/com/google/cloud/spanner/Type.Code.html
+   */
+  public static Type getSpannerType(String typeAsString) {
+    typeAsString = typeAsString.trim();
+    if (typeAsString.startsWith("STRING")) {
+      return Type.string();
+    } else if (typeAsString.startsWith("INT64")) {
+      return Type.int64();
+    } else if (typeAsString.startsWith("DATE")) {
+      return Type.date();
+    } else if (typeAsString.startsWith("BOOL")) {
+      return Type.bool();
+    } else if (typeAsString.startsWith("FLOAT64")) {
+      return Type.float64();
+    } else if (typeAsString.startsWith("BYTES")) {
+      return Type.bytes();
+    } else if (typeAsString.startsWith("TIMESTAMP")) {
+      return Type.timestamp();
+    } else if (typeAsString.startsWith("ARRAY<") && typeAsString.endsWith(">")) {
+      // parse out the specific column statements
+      Pattern compiledPattern = Pattern.compile("^ARRAY<([a-zA-Z0-9()]+)>$", Pattern.DOTALL);
+      Matcher matcher = compiledPattern.matcher(typeAsString);
+      if (!matcher.matches()) {
+        throw new RuntimeException("Unparsable Array Type:\n" + typeAsString);
+      }
+      String subTypeAsString = matcher.group(1);
+      return Type.array(getSpannerType(subTypeAsString));
+    } else {
+      throw new RuntimeException("Unparsable Cloud Spanner Type: " + typeAsString);
+    }
+  }
+
+  /**
+   * Read in a DDL for an entire database, parse it into a map of DDLs for each table. Ignore DDL
+   * statements that are not tables (e.g., indexes).
+   */
+  public static ImmutableMap<String, String> convertEntireDtaabaseDdlIntoTableSpecificDdl(
+      ImmutableList<String> ddl) {
+    Map<String, String> map = new HashMap<String, String>();
+    for (String ddlStatement : ddl) {
+      ddlStatement = ddlStatement.trim();
+      if (!ddlStatement.substring(0, 12).equals("CREATE TABLE")) {
+        // DDL statement is not for a table, so move on.
+        continue;
+      }
+      // parse out the name of the table
+      Pattern compiledPattern =
+          Pattern.compile("^CREATE TABLE[\\s]*([a-zA-Z0-9_]+)[\\s]?\\(.*$", Pattern.DOTALL);
+      Matcher matcher = compiledPattern.matcher(ddlStatement);
+      if (!matcher.matches()) {
+        throw new RuntimeException("Unparsable DDL:\n" + ddlStatement);
+      }
+      String tableName = matcher.group(1);
+      if (Strings.isNullOrEmpty(tableName)) {
+        throw new RuntimeException("Unable to parse table name. DDL Statement:\n" + ddlStatement);
+      }
+
+      map.put(tableName, ddlStatement);
+    }
+    return ImmutableMap.copyOf(map);
   }
 
   /** Fetch a list of all database names. */

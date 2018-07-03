@@ -48,7 +48,7 @@ public class SerializedCloudSpannerDatabaseBackupTest {
 
     // Apply the Count transform under test.
     PCollection<String> structDataAsString =
-        input.apply(MapElements.via(new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME)));
+        input.apply(MapElements.via(new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_1)));
 
     // Assert on the results.
     PAssert.that(structDataAsString)

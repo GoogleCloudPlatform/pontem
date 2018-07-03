@@ -43,7 +43,7 @@ public class SerializedCloudSpannerDatabaseRestoreTest {
                 TestHelper.STRUCT_1_BASE64_SERIALIZED, TestHelper.STRUCT_2_BASE64_SERIALIZED));
 
     PCollection<Mutation> structDataAsMutation =
-        rows.apply(MapElements.via(new FormatStringAsSpannerMutationFn(TestHelper.TABLE_NAME)));
+        rows.apply(MapElements.via(new FormatStringAsSpannerMutationFn(TestHelper.TABLE_NAME_1)));
 
     PAssert.that(structDataAsMutation)
         .containsInAnyOrder(TestHelper.MUTATION_1, TestHelper.MUTATION_2);
