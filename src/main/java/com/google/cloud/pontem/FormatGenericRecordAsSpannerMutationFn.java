@@ -156,7 +156,14 @@ public class FormatGenericRecordAsSpannerMutationFn
         if (object == null) {
           // Do nothing with NULL value.
         } else if (object instanceof ByteBuffer) {
-          mutationBuilder.set(fieldName).to(ByteArray.copyFrom((ByteBuffer) object));
+          // WARNING: If you call ByteArray.copyFrom(ByteBuffer), you will change the pointer of
+          // the ByteBuffer and consume its contents. This will mean that the GenericRecord that
+          // you received at the beginning of the function is not the same as record at the end.
+          // To prevent this, invoke asReadOnlyBuffer() on the ByteBuffer before passing it to
+          // ByteArray.copyFrom()
+          mutationBuilder
+              .set(fieldName)
+              .to(ByteArray.copyFrom(((ByteBuffer) object).asReadOnlyBuffer()));
         } else {
           throw new RuntimeException(
               "Unrecognized format in field " + fieldName + " for Avro: " + object.getClass());
@@ -265,7 +272,13 @@ public class FormatGenericRecordAsSpannerMutationFn
                 .toBytesArray(
                     object
                         .stream()
-                        .map(val -> ByteArray.copyFrom(val))
+                        // WARNING: If you call ByteArray.copyFrom(ByteBuffer), you will change the
+                        // pointer of the ByteBuffer and consume its contents.
+                        // This will mean that the GenericRecord that you received at the
+                        // beginning of the function is not the same as record at the end.
+                        // To prevent this, invoke asReadOnlyBuffer() on the ByteBuffer before
+                        // passing it to ByteArray.copyFrom()
+                        .map(val -> ByteArray.copyFrom(val.asReadOnlyBuffer()))
                         .collect(Collectors.toList()));
           }
         } else {
