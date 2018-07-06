@@ -68,6 +68,13 @@ public final class FormatSpannerStructAsStringFnTest {
   }
 
   @Test
+  public void testFormatSpannerStructAsStringFnTest_arrays8() throws Exception {
+    FormatSpannerStructAsStringFn simpleFn =
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_8);
+    assertEquals(TestHelper.STRUCT_8_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_8));
+  }
+
+  @Test
   public void testFormatSpannerStructAsStringFnTest_nullValue() throws Exception {
     FormatSpannerStructAsStringFn simpleFn =
         new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_3);

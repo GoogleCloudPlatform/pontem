@@ -53,6 +53,10 @@ public class FormatStructAsGenericRecordFn extends SimpleFunction<Struct, Generi
       }
 
       boolean isSpannerColumnValueNull = inputRow.isNull(columnName);
+      // WARNING: Calling getColumnType(columnName) on a {@type Struct} will have the effect of
+      // changing the serialized value of the {@type Struct}. The underlying data will not change,
+      // but the serialized value will. Consequently, every {@type Struct} that passes through
+      // here will not have the same serialized value.
       if (columnTypeSchema.getType() == Schema.Type.STRING
           && inputRow.getColumnType(columnName).getCode() == Code.STRING) {
         genericRecordBuilder.set(

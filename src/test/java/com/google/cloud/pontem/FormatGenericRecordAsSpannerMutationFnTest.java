@@ -131,4 +131,13 @@ public final class FormatGenericRecordAsSpannerMutationFnTest {
     Mutation actualMutation = fn.apply(TestHelper.GENERIC_RECORD_7);
     assertEquals(TestHelper.MUTATION_7, actualMutation);
   }
+
+  @Test
+  public void testFormatGenericRecordAsSpannerMutationFn_advanced8() {
+    FormatGenericRecordAsSpannerMutationFn fn =
+        new FormatGenericRecordAsSpannerMutationFn(
+            TestHelper.TABLE_NAME_8, TestHelper.MAP_OF_COLUMN_NAMES_TO_SPANNER_TYPES_8);
+    Mutation actualMutation = fn.apply(TestHelper.GENERIC_RECORD_8);
+    assertEquals(TestHelper.MUTATION_8, actualMutation);
+  }
 }

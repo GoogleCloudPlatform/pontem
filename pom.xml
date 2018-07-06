@@ -74,6 +74,15 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+            <!-- Explicitly specify random test execution order -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.0</version>
+                <configuration>
+                    <runOrder>random</runOrder>
+                </configuration>
+            </plugin>
             <!-- Adding code coverage plugin -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -254,6 +263,13 @@
             <artifactId>hamcrest-core</artifactId>
             <scope>test</scope>
             <version>${hamcrest.version}</version>
+        </dependency>
+        <!-- Added Apache Commons Library for use with tests. -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.7</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Deps not in Beam -->

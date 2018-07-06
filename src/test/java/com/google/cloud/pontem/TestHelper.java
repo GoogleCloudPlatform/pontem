@@ -842,6 +842,77 @@ public class TestHelper {
           + "\tproperty_bb BYTES,\n"
           + ") PRIMARY KEY (property_a)";
 
+  public static final String TABLE_NAME_8 = "table8";
+  private static final ByteArray PROPERTY_A8 = ByteArray.copyFrom("dsjksjd");
+  private static final List<ByteArray> PROPERTY_B8 =
+      ImmutableList.of(ByteArray.copyFrom("dss"), ByteArray.copyFrom("as%$@(%*(Js"));
+  private static final String PROPERTY_C8 = "foo";
+  public static final Struct STRUCT_8 =
+      Struct.newBuilder()
+          .set("property_a")
+          .to(PROPERTY_A8)
+          .set("property_b")
+          .toBytesArray(PROPERTY_B8)
+          .set("property_c")
+          .to(PROPERTY_C8)
+          .build();
+  public static final Mutation MUTATION_8 =
+      Mutation.newInsertOrUpdateBuilder(TestHelper.TABLE_NAME_8)
+          .set("property_a")
+          .to(PROPERTY_A8)
+          .set("property_b")
+          .toBytesArray(PROPERTY_B8)
+          .set("property_c")
+          .to(PROPERTY_C8)
+          .build();
+  public static final Schema SCHEMA_8 =
+      SchemaBuilder.record(TABLE_NAME_8)
+          .namespace(AvroUtil.AVRO_SCHEMA_NAMESPACE)
+          .prop("pontemAvroSchemaFormattingVersion", AvroUtil.AVRO_RECORD_VERSION)
+          .fields()
+          .name("property_a")
+          .type(SchemaBuilder.builder().bytesType())
+          .noDefault()
+          .name("property_b")
+          .type(SchemaBuilder.builder().array().items().bytesType())
+          .noDefault()
+          .name("property_c")
+          .type(SchemaBuilder.builder().stringType())
+          .noDefault()
+          .endRecord();
+  public static final GenericRecord GENERIC_RECORD_8 =
+      new GenericRecordBuilder(SCHEMA_8)
+          .set("property_a", ByteBuffer.wrap(PROPERTY_A8.toByteArray()))
+          .set("property_c", PROPERTY_C8)
+          .set(
+              "property_b",
+              PROPERTY_B8
+                  .stream()
+                  .map(val -> ByteBuffer.wrap(val.toByteArray()))
+                  .collect(Collectors.toList()))
+          .build();
+  public static final ImmutableMap<String, Type> MAP_OF_COLUMN_NAMES_TO_SPANNER_TYPES_8 =
+      ImmutableMap.of(
+          "property_a",
+          Type.bytes(),
+          "property_b",
+          Type.array(Type.bytes()),
+          "property_c",
+          Type.string());
+  public static final String TABLE_DDL_8 =
+      "CREATE TABLE "
+          + TABLE_NAME_8
+          + " (\n"
+          + "\tproperty_a BYTES NOT NULL,\n"
+          + "\tproperty_b ARRAY<BYTES> NOT NULL,\n"
+          + "\tproperty_c STRING(MAX) NOT NULL,\n"
+          + ") PRIMARY KEY (property_a)";
+
+  // CHECKSTYLE.OFF: LineLength
+  public static final String STRUCT_8_BASE64_SERIALIZED =
+      "rO0ABXNyAC9jb20uZ29vZ2xlLmNsb3VkLnNwYW5uZXIuU3RydWN0JFZhbHVlTGlzdFN0cnVjdCJPEfWmuB9hAgACTAAEdHlwZXQAH0xjb20vZ29vZ2xlL2Nsb3VkL3NwYW5uZXIvVHlwZTtMAAZ2YWx1ZXN0ABBMamF2YS91dGlsL0xpc3Q7eHIAH2NvbS5nb29nbGUuY2xvdWQuc3Bhbm5lci5TdHJ1Y3TreRgevRZR1wIAAHhwc3IAHWNvbS5nb29nbGUuY2xvdWQuc3Bhbm5lci5UeXBl1U9P8MIRFWoCAARMABBhcnJheUVsZW1lbnRUeXBlcQB+AAFMAARjb2RldAAkTGNvbS9nb29nbGUvY2xvdWQvc3Bhbm5lci9UeXBlJENvZGU7TAAMZmllbGRzQnlOYW1ldAAPTGphdmEvdXRpbC9NYXA7TAAMc3RydWN0RmllbGRzdAApTGNvbS9nb29nbGUvY29tbW9uL2NvbGxlY3QvSW1tdXRhYmxlTGlzdDt4cHB+cgAiY29tLmdvb2dsZS5jbG91ZC5zcGFubmVyLlR5cGUkQ29kZQAAAAAAAAAAEgAAeHIADmphdmEubGFuZy5FbnVtAAAAAAAAAAASAAB4cHQABlNUUlVDVHBzcgA2Y29tLmdvb2dsZS5jb21tb24uY29sbGVjdC5JbW11dGFibGVMaXN0JFNlcmlhbGl6ZWRGb3JtAAAAAAAAAAACAAFbAAhlbGVtZW50c3QAE1tMamF2YS9sYW5nL09iamVjdDt4cHVyABNbTGphdmEubGFuZy5PYmplY3Q7kM5YnxBzKWwCAAB4cAAAAANzcgApY29tLmdvb2dsZS5jbG91ZC5zcGFubmVyLlR5cGUkU3RydWN0RmllbGR36UM9x2XCkgIAAkwABG5hbWV0ABJMamF2YS9sYW5nL1N0cmluZztMAAR0eXBlcQB+AAF4cHQACnByb3BlcnR5X2FzcQB+AAVwfnEAfgAKdAAFQllURVNwcHNxAH4AE3QACnByb3BlcnR5X2JzcQB+AAVxAH4AF35xAH4ACnQABUFSUkFZcHBzcQB+ABN0AApwcm9wZXJ0eV9jc3EAfgAFcH5xAH4ACnQABlNUUklOR3Bwc3EAfgAOdXEAfgARAAAAA3NyAChjb20uZ29vZ2xlLmNsb3VkLnNwYW5uZXIuVmFsdWUkQnl0ZXNJbXBsRs+l5NMK1AsCAAB4cgAyY29tLmdvb2dsZS5jbG91ZC5zcGFubmVyLlZhbHVlJEFic3RyYWN0T2JqZWN0VmFsdWX/laoSsDtinQIAAUwABXZhbHVldAASTGphdmEvbGFuZy9PYmplY3Q7eHIALGNvbS5nb29nbGUuY2xvdWQuc3Bhbm5lci5WYWx1ZSRBYnN0cmFjdFZhbHVlWGHIp61Am88CAAJaAAZpc051bGxMAAR0eXBlcQB+AAF4cgAeY29tLmdvb2dsZS5jbG91ZC5zcGFubmVyLlZhbHVltpagbFkjPDYCAAB4cABxAH4AF3NyABpjb20uZ29vZ2xlLmNsb3VkLkJ5dGVBcnJheeWCjDS+PXLIAgABTAAKYnl0ZVN0cmluZ3QAIExjb20vZ29vZ2xlL3Byb3RvYnVmL0J5dGVTdHJpbmc7eHBzcgAwY29tLmdvb2dsZS5wcm90b2J1Zi5CeXRlU3RyaW5nJExpdGVyYWxCeXRlU3RyaW5nAAAAAAAAAAECAAFbAAVieXRlc3QAAltCeHIALWNvbS5nb29nbGUucHJvdG9idWYuQnl0ZVN0cmluZyRMZWFmQnl0ZVN0cmluZ7TgNIKoj3N4AgAAeHIAHmNvbS5nb29nbGUucHJvdG9idWYuQnl0ZVN0cmluZ/0UNwb1jrwNAgABSQAEaGFzaHhwAAAAAHVyAAJbQqzzF/gGCFTgAgAAeHAAAAAHZHNqa3NqZHNyAC1jb20uZ29vZ2xlLmNsb3VkLnNwYW5uZXIuVmFsdWUkQnl0ZXNBcnJheUltcGyw5dkZnnk28wIAAHhyADFjb20uZ29vZ2xlLmNsb3VkLnNwYW5uZXIuVmFsdWUkQWJzdHJhY3RBcnJheVZhbHVlcxWDhc/tllsCAAB4cQB+ACcAcQB+ABxzcgAmamF2YS51dGlsLkNvbGxlY3Rpb25zJFVubW9kaWZpYWJsZUxpc3T8DyUxteyOEAIAAUwABGxpc3RxAH4AAnhyACxqYXZhLnV0aWwuQ29sbGVjdGlvbnMkVW5tb2RpZmlhYmxlQ29sbGVjdGlvbhlCAIDLXvceAgABTAABY3QAFkxqYXZhL3V0aWwvQ29sbGVjdGlvbjt4cHNyABNqYXZhLnV0aWwuQXJyYXlMaXN0eIHSHZnHYZ0DAAFJAARzaXpleHAAAAACdwQAAAACc3EAfgAsc3EAfgAvAAAAAHVxAH4ANAAAAANkc3NzcQB+ACxzcQB+AC8AAAAAdXEAfgA0AAAAC2FzJSRAKCUqKEpzeHEAfgA+c3IAKWNvbS5nb29nbGUuY2xvdWQuc3Bhbm5lci5WYWx1ZSRTdHJpbmdJbXBsjNNcmhMipikCAAB4cQB+ACcAcQB+ACF0AANmb28=";
+  // CHECKSTYLE.ON: LineLength
+
   public static JobMetrics getJobMetrics(Map<String, Long> tableRowCounts) {
     JobMetrics jobMetrics = new JobMetrics();
     List<MetricUpdate> metricUpdates = Lists.newArrayList();
