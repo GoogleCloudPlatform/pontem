@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
@@ -85,8 +86,23 @@ public class AvroCloudSpannerDatabaseBackupTest {
     Timestamp readTimestamp = Timestamp.now();
 
     ImmutableList<String> tablesToBackup = ImmutableList.of("tableName1", "tableName2");
+    ImmutableMap<String, String> mapOfTableNameToTableDdl = ImmutableMap.of(
+        "tableName1",
+        "CREATE TABLE tableName1 (\n"
+            + "    word STRING(MAX) NOT NULL,\n"
+            + ") PRIMARY KEY (word)",
+        "tableName2",
+        "CREATE TABLE tableName1 (\n"
+            + "    word STRING(MAX) NOT NULL,\n"
+            + ") PRIMARY KEY (word)");
     TestPipeline testPipeline = TestPipeline.create();
-    SerializedCloudSpannerDatabaseBackup.constructPipeline(
-        testPipeline, options, mockSpannerConfig, mockGcsUtil, tablesToBackup, readTimestamp);
+    AvroCloudSpannerDatabaseBackup.constructPipeline(
+        testPipeline,
+        options,
+        mockSpannerConfig,
+        mockGcsUtil,
+        tablesToBackup,
+        readTimestamp,
+        mapOfTableNameToTableDdl);
   }
 }
