@@ -16,6 +16,7 @@
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Type;
+import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 import org.apache.avro.Schema;
@@ -136,6 +137,11 @@ public class AvroUtil {
   }
 
   public static String getAvroSchemaFileLocation(String tableName) {
-    return "metadata/" + AvroUtil.AVRO_SCHEMA_FOLDER_LOCATION + "/" + tableName + ".json";
+    return "metadata"
+        + File.separator
+        + AvroUtil.AVRO_SCHEMA_FOLDER_LOCATION
+        + File.separator
+        + tableName
+        + ".json";
   }
 }

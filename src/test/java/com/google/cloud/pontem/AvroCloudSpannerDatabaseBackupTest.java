@@ -86,15 +86,16 @@ public class AvroCloudSpannerDatabaseBackupTest {
     Timestamp readTimestamp = Timestamp.now();
 
     ImmutableList<String> tablesToBackup = ImmutableList.of("tableName1", "tableName2");
-    ImmutableMap<String, String> mapOfTableNameToTableDdl = ImmutableMap.of(
-        "tableName1",
-        "CREATE TABLE tableName1 (\n"
-            + "    word STRING(MAX) NOT NULL,\n"
-            + ") PRIMARY KEY (word)",
-        "tableName2",
-        "CREATE TABLE tableName1 (\n"
-            + "    word STRING(MAX) NOT NULL,\n"
-            + ") PRIMARY KEY (word)");
+    ImmutableMap<String, String> mapOfTableNameToTableDdl =
+        ImmutableMap.of(
+            "tableName1",
+            "CREATE TABLE tableName1 (\n"
+                + "    word STRING(MAX) NOT NULL,\n"
+                + ") PRIMARY KEY (word)",
+            "tableName2",
+            "CREATE TABLE tableName1 (\n"
+                + "    word STRING(MAX) NOT NULL,\n"
+                + ") PRIMARY KEY (word)");
     TestPipeline testPipeline = TestPipeline.create();
     AvroCloudSpannerDatabaseBackup.constructPipeline(
         testPipeline,
