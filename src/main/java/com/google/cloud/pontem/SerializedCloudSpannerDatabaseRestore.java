@@ -16,6 +16,7 @@
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Mutation;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -215,7 +216,13 @@ public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatab
                     + Util.TRANSFORM_NODE_NAME_DELIMITER
                     + childTableName,
                 TextIO.read()
-                    .from(this.options.getInputFolder() + "tables/" + childTableName + "/*")
+                    .from(
+                        this.options.getInputFolder()
+                            + "tables"
+                            + File.separator
+                            + childTableName
+                            + File.separator
+                            + "*")
                     .withCompressionType(TextIO.CompressionType.GZIP));
         PCollection<Mutation> mutations =
             rows.apply(

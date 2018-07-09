@@ -21,6 +21,7 @@ import com.google.cloud.spanner.TimestampBound;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -232,9 +233,10 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
               TextIO.write()
                   .to(
                       GcsUtil.getFormattedOutputPath(options.getOutputFolder())
-                          + "tables/"
+                          + "tables"
+                          + File.separator
                           + entry.getKey()
-                          + "/")
+                          + File.separator)
                   .withWritableByteChannelFactory(FileBasedSink.CompressionType.GZIP));
     }
   }

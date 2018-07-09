@@ -22,6 +22,7 @@ package com.google.cloud.pontem;
 import static org.junit.Assert.assertEquals;
 
 import com.google.cloud.spanner.Type;
+import java.io.File;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.junit.Test;
@@ -89,7 +90,12 @@ public class AvroUtilTest {
   public void testGetAvroSchemaFileLocation() {
     String tableName = "fooBar";
     assertEquals(
-        "metadata/" + AvroUtil.AVRO_SCHEMA_FOLDER_LOCATION + "/" + tableName + ".json",
+        "metadata"
+            + File.separator
+            + AvroUtil.AVRO_SCHEMA_FOLDER_LOCATION
+            + File.separator
+            + tableName
+            + ".json",
         AvroUtil.getAvroSchemaFileLocation(tableName));
   }
 

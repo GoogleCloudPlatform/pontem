@@ -19,6 +19,7 @@ import com.google.cloud.spanner.Mutation;
 import com.google.cloud.spanner.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -219,7 +220,13 @@ public class AvroCloudSpannerDatabaseRestore extends BaseCloudSpannerDatabaseRes
                     + Util.TRANSFORM_NODE_NAME_DELIMITER
                     + childTableName,
                 AvroIO.readGenericRecords(schema.toString())
-                    .from(options.getInputFolder() + "tables/" + childTableName + "/*.avro"));
+                    .from(
+                        options.getInputFolder()
+                            + "tables"
+                            + File.separator
+                            + childTableName
+                            + File.separator
+                            + "*.avro"));
         PCollection<Mutation> mutations =
             rows.apply(
                 Util.MAP_DATA_TRANSFORM_NODE_NAME

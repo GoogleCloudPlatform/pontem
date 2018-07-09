@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.beam.sdk.Pipeline;
@@ -239,9 +240,10 @@ public class AvroCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBack
               AvroIO.writeGenericRecords(tableSchema)
                   .to(
                       GcsUtil.getFormattedOutputPath(options.getOutputFolder())
-                          + "tables/"
+                          + "tables"
+                          + File.separator
                           + entry.getKey()
-                          + "/")
+                          + File.separator)
                   .withSuffix(".avro"));
     }
   }
