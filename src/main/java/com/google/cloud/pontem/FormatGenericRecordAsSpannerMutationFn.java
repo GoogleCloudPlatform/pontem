@@ -64,7 +64,7 @@ public class FormatGenericRecordAsSpannerMutationFn
       Type spannerFieldType = this.mapOfColumnNamesToSpannerTypes.get(fieldName);
       Schema columnSchema = tableField.schema();
       // Since the Avro column schema could be a UNION of types (e.g., [STRING, NULL]),
-      // we need to unpack that UNION to simply be a noramlly recognized Avro type (e.g., STRING).
+      // we need to unpack that UNION to simply be a normally recognized Avro type (e.g., STRING).
       if (columnSchema.getType() == Schema.Type.UNION) {
         columnSchema = AvroUtil.getSingleAvroTypeFromNullableUnion(columnSchema);
       }

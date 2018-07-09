@@ -87,6 +87,7 @@ public class AvroCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBack
               options.getProjectId(),
               GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(options.getOutputFolder()),
               GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(options.getOutputFolder()));
+
       if (numBlobs > 0) {
         throw new Exception(
             "Attempts to backup to location "

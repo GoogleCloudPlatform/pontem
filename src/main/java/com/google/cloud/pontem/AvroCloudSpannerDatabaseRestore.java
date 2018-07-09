@@ -126,6 +126,7 @@ public class AvroCloudSpannerDatabaseRestore extends BaseCloudSpannerDatabaseRes
               mapOfTableNameToTableDdl);
       threadPool.execute(insertionTask);
     }
+
     threadPool.shutdown();
   }
 

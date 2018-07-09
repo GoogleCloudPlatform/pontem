@@ -29,6 +29,16 @@ import org.apache.avro.Schema;
 /** Wrapper class for storing information about a table. */
 public class TableInformation {
   private static final Logger LOG = Logger.getLogger(TableInformation.class.getName());
+  private static final Pattern COMPILED_TABLE_PATTERN =
+      Pattern.compile(
+          "^CREATE TABLE[\\s]*[a-zA-Z0-9_]*[\\s]?\\((.*)\\)[\\s]*PRIMARY KEY.*$", Pattern.DOTALL);
+
+  // parse out the name and type of column as well as nullability
+  // E.g., "dateArray ARRAY<DATE> NOT NULL,"
+  // E.g., "int64_ INT64 NOT NULL,"
+  // E.g., "timestamp TIMESTAMP NOT NULL,"
+  private static final Pattern COMPILED_COLUMN_PATTERN =
+      Pattern.compile("^([a-zA-Z0-9_]+)[\\s]+([<>A-z0-9()]+)[\\s]?(NOT NULL)?.*$", Pattern.DOTALL);
 
   private final ImmutableMap<String, Type> mapOfColumnNamesToSpannerTypes;
   private final ImmutableMap<String, Schema> mapOfColumnNamesToAvroTypes;
@@ -37,10 +47,7 @@ public class TableInformation {
   public TableInformation(String tableDdl) {
 
     // Parse out the specific column statements from the entire Table DDL.
-    Pattern compiledPattern =
-        Pattern.compile(
-            "^CREATE TABLE[\\s]*[a-zA-Z0-9_]*[\\s]?\\((.*)\\)[\\s]*PRIMARY KEY.*$", Pattern.DOTALL);
-    Matcher matcher = compiledPattern.matcher(tableDdl);
+    Matcher matcher = COMPILED_TABLE_PATTERN.matcher(tableDdl);
     if (!matcher.matches()) {
       throw new RuntimeException("Unparsable Table DDL:\n" + tableDdl);
     }
@@ -63,14 +70,7 @@ public class TableInformation {
     for (String columnStatement : columnStatements) {
       columnStatement = columnStatement.trim();
 
-      // parse out the name and type of column as well as nullability
-      // E.g., "dateArray ARRAY<DATE> NOT NULL,"
-      // E.g., "int64_ INT64 NOT NULL,"
-      // E.g., "timestamp TIMESTAMP NOT NULL,"
-      Pattern compiledColumnPattern =
-          Pattern.compile(
-              "^([a-zA-Z0-9_]+)[\\s]+([<>A-z0-9()]+)[\\s]?(NOT NULL)?.*$", Pattern.DOTALL);
-      Matcher matcherColumnPattern = compiledColumnPattern.matcher(columnStatement);
+      Matcher matcherColumnPattern = COMPILED_COLUMN_PATTERN.matcher(columnStatement);
       if (!matcherColumnPattern.matches()) {
         throw new RuntimeException("Unparsable Column Definition Statement:\n" + columnStatement);
       }
@@ -84,6 +84,7 @@ public class TableInformation {
         }
       } catch (IndexOutOfBoundsException e) {
         // Group does not exist.
+        LOG.info("Group does not exist:\n" + e.toString());
       }
 
       LOG.info("Mapped " + columnName + " to Cloud Spanner Type, " + colTypeAsString);

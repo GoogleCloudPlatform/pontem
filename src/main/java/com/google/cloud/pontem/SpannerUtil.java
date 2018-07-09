@@ -53,6 +53,14 @@ import java.util.regex.Pattern;
 public class SpannerUtil {
   private static final Logger LOG = Logger.getLogger(SpannerUtil.class.getName());
 
+  // parse out the name of the table
+  private static final Pattern COMPILED_TABLE_PATTERN =
+      Pattern.compile("^CREATE TABLE[\\s]*([a-zA-Z0-9_]+)[\\s]?\\(.*$", Pattern.DOTALL);
+
+  // parse out the specific column statements
+  private static final Pattern COMPILED_ARRAY_PATTERN =
+      Pattern.compile("^ARRAY<([a-zA-Z0-9()]+)>$", Pattern.DOTALL);
+
   public static final String CLOUD_SPANNER_API_ENDPOINT_HOSTNAME = "https://spanner.googleapis.com";
   public static final String FILE_PATH_FOR_DATABASE_DDL = "metadata/database_ddl.txt";
 
@@ -90,8 +98,7 @@ public class SpannerUtil {
       return Type.timestamp();
     } else if (typeAsString.startsWith("ARRAY<") && typeAsString.endsWith(">")) {
       // parse out the specific column statements
-      Pattern compiledPattern = Pattern.compile("^ARRAY<([a-zA-Z0-9()]+)>$", Pattern.DOTALL);
-      Matcher matcher = compiledPattern.matcher(typeAsString);
+      Matcher matcher = COMPILED_ARRAY_PATTERN.matcher(typeAsString);
       if (!matcher.matches()) {
         throw new RuntimeException("Unparsable Array Type:\n" + typeAsString);
       }
@@ -115,10 +122,7 @@ public class SpannerUtil {
         // DDL statement is not for a table, so move on.
         continue;
       }
-      // parse out the name of the table
-      Pattern compiledPattern =
-          Pattern.compile("^CREATE TABLE[\\s]*([a-zA-Z0-9_]+)[\\s]?\\(.*$", Pattern.DOTALL);
-      Matcher matcher = compiledPattern.matcher(ddlStatement);
+      Matcher matcher = COMPILED_TABLE_PATTERN.matcher(ddlStatement);
       if (!matcher.matches()) {
         throw new RuntimeException("Unparsable DDL:\n" + ddlStatement);
       }

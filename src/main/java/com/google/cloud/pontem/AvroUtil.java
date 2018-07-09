@@ -30,7 +30,7 @@ public class AvroUtil {
 
   /**
    * Since the Avro column schema could be a UNION of types (e.g., [STRING, NULL]), we need to
-   * unpack that UNION to simply be a noramlly recognized Avro type (e.g., STRING).
+   * unpack that UNION to simply be a normally recognized Avro type (e.g., STRING).
    */
   public static Schema getSingleAvroTypeFromNullableUnion(Schema columnSchema) {
     if (columnSchema.getType() == Schema.Type.UNION) {
@@ -70,6 +70,7 @@ public class AvroUtil {
 
     Schema schema = schemaBuilderFieldAssembler.endRecord();
     LOG.info("Schema:\n" + schema.toString());
+
     return schema;
   }
 
