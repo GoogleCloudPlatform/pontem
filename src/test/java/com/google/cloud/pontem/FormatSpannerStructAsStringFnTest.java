@@ -26,27 +26,58 @@ import org.junit.Test;
 /** Tests for {@link FormatSpannerSpannerStructAsStringFn}. */
 public final class FormatSpannerStructAsStringFnTest {
   @Test
-  public void testFormatSpannerStructAsStringFnTest() throws Exception {
+  public void testFormatSpannerStructAsStringFnTest1() throws Exception {
     FormatSpannerStructAsStringFn simpleFn =
-        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME);
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_1);
     assertEquals(TestHelper.STRUCT_1_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_1));
+  }
+
+  @Test
+  public void testFormatSpannerStructAsStringFnTest2() throws Exception {
+    FormatSpannerStructAsStringFn simpleFn =
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_2);
     assertEquals(TestHelper.STRUCT_2_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_2));
+  }
+
+  @Test
+  public void testFormatSpannerStructAsStringFnTest3() throws Exception {
+    FormatSpannerStructAsStringFn simpleFn =
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_3);
     assertEquals(TestHelper.STRUCT_3_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_3));
   }
 
   @Test
-  public void testFormatSpannerStructAsStringFnTest_arrays() throws Exception {
+  public void testFormatSpannerStructAsStringFnTest_arrays4() throws Exception {
     FormatSpannerStructAsStringFn simpleFn =
-        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME);
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_4);
     assertEquals(TestHelper.STRUCT_4_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_4));
+  }
+
+  @Test
+  public void testFormatSpannerStructAsStringFnTest_arrays5() throws Exception {
+    FormatSpannerStructAsStringFn simpleFn =
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_5);
     assertEquals(TestHelper.STRUCT_5_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_5));
+  }
+
+  @Test
+  public void testFormatSpannerStructAsStringFnTest_arrays6() throws Exception {
+    FormatSpannerStructAsStringFn simpleFn =
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_6);
     assertEquals(TestHelper.STRUCT_6_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_6));
+  }
+
+  @Test
+  public void testFormatSpannerStructAsStringFnTest_arrays8() throws Exception {
+    FormatSpannerStructAsStringFn simpleFn =
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_8);
+    assertEquals(TestHelper.STRUCT_8_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_8));
   }
 
   @Test
   public void testFormatSpannerStructAsStringFnTest_nullValue() throws Exception {
     FormatSpannerStructAsStringFn simpleFn =
-        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME);
+        new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_3);
     assertEquals(TestHelper.STRUCT_3_BASE64_SERIALIZED, simpleFn.apply(TestHelper.STRUCT_3));
   }
 }

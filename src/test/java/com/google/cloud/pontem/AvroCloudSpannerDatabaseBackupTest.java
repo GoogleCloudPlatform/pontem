@@ -24,6 +24,9 @@ import static org.mockito.Mockito.mock;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Struct;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.gcp.spanner.SpannerConfig;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.PAssert;
@@ -36,24 +39,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link SerializedCloudSpannerDatabaseBackup}. */
+/** Tests for {@link AvroCloudSpannerDatabaseBackup}. */
 @RunWith(JUnit4.class)
-public class SerializedCloudSpannerDatabaseBackupTest {
+public class AvroCloudSpannerDatabaseBackupTest {
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
   @Test
   public void testPipelineCanRunSuccessfully() throws Exception {
     // Create an input PCollection.
-    PCollection<Struct> input = pipeline.apply(Create.of(TestHelper.STRUCT_1, TestHelper.STRUCT_2));
+    PCollection<Struct> input = pipeline.apply(Create.of(TestHelper.STRUCT_1));
 
     // Apply the Count transform under test.
-    PCollection<String> structDataAsString =
-        input.apply(MapElements.via(new FormatSpannerStructAsStringFn(TestHelper.TABLE_NAME_1)));
+    PCollection<GenericRecord> structDataAsGenericRecord =
+        input
+            .apply(
+                MapElements.via(new FormatStructAsGenericRecordFn(TestHelper.SCHEMA_1.toString())))
+            .setCoder(AvroCoder.of(TestHelper.SCHEMA_1));
 
     // Assert on the results.
-    PAssert.that(structDataAsString)
-        .containsInAnyOrder(
-            TestHelper.STRUCT_1_BASE64_SERIALIZED, TestHelper.STRUCT_2_BASE64_SERIALIZED);
+    PAssert.that(structDataAsGenericRecord).containsInAnyOrder(TestHelper.GENERIC_RECORD_1);
 
     // Run the pipeline.
     pipeline.run().waitUntilFinish();
@@ -82,8 +86,23 @@ public class SerializedCloudSpannerDatabaseBackupTest {
     Timestamp readTimestamp = Timestamp.now();
 
     ImmutableList<String> tablesToBackup = ImmutableList.of("tableName1", "tableName2");
+    ImmutableMap<String, String> mapOfTableNameToTableDdl = ImmutableMap.of(
+        "tableName1",
+        "CREATE TABLE tableName1 (\n"
+            + "    word STRING(MAX) NOT NULL,\n"
+            + ") PRIMARY KEY (word)",
+        "tableName2",
+        "CREATE TABLE tableName1 (\n"
+            + "    word STRING(MAX) NOT NULL,\n"
+            + ") PRIMARY KEY (word)");
     TestPipeline testPipeline = TestPipeline.create();
-    SerializedCloudSpannerDatabaseBackup.constructPipeline(
-        testPipeline, options, mockSpannerConfig, mockGcsUtil, tablesToBackup, readTimestamp);
+    AvroCloudSpannerDatabaseBackup.constructPipeline(
+        testPipeline,
+        options,
+        mockSpannerConfig,
+        mockGcsUtil,
+        tablesToBackup,
+        readTimestamp,
+        mapOfTableNameToTableDdl);
   }
 }

@@ -20,6 +20,8 @@
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Mutation;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
@@ -30,23 +32,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link SerializedCloudSpannerDatabaseRestore}. */
+/** Tests for {@link AvroCloudSpannerDatabaseRestore}. */
 @RunWith(JUnit4.class)
-public class SerializedCloudSpannerDatabaseRestoreTest {
+public class AvroCloudSpannerDatabaseRestoreTest {
   @Rule public final transient TestPipeline pipeline = TestPipeline.create();
 
   @Test
   public void testPipelineCanRunSuccessfully() throws Exception {
-    PCollection<String> rows =
+    PCollection<GenericRecord> rows =
         pipeline.apply(
-            Create.of(
-                TestHelper.STRUCT_1_BASE64_SERIALIZED, TestHelper.STRUCT_2_BASE64_SERIALIZED));
+            Create.of(TestHelper.GENERIC_RECORD_1)
+                .withCoder(AvroCoder.of(GenericRecord.class, TestHelper.SCHEMA_1)));
 
     PCollection<Mutation> structDataAsMutation =
-        rows.apply(MapElements.via(new FormatStringAsSpannerMutationFn(TestHelper.TABLE_NAME_1)));
+        rows.apply(
+            MapElements.via(
+                new FormatGenericRecordAsSpannerMutationFn(
+                    TestHelper.TABLE_NAME_1, TestHelper.MAP_OF_COLUMN_NAMES_TO_SPANNER_TYPES_1)));
 
-    PAssert.that(structDataAsMutation)
-        .containsInAnyOrder(TestHelper.MUTATION_1, TestHelper.MUTATION_2);
+    PAssert.that(structDataAsMutation).containsInAnyOrder(TestHelper.MUTATION_1);
 
     pipeline.run().waitUntilFinish();
   }
