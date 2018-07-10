@@ -47,7 +47,7 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/proje
   - [Restore with an Integrity Check](#restore-with-an-integrity-check)
 
 ## Backup
-A simple run that backs up a database:
+To backup in Avro format:
 
 ```bash
 mvn compile exec:java \
@@ -63,6 +63,7 @@ mvn compile exec:java \
   -Pdataflow-runner
 ```
 
+To backup in serialized format:
 
 ```bash
 mvn compile exec:java \
@@ -108,7 +109,7 @@ mvn compile exec:java \
 ```
 
 ## Restore
-A simple restore of a database:
+A simple restore of a database from Avro format:
 
 ```bash
 mvn compile exec:java \
@@ -124,6 +125,7 @@ mvn compile exec:java \
   -Pdataflow-runner
 ```
 
+A simple restore of a database from serialized format:
 
 ```bash
 mvn compile exec:java \
