@@ -47,7 +47,23 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/proje
   - [Restore with an Integrity Check](#restore-with-an-integrity-check)
 
 ## Backup
-A simple run that backs up a database:
+To backup in Avro format:
+
+```bash
+mvn compile exec:java \
+  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
+  -Dexec.args="--runner=DataflowRunner \
+               --project=my-cloud-spanner-project \
+               --region=us-central1 \
+               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
+               --inputSpannerInstanceId=my-cloud-spanner-project-db \
+               --inputSpannerDatabaseId=words2 \
+               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
+               --projectId=my-cloud-spanner-project" \
+  -Pdataflow-runner
+```
+
+To backup in serialized format:
 
 ```bash
 mvn compile exec:java \
@@ -93,7 +109,23 @@ mvn compile exec:java \
 ```
 
 ## Restore
-A simple restore of a database:
+A simple restore of a database from Avro format:
+
+```bash
+mvn compile exec:java \
+  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseRestore \
+  -Dexec.args="--runner=DataflowRunner \
+               --project=my-cloud-spanner-project \
+               --region=us-central1 \
+               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
+               --outputSpannerInstanceId=my-cloud-spanner-project-db \
+               --outputSpannerDatabaseId=words2 \
+               --inputFolder=gs://my-cloud-spanner-project/backups/latest \
+               --projectId=my-cloud-spanner-project" \
+  -Pdataflow-runner
+```
+
+A simple restore of a database from serialized format:
 
 ```bash
 mvn compile exec:java \
