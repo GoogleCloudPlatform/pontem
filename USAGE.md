@@ -51,6 +51,21 @@ A simple run that backs up a database:
 
 ```bash
 mvn compile exec:java \
+  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
+  -Dexec.args="--runner=DataflowRunner \
+               --project=my-cloud-spanner-project \
+               --region=us-central1 \
+               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
+               --inputSpannerInstanceId=my-cloud-spanner-project-db \
+               --inputSpannerDatabaseId=words2 \
+               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
+               --projectId=my-cloud-spanner-project" \
+  -Pdataflow-runner
+```
+
+
+```bash
+mvn compile exec:java \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
@@ -94,6 +109,21 @@ mvn compile exec:java \
 
 ## Restore
 A simple restore of a database:
+
+```bash
+mvn compile exec:java \
+  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseRestore \
+  -Dexec.args="--runner=DataflowRunner \
+               --project=my-cloud-spanner-project \
+               --region=us-central1 \
+               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
+               --outputSpannerInstanceId=my-cloud-spanner-project-db \
+               --outputSpannerDatabaseId=words2 \
+               --inputFolder=gs://my-cloud-spanner-project/backups/latest \
+               --projectId=my-cloud-spanner-project" \
+  -Pdataflow-runner
+```
+
 
 ```bash
 mvn compile exec:java \
