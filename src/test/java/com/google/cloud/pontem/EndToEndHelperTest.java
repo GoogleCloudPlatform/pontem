@@ -19,11 +19,15 @@
  */
 package com.google.cloud.pontem;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
+import org.apache.commons.cli.Option;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -37,11 +41,11 @@ public final class EndToEndHelperTest {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn(
             EndToEndHelper.CHILD_TABLE_NAME
@@ -53,7 +57,7 @@ public final class EndToEndHelperTest {
                 + EndToEndHelper.FOO_TABLE_NAME
                 + ",");
 
-    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockUtil);
+    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockGcsUtil);
     assertTrue("Verification of GCS backup succeeded", true);
   }
 
@@ -62,11 +66,11 @@ public final class EndToEndHelperTest {
     String projectId = "cloud-project-id";
     String inputGcsPath = "gs://my-bucket/myPath";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(
             eq(projectId),
-            eq(Util.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
-            eq(Util.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath)),
+            eq(GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath)),
             eq(Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES)))
         .thenReturn(
             "Foo"
@@ -77,7 +81,7 @@ public final class EndToEndHelperTest {
                 + EndToEndHelper.PARENT_TABLE_NAME
                 + ",");
 
-    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockUtil);
+    EndToEndHelper.verifyGcsBackupMetaData(projectId, inputGcsPath, mockGcsUtil);
   }
 
   @Test
@@ -86,32 +90,53 @@ public final class EndToEndHelperTest {
     String instanceId = "instance-id";
     String databaseId = "database-id";
 
-    Util mockUtil = mock(Util.class);
-    when(mockUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
+    SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
+    when(mockSpannerUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
         .thenReturn(EndToEndHelper.GOOGLE_CLOUD_SPANNER_DDL);
 
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockSpannerUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.FOO_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.FOO_TABLE_STRUCTS);
 
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockSpannerUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.PARENT_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.PARENT_TABLE_STRUCTS);
 
-    when(mockUtil.performSingleSpannerQuery(
+    when(mockSpannerUtil.performSingleSpannerReadQuery(
             eq(projectId),
             eq(instanceId),
             eq(databaseId),
             eq("SELECT * FROM " + EndToEndHelper.CHILD_TABLE_NAME + ";")))
         .thenReturn(EndToEndHelper.CHILD_TABLE_STRUCTS);
 
-    EndToEndHelper.verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, mockUtil);
+    EndToEndHelper.verifyDatabaseStructureAndContent(
+        projectId, instanceId, databaseId, mockSpannerUtil);
     assertTrue("Verification of database structure succeeded", true);
+  }
+
+  @Test(expected = Exception.class)
+  public void testVerifyDatabaseStructureAndContent_DdlNotMatching() throws Exception {
+    String projectId = "cloud-project-id";
+    String instanceId = "instance-id";
+    String databaseId = "database-id";
+
+    SpannerUtil mockSpannerUtil = mock(SpannerUtil.class);
+    when(mockSpannerUtil.queryDatabaseDdl(eq(projectId), eq(instanceId), eq(databaseId)))
+        .thenReturn(ImmutableList.of("CREATE TABLE FooTable {}"));
+
+    EndToEndHelper.verifyDatabaseStructureAndContent(
+        projectId, instanceId, databaseId, mockSpannerUtil);
+  }
+
+  @Test
+  public void testConfigureCommandlineOptions() throws Exception {
+    Collection<Option> options = EndToEndHelper.configureCommandlineOptions().getOptions();
+    assertEquals("All options present", 6, options.size());
   }
 }

@@ -44,21 +44,11 @@ import org.apache.commons.cli.ParseException;
  *                --job=2017-10-25_11_18_28-6233650047978038157"
  * </pre>
  *
- * <p>A sample run that requires checking row counts against the meta-data file:
- *
- * <pre>
- * mvn compile exec:java \
- *   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackupIntegrityCheck \
- *   -Dexec.args="--project=my-cloud-spanner-project \
- *                --databaseBackupLocation=gs://my-cloud-spanner-project/multi-backup \
- *                --job=2017-10-25_11_18_28-6233650047978038157 \
- *                --checkRowCountsAgainstGcsMetadataFile=true"
- *
  * </pre>
  */
 public class CloudSpannerDatabaseBackupIntegrityCheck {
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud project ID. */
@@ -80,19 +70,6 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
     Option jobId = new Option("j", "job", true, "Google Cloud Dataflow Job Id");
     jobId.setRequired(true);
     options.addOption(jobId);
-
-    /**
-     * Whether to check the table row counts against a GCS file that stores the number of rows in
-     * each table. The GCS metadata file is only generated if the corresponding option is set in the
-     * backup code. By default, the backup code does not store row counts because getting the row
-     * counts requires performing a COUNT(*) query which triggers a table-scan and can take an hour
-     * on a large table.
-     */
-    Option checkRowCountsAgainstGcsMetadataFile =
-        new Option(
-            "checkRowCountsAgainstGcsMetadataFile",
-            "Whether to check row counts against metatadata file in GCS");
-    options.addOption(checkRowCountsAgainstGcsMetadataFile);
 
     /**
      * Whether to write to GCS a file containing the table row counts based upon the backup job
@@ -136,15 +113,14 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
     String projectId = cmd.getOptionValue("project");
     String jobId = cmd.getOptionValue("job");
     String gcsBucketName =
-        Util.getGcsBucketNameFromDatabaseBackupLocation(
+        GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(
             cmd.getOptionValue("databaseBackupLocation"));
     String gcsFolderPath =
-        Util.getGcsFolderPathFromDatabaseBackupLocation(
+        GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(
             cmd.getOptionValue("databaseBackupLocation"));
-    boolean shouldCheckRowCountsAgainstGcsMetadataFile =
-        Boolean.valueOf(cmd.getOptionValue("checkRowCountsAgainstGcsMetadataFile"));
     boolean shouldSkipWriteRowCountsOfVerifiedBackupToGcs =
         Boolean.valueOf(cmd.getOptionValue("skipWriteRowCountsOfVerifiedBackupToGcs"));
+    GcsUtil gcsUtil = new GcsUtil();
     Util util = new Util();
 
     performDatabaseBackupIntegrityCheck(
@@ -152,8 +128,8 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
         jobId,
         gcsBucketName,
         gcsFolderPath,
-        shouldCheckRowCountsAgainstGcsMetadataFile,
         shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+        gcsUtil,
         util);
 
     System.out.println("Database Backup Integrity Check Complete");
@@ -168,41 +144,22 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
       String jobId,
       String gcsBucketName,
       String gcsFolderPath,
-      boolean shouldCheckRowCountsAgainstGcsMetadataFile,
       boolean shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+      GcsUtil gcsUtill,
       Util util)
       throws Exception {
 
     // STEP 2: Pull metadata about backup from GCS.
     // STEP 2a: Fetch file from GCS.
-    String rawContentsOfTableNameRowCounts = null;
-    if (shouldCheckRowCountsAgainstGcsMetadataFile) {
-      rawContentsOfTableNameRowCounts =
-          util.getContentsOfFileFromGcs(
-              projectId,
-              gcsBucketName,
-              gcsFolderPath,
-              Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES_ROW_COUNTS);
-    }
     String rawContentsOfTableNames =
-        util.getContentsOfFileFromGcs(
+        gcsUtill.getContentsOfFileFromGcs(
             projectId, gcsBucketName, gcsFolderPath, Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
 
-    // STEP 2b: Parse file into HashMap of table name and expected row counts.
-    Map<String, Long> tableNameToNumRowsFromGcs = null;
-    if (shouldCheckRowCountsAgainstGcsMetadataFile) {
-      tableNameToNumRowsFromGcs =
-          Util.convertTableMetadataContentsToMap(rawContentsOfTableNameRowCounts);
-    }
-
-    // STEP 2c: Parse table names file into Set
+    // STEP 2b: Parse table names file into Set
     Set<String> tableNamesFromGcs = Util.convertTablenamesIntoSet(rawContentsOfTableNames);
 
     // STEP 3: Perform rudamentary check to ensure table names match
     boolean areTableNamesValid = false;
-    if (shouldCheckRowCountsAgainstGcsMetadataFile) {
-      areTableNamesValid = validateTableNames(tableNamesFromGcs, tableNameToNumRowsFromGcs);
-    }
 
     // STEP 4: Check Dataflow job metrics for elements read/written against expected values.
     // STEP 4a: Get all job metrics
@@ -212,25 +169,13 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
     Map<String, Long> tableNameToNumRowsFromJobMetrics =
         Util.getTableRowCountsFromJobMetrics(jobMetrics);
 
-    // STEP 4c: Validate table row counts
+    // STEP 4c: Validate table data
     boolean areTableRowCountsValid = false;
-    if (shouldCheckRowCountsAgainstGcsMetadataFile) {
-      areTableRowCountsValid =
-          validateTableRowCounts(tableNameToNumRowsFromJobMetrics, tableNameToNumRowsFromGcs);
-      if (!areTableNamesValid || !areTableRowCountsValid) {
-        throw new DataIntegrityErrorException(
-            "Database backup integrity issue found: "
-                + areTableNamesValid
-                + " "
-                + areTableRowCountsValid);
-      }
-    } else {
-      // No metadata file with row counts exists, so fetch only check table names.
-      areTableNamesValid =
-          validateTableNamesOnly(tableNameToNumRowsFromJobMetrics, tableNamesFromGcs);
-      if (!areTableNamesValid) {
-        throw new DataIntegrityErrorException("Number of tables does not match");
-      }
+    // No metadata file with row counts exists, so fetch only check table names.
+    areTableNamesValid =
+        validateTableNamesOnly(tableNameToNumRowsFromJobMetrics, tableNamesFromGcs);
+    if (!areTableNamesValid) {
+      throw new DataIntegrityErrorException("Number of tables does not match");
     }
 
     // STEP 5: Write the verified backup row counts to disk for use later.
@@ -240,7 +185,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
         rowCountContents += table.getKey() + "," + table.getValue() + "\n";
       }
       rowCountContents = rowCountContents.trim();
-      util.writeContentsToGcs(
+      gcsUtill.writeContentsToGcs(
           rowCountContents,
           projectId,
           gcsBucketName,
@@ -262,48 +207,6 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
       if (!tableNameToNumRowsFromJobMetrics.containsKey(tableName)) {
         System.out.println("Table name " + tableName + " not found.");
         isDataValid = false;
-      }
-    }
-    return isDataValid;
-  }
-
-  private static boolean validateTableRowCounts(
-      Map<String, Long> tableNameToNumRowsFromJobMetrics,
-      Map<String, Long> tableNameToNumRowsFromGcs) {
-    boolean isDataValid = true;
-    if (tableNameToNumRowsFromJobMetrics.size() != tableNameToNumRowsFromGcs.size()) {
-      isDataValid = false;
-      System.err.println(
-          "Data not valid as number of tables do not match."
-              + " Number of tables per Dataflow Job = "
-              + tableNameToNumRowsFromJobMetrics.size()
-              + " Num. tables per GCS file = "
-              + tableNameToNumRowsFromGcs.size());
-    }
-    for (Map.Entry<String, Long> entry : tableNameToNumRowsFromJobMetrics.entrySet()) {
-      if (!tableNameToNumRowsFromGcs.containsKey(entry.getKey())) {
-        isDataValid = false;
-        System.err.println("Table " + entry.getKey() + " not found");
-      }
-      if (!tableNameToNumRowsFromGcs.get(entry.getKey()).equals(entry.getValue())) {
-        isDataValid = false;
-        System.err.println("Number of rows does not match for table " + entry.getKey());
-      }
-    }
-    return isDataValid;
-  }
-
-  private static boolean validateTableNames(
-      Set<String> tableNames, Map<String, Long> tableNamesToNumRows) {
-    boolean isDataValid = true;
-    if (tableNames.size() != tableNamesToNumRows.size()) {
-      isDataValid = false;
-      System.err.println("Different number of tables");
-    }
-    for (String tableName : tableNamesToNumRows.keySet()) {
-      if (!tableNames.contains(tableName)) {
-        isDataValid = false;
-        System.err.println("Table name " + tableName + " not found");
       }
     }
     return isDataValid;

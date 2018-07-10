@@ -137,27 +137,34 @@ public class EndToEndHelper {
           .to(FOO_TABLE_MUTATION_2__COL_INT)
           .build();
 
+  private static final Long PARENT_TABLE_MUTATION_0__COL_FOO_ID = 10l;
+  private static final String PARENT_TABLE_MUTATION_0__COL_BAR_STRING = "hello";
   public static final Mutation PARENT_TABLE_MUTATION_0 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
-          .to(10L)
+          .to(PARENT_TABLE_MUTATION_0__COL_FOO_ID)
           .set("bar_string")
-          .to("hello")
+          .to(PARENT_TABLE_MUTATION_0__COL_BAR_STRING)
           .build();
+
+  private static final Long PARENT_TABLE_MUTATION_1__COL_FOO_ID = Long.MAX_VALUE;
+  private static final String PARENT_TABLE_MUTATION_1__COL_BAR_STRING = "hello_2";
   public static final Mutation PARENT_TABLE_MUTATION_1 =
       Mutation.newInsertBuilder(PARENT_TABLE_NAME)
           .set("foo_id")
-          .to(100L)
+          .to(PARENT_TABLE_MUTATION_1__COL_FOO_ID)
           .set("bar_string")
-          .to("hello_2")
+          .to(PARENT_TABLE_MUTATION_1__COL_BAR_STRING)
           .build();
 
-  public static final Mutation CHILD_TABLE_MUTATION =
+  private static final Long CHILD_TABLE_MUTATION_0__COL_FOO_ID = 10l;
+  private static final String CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING = "child_hello";
+  public static final Mutation CHILD_TABLE_MUTATION_0 =
       Mutation.newInsertBuilder(CHILD_TABLE_NAME)
           .set("foo_id")
-          .to(10L)
+          .to(CHILD_TABLE_MUTATION_0__COL_FOO_ID)
           .set("child_bar_string")
-          .to("child_hello")
+          .to(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING)
           .build();
 
   public static final ImmutableList<Mutation> MUTATIONS =
@@ -167,7 +174,7 @@ public class EndToEndHelper {
           FOO_TABLE_MUTATION_2,
           PARENT_TABLE_MUTATION_0,
           PARENT_TABLE_MUTATION_1,
-          CHILD_TABLE_MUTATION);
+          CHILD_TABLE_MUTATION_0);
   public static final ImmutableList<Struct> FOO_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
@@ -196,18 +203,18 @@ public class EndToEndHelper {
   public static final ImmutableList<Struct> PARENT_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("foo_id", Value.int64(10L))
-              .add("bar_string", Value.string("hello"))
+              .add("foo_id", Value.int64(PARENT_TABLE_MUTATION_0__COL_FOO_ID))
+              .add("bar_string", Value.string(PARENT_TABLE_MUTATION_0__COL_BAR_STRING))
               .build(),
           Struct.newBuilder()
-              .add("foo_id", Value.int64(100L))
-              .add("bar_string", Value.string("hello_2"))
+              .add("foo_id", Value.int64(PARENT_TABLE_MUTATION_1__COL_FOO_ID))
+              .add("bar_string", Value.string(PARENT_TABLE_MUTATION_1__COL_BAR_STRING))
               .build());
   public static final ImmutableList<Struct> CHILD_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("foo_id", Value.int64(10L))
-              .add("child_bar_string", Value.string("child_hello"))
+              .add("foo_id", Value.int64(CHILD_TABLE_MUTATION_0__COL_FOO_ID))
+              .add("child_bar_string", Value.string(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING))
               .build());
 
   public static final ImmutableList<String> GOOGLE_CLOUD_SPANNER_DDL =
@@ -234,7 +241,7 @@ public class EndToEndHelper {
               + ") PRIMARY KEY(foo_id, child_bar_string DESC),\n"
               + "  INTERLEAVE IN PARENT parent_table ON DELETE CASCADE");
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud Storage Absolute Path to Backup Folder. */
@@ -298,25 +305,29 @@ public class EndToEndHelper {
       final String gcsRootBackupFolderPath = cmd.getOptionValue("gcsRootBackupFolderPath");
       final boolean shouldFailIfContentAlreadyExists =
           Boolean.valueOf(cmd.getOptionValue("shouldFailIfContentAlreadyExists", "false"));
-      final Util util = new Util();
+
+      final GcsUtil gcsUtil = new GcsUtil();
+      final SpannerUtil spannerUtil = new SpannerUtil();
+
       if (operation.equals("setup")) {
         setupEnvironmentForEndToEndTests(
             projectId,
             instanceId,
             databaseId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            shouldFailIfContentAlreadyExists);
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            shouldFailIfContentAlreadyExists,
+            spannerUtil);
       } else if (operation.equals("teardown")) {
         tearDownEnvironmentForEndToEndTests(
             projectId,
             instanceId,
             databaseId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath));
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath));
       } else if (operation.equals("verifyDatabase")) {
-        verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, util);
+        verifyDatabaseStructureAndContent(projectId, instanceId, databaseId, spannerUtil);
       } else if (operation.equals("verifyGcsBackup")) {
-        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, util);
+        verifyGcsBackupMetaData(projectId, gcsRootBackupFolderPath, gcsUtil);
       } else if (operation.equals("teardownDatabase")) {
         deleteCloudSpannerDatabase(projectId, instanceId, databaseId);
       } else {
@@ -350,12 +361,13 @@ public class EndToEndHelper {
       String instanceId,
       String databaseId,
       String gcsBucketName,
-      boolean shouldFailIfAlreadyExists)
+      boolean shouldFailIfAlreadyExists,
+      SpannerUtil spannerUtil)
       throws Exception {
     createGcsBucket(projectId, gcsBucketName, shouldFailIfAlreadyExists);
 
     createCloudSpannerDatabaseAndTableStructure(
-        projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
+        projectId, instanceId, databaseId, shouldFailIfAlreadyExists, spannerUtil);
     populateCloudSpannerDatabaseWithBasicContent(
         projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
   }
@@ -363,7 +375,7 @@ public class EndToEndHelper {
   public static void deleteCloudSpannerDatabase(
       String projectId, String instanceId, String databaseId) {
     LOG.info("Beginning deletion of Cloud Spanner database " + databaseId);
-    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
+    SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
@@ -385,7 +397,8 @@ public class EndToEndHelper {
       LOG.info("Finished deletion of Cloud Spanner database " + databaseId);
       spanner.close();
     }
-    ImmutableList<String> databaseNames = Util.getListOfDatabaseNames(projectId, instanceId, 10);
+    ImmutableList<String> databaseNames =
+        SpannerUtil.getListOfDatabaseNames(projectId, instanceId, 10);
     LOG.info(
         "Database names remaining in instance " + instanceId + ":\n" + databaseNames.toString());
     LOG.info("End deletion of Cloud Spanner database " + databaseId);
@@ -408,12 +421,16 @@ public class EndToEndHelper {
   }
 
   private static void createCloudSpannerDatabaseAndTableStructure(
-      String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyCreated)
+      String projectId,
+      String instanceId,
+      String databaseId,
+      boolean shouldFailIfAlreadyCreated,
+      SpannerUtil spannerUtil)
       throws Exception {
     LOG.info("Begin creation of Cloud Spanner database " + databaseId);
-    Util util = new Util();
     try {
-      util.createDatabaseAndTables(projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
+      spannerUtil.createDatabaseAndTables(
+          projectId, instanceId, databaseId, GOOGLE_CLOUD_SPANNER_DDL);
     } catch (SpannerException e) {
       if (e.getMessage().contains("ALREADY_EXISTS") && !shouldFailIfAlreadyCreated) {
         LOG.info("Cloud Spanner database already exists.");
@@ -455,7 +472,7 @@ public class EndToEndHelper {
       String projectId, String instanceId, String databaseId, boolean shouldFailIfAlreadyPopulated)
       throws Exception {
     LOG.info("Begin population of Cloud Spanner database with basic content: " + databaseId);
-    SpannerOptions options = Util.getSpannerOptionsBuilder().build();
+    SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
     Spanner spanner = options.getService();
     try {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
@@ -476,13 +493,13 @@ public class EndToEndHelper {
   }
 
   public static void verifyGcsBackupMetaData(
-      String projectId, String gcsRootBackupFolderPath, Util util) throws Exception {
+      String projectId, String gcsRootBackupFolderPath, GcsUtil gcsUtil) throws Exception {
     LOG.info("Begin verify of GCS backup");
     String rawFileContentsOfTableList =
-        util.getContentsOfFileFromGcs(
+        gcsUtil.getContentsOfFileFromGcs(
             projectId,
-            Util.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
-            Util.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
+            GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
     String tables[] = rawFileContentsOfTableList.split("\\r?\\n");
     if (tables.length != TABLE_NAMES.size()) {
@@ -513,9 +530,10 @@ public class EndToEndHelper {
   }
 
   public static void verifyDatabaseStructureAndContent(
-      String projectId, String instanceId, String databaseId, Util util) throws Exception {
+      String projectId, String instanceId, String databaseId, SpannerUtil spannerUtil)
+      throws Exception {
     // STEP 1: Check DDL
-    ImmutableList<String> ddl = util.queryDatabaseDdl(projectId, instanceId, databaseId);
+    ImmutableList<String> ddl = spannerUtil.queryDatabaseDdl(projectId, instanceId, databaseId);
     LOG.info("DDL in database " + databaseId + " with " + ddl.size() + " statements");
     if (!ddl.equals(GOOGLE_CLOUD_SPANNER_DDL)) {
       LOG.info("Expected:\n" + GOOGLE_CLOUD_SPANNER_DDL.toString());
@@ -525,17 +543,17 @@ public class EndToEndHelper {
 
     // STEP 2: Check Database Content
     ImmutableList<Struct> fooResultSet =
-        util.performSingleSpannerQuery(
+        spannerUtil.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + FOO_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + FOO_TABLE_NAME + " = " + fooResultSet.size());
 
     ImmutableList<Struct> parentResultSet =
-        util.performSingleSpannerQuery(
+        spannerUtil.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + PARENT_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + PARENT_TABLE_NAME + " = " + parentResultSet.size());
 
     ImmutableList<Struct> childResultSet =
-        util.performSingleSpannerQuery(
+        spannerUtil.performSingleSpannerReadQuery(
             projectId, instanceId, databaseId, "SELECT * FROM " + CHILD_TABLE_NAME + ";");
     LOG.info("Number of rows in table " + CHILD_TABLE_NAME + " = " + childResultSet.size());
 
@@ -610,10 +628,16 @@ public class EndToEndHelper {
       throw new Exception("Contents of colArrayBool do not match");
     }
 
-    if (!childResultSet.get(0).getString("child_bar_string").equals("child_hello")) {
+    if (!childResultSet
+        .get(0)
+        .getString("child_bar_string")
+        .equals(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING)) {
       throw new Exception("Contents of child_bar_string do not match");
     }
-    if (!parentResultSet.get(0).getString("bar_string").equals("hello")) {
+    if (!parentResultSet
+        .get(0)
+        .getString("bar_string")
+        .equals(PARENT_TABLE_MUTATION_0__COL_BAR_STRING)) {
       throw new Exception("Contents of parent bar_string do not match");
     }
   }

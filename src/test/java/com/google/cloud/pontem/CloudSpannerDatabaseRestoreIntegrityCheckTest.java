@@ -19,6 +19,7 @@
  */
 package com.google.cloud.pontem;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
@@ -27,7 +28,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import java.util.Map;
+import org.apache.commons.cli.Option;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,8 +57,9 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
     Map<String, Long> tableRowCountsRestore1 = ImmutableMap.of("tableName2", 2L);
     JobMetrics jobMetricsRestore1 = TestHelper.getJobMetrics(tableRowCountsRestore1);
 
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(backupJobId)))
         .thenReturn(jobMetricsBackup);
@@ -72,6 +76,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
             gcsBucketName,
             gcsFolderPath,
             requireAllTablesRestored,
+            mockGcsUtil,
             mockUtil));
   }
 
@@ -94,8 +99,9 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
     Map<String, Long> tableRowCountsRestore1 = ImmutableMap.of("tableName2", 2L);
     JobMetrics jobMetricsRestore1 = TestHelper.getJobMetrics(tableRowCountsRestore1);
 
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(backupJobId)))
         .thenReturn(jobMetricsBackup);
@@ -111,6 +117,14 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
         gcsBucketName,
         gcsFolderPath,
         requireAllTablesRestored,
+        mockGcsUtil,
         mockUtil);
+  }
+
+  @Test
+  public void testConfigureCommandlineOptions() throws Exception {
+    Collection<Option> options =
+        CloudSpannerDatabaseRestoreIntegrityCheck.configureCommandlineOptions().getOptions();
+    assertEquals("All options present", 5, options.size());
   }
 }

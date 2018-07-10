@@ -27,12 +27,12 @@ import org.apache.beam.sdk.transforms.SimpleFunction;
  * A {@code SimpleFunction} that converts a {@code Struct} containing any type of data to a text
  * file that can be written.
  */
-public class FormatGenericSpannerStructAsTextFn extends SimpleFunction<Struct, String> {
+public class FormatSpannerStructAsStringFn extends SimpleFunction<Struct, String> {
   private final Counter tableRowsReadCounter;
 
-  FormatGenericSpannerStructAsTextFn(final String tableName) throws Exception {
+  FormatSpannerStructAsStringFn(final String tableName) throws Exception {
     this.tableRowsReadCounter =
-        Metrics.counter(FormatGenericSpannerStructAsTextFn.class, "rowsRead_" + tableName);
+        Metrics.counter(FormatSpannerStructAsStringFn.class, "rowsRead_" + tableName);
   }
 
   @Override

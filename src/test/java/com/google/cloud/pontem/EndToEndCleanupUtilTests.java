@@ -21,22 +21,18 @@ package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.spanner.Struct;
+import java.util.Collection;
+import org.apache.commons.cli.Option;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link FormatSpannerTableRowCountsStructAsTextFn}. */
+/** Tests for {@link EndToEndCleanupUtil}. */
 @RunWith(JUnit4.class)
-public final class FormatSpannerTableRowCountsStructAsTextFnTest {
+public final class EndToEndCleanupUtilTests {
   @Test
-  public void testFormatSpannerTablesListStructAsTextFn_parent() throws Exception {
-    long numRows = 100;
-    String tableName = "tableName";
-    Struct struct =
-        Struct.newBuilder().set("num_rows").to(numRows).set("table_name").to(tableName).build();
-    FormatSpannerTableRowCountsStructAsTextFn simpleFn =
-        new FormatSpannerTableRowCountsStructAsTextFn();
-    assertEquals(tableName + "," + numRows, simpleFn.apply(struct));
+  public void testConfigureCommandlineOptions() throws Exception {
+    Collection<Option> options = EndToEndCleanupUtil.configureCommandlineOptions().getOptions();
+    assertEquals("All options present", 4, options.size());
   }
 }

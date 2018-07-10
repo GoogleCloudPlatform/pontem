@@ -19,15 +19,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <parent>
-        <artifactId>beam-parent</artifactId>
-        <groupId>org.apache.beam</groupId>
-        <version>2.4.0</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.google.cloud</groupId>
     <artifactId>pontem</artifactId>
+    <version>0.2</version>
 
     <properties>
         <!-- Since Cloud Spanner is using GAX 1.1.0, must use Cloud Storage version
@@ -35,6 +31,22 @@
         <google-cloud-storage.version>1.0.2</google-cloud-storage.version>
         <java.version>1.8</java.version>
         <gax.version>1.1.0</gax.version>
+
+        <!-- Below are deps inherited from the deprecated parent-pom -->
+        <apache-beam.version>2.5.0</apache-beam.version>
+        <google-cloud-core.version>1.0.2</google-cloud-core.version>
+        <spanner.version>0.20.0b-beta</spanner.version>
+        <grpc-google-common-protos.version>0.1.9</grpc-google-common-protos.version>
+        <dataflow.version>v1b3-rev221-1.23.0</dataflow.version>
+        <google-clients.version>1.23.0</google-clients.version>
+        <guava.version>20.0</guava.version>
+        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <avro.version>1.8.2</avro.version>
+
+        <!-- Below are test deps inherited from the depricated parent-pom -->
+        <mockito.version>1.9.5</mockito.version>
+        <junit.version>4.12</junit.version>
+        <hamcrest.version>1.3</hamcrest.version>
     </properties>
 
     <repositories>
@@ -62,17 +74,52 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+            <!-- Explicitly specify random test execution order -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.0</version>
+                <configuration>
+                    <runOrder>random</runOrder>
+                </configuration>
+            </plugin>
             <!-- Adding code coverage plugin -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.7</version>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.1</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>post-unit-test</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                            <configuration>
+                                <!-- Sets the path to the file which contains the execution data. -->
+                                <dataFile>target/jacoco.exec</dataFile>
+                                <!-- Sets the output directory for the code coverage report. -->
+                                <outputDirectory>target/site/jacoco-ut</outputDirectory>
+                            </configuration>
+                    </execution>
+                </executions>
                 <configuration>
-                    <formats>
-                        <format>html</format>
-                        <format>xml</format>
-                   </formats>
-                   <check />
+                    <systemPropertyVariables>
+		        <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
@@ -90,6 +137,7 @@
                     <groupId>org.apache.beam</groupId>
                     <artifactId>beam-runners-direct-java</artifactId>
                     <scope>runtime</scope>
+                    <version>${apache-beam.version}</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -102,6 +150,7 @@
                     <groupId>org.apache.beam</groupId>
                     <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
                     <scope>runtime</scope>
+                    <version>${apache-beam.version}</version>
                 </dependency>
             </dependencies>
         </profile>
@@ -111,30 +160,43 @@
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-core</artifactId>
+            <version>${apache-beam.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-core</artifactId>
+            <version>${google-cloud-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-spanner</artifactId>
+            <version>${spanner.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.api.grpc</groupId>
             <artifactId>proto-google-cloud-spanner-admin-database-v1</artifactId>
+            <version>${grpc-google-common-protos.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
+            <version>${apache-beam.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-dataflow</artifactId>
+            <version>${dataflow.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>
+            <version>${google-clients.version}</version>
             <exclusions>
                 <exclusion>
                   <groupId>com.google.guava</groupId>
@@ -145,6 +207,7 @@
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client</artifactId>
+            <version>${google-clients.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
@@ -155,6 +218,7 @@
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client-jackson2</artifactId>
+            <version>${google-clients.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
@@ -165,6 +229,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
         <dependency>
@@ -179,20 +244,31 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
+            <version>${mockito.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+            <version>${junit.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
             <scope>test</scope>
+            <version>${hamcrest.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
+            <scope>test</scope>
+            <version>${hamcrest.version}</version>
+        </dependency>
+        <!-- Added Apache Commons Library for use with tests. -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.7</version>
             <scope>test</scope>
         </dependency>
 
@@ -206,6 +282,19 @@
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
             <version>${google-cloud-storage.version}</version>
+        </dependency>
+
+        <!-- Deps added because of https://github.com/google/google-api-java-client/issues/1073
+             and https://github.com/GoogleCloudPlatform/DataflowJavaSDK/issues/607
+             Per https://cloud.google.com/dataflow/docs/concepts/sdk-worker-dependencies
+             Dataflow on Beam 2.5 needs a specific version of google-api-services-storage
+             but google-cloud-storage clobbers that version. We cannot change
+             google-cloud-storage because there will be conflicts with gax version, so we
+             must explicitly include google-api-services-storage -->
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-storage</artifactId>
+            <version>v1-rev124-1.23.0</version>
         </dependency>
 
     </dependencies>

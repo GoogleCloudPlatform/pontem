@@ -45,7 +45,7 @@ import org.apache.commons.cli.ParseException;
 public class EndToEndCleanupUtil {
   private static final Logger LOG = Logger.getLogger(EndToEndCleanupUtil.class.getName());
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud Storage Bucket. */
@@ -115,7 +115,7 @@ public class EndToEndCleanupUtil {
   public static void cleanupDatabase(String projectId, String instanceId) {
     LOG.info("Begin deletion of databases.");
     ImmutableList<String> allDatabaseNames =
-        Util.getListOfDatabaseNames(projectId, instanceId, 1000);
+        SpannerUtil.getListOfDatabaseNames(projectId, instanceId, 1000);
     for (String databaseName : allDatabaseNames) {
       EndToEndHelper.deleteCloudSpannerDatabase(projectId, instanceId, databaseName);
     }

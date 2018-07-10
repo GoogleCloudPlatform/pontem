@@ -75,7 +75,7 @@ import org.apache.commons.cli.ParseException;
  */
 public class CloudSpannerDatabaseRestoreIntegrityCheck {
 
-  private static Options configureCommandlineOptions() {
+  public static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** The Google Cloud project id. */
@@ -151,13 +151,14 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
     String backupJobId = cmd.getOptionValue("backupJobId");
     String databaseBackupLocation = cmd.getOptionValue("databaseBackupLocation");
     String gcsBucketName =
-        Util.getGcsBucketNameFromDatabaseBackupLocation(
+        GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(
             cmd.getOptionValue("databaseBackupLocation"));
     String gcsFolderPath =
-        Util.getGcsFolderPathFromDatabaseBackupLocation(
+        GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(
             cmd.getOptionValue("databaseBackupLocation"));
     boolean requireAllTablesRestored =
         Boolean.parseBoolean(cmd.getOptionValue("areAllTablesRestored"));
+    GcsUtil gcsUtil = new GcsUtil();
     Util util = new Util();
 
     performDatabaseRestoreIntegrityCheck(
@@ -167,6 +168,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
         gcsBucketName,
         gcsFolderPath,
         requireAllTablesRestored,
+        gcsUtil,
         util);
 
     LOG.info("Database Restore Integrity Check Complete");
@@ -183,6 +185,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
       String gcsBucketName,
       String gcsFolderPath,
       boolean requireAllTablesRestored,
+      GcsUtil gcsUtil,
       Util util)
       throws Exception {
 
@@ -199,7 +202,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
       // Unable to fetch backup job metrics from dataflow, so fallback to
       // the data written to disk during the backup integrity check.
       String tableRowCountsFileContents =
-          util.getContentsOfFileFromGcs(
+          gcsUtil.getContentsOfFileFromGcs(
               projectId,
               gcsBucketName,
               gcsFolderPath,

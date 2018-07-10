@@ -19,8 +19,8 @@
  */
 package com.google.cloud.pontem;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -28,7 +28,9 @@ import static org.mockito.Mockito.when;
 
 import com.google.api.services.dataflow.model.JobMetrics;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import java.util.Map;
+import org.apache.commons.cli.Option;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,8 +51,9 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
     Map<String, Long> tableRowCounts = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
 
     JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
 
@@ -60,12 +63,42 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
             jobId,
             gcsBucketName,
             gcsFolderPath,
-            shouldCheckRowCountsAgainstGcsMetadataFile,
             shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+            mockGcsUtil,
             mockUtil));
   }
 
   @Test
+  public void testPerformDatabaseBackupIntegrityCheck_gcsMetaDataValid() throws Exception {
+    String projectId = "cloud-spanner-successful-backup";
+    String jobId = "dataflow-backup-job-id";
+    String gcsBucketName = "cloud-spanner-backup-bucket-success";
+    String gcsFolderPath = "subFolder/";
+    boolean shouldCheckRowCountsAgainstGcsMetadataFile = true;
+    boolean shouldSkipWriteRowCountsOfVerifiedBackupToGcs = true;
+
+    Map<String, Long> tableRowCounts = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
+
+    JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
+    String rawTableData = "MyTable100,100\ntableName2,2";
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
+    Util mockUtil = mock(Util.class);
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+        .thenReturn(rawTableData);
+    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
+
+    assertTrue(
+        CloudSpannerDatabaseBackupIntegrityCheck.performDatabaseBackupIntegrityCheck(
+            projectId,
+            jobId,
+            gcsBucketName,
+            gcsFolderPath,
+            shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+            mockGcsUtil,
+            mockUtil));
+  }
+
+  @Test(expected = DataIntegrityErrorException.class)
   public void testPerformDatabaseBackupIntegrityCheck_invalid() throws Exception {
     String projectId = "cloud-spanner-successful-backup";
     String jobId = "dataflow-backup-job-id";
@@ -77,23 +110,26 @@ public class CloudSpannerDatabaseBackupIntegrityCheckTest {
     Map<String, Long> tableRowCounts = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
 
     JobMetrics jobMetrics = TestHelper.getJobMetrics(tableRowCounts);
+    GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2\nExtraTable");
     when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(jobId))).thenReturn(jobMetrics);
 
-    try {
-      CloudSpannerDatabaseBackupIntegrityCheck.performDatabaseBackupIntegrityCheck(
-          projectId,
-          jobId,
-          gcsBucketName,
-          gcsFolderPath,
-          shouldCheckRowCountsAgainstGcsMetadataFile,
-          shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
-          mockUtil);
-      fail("Invalid data did not throw exception");
-    } catch (DataIntegrityErrorException e) {
-      assertTrue("Invalid data exception thrown", true);
-    }
+    CloudSpannerDatabaseBackupIntegrityCheck.performDatabaseBackupIntegrityCheck(
+        projectId,
+        jobId,
+        gcsBucketName,
+        gcsFolderPath,
+        shouldSkipWriteRowCountsOfVerifiedBackupToGcs,
+        mockGcsUtil,
+        mockUtil);
+  }
+
+  @Test
+  public void testConfigureCommandlineOptions() throws Exception {
+    Collection<Option> options =
+        CloudSpannerDatabaseBackupIntegrityCheck.configureCommandlineOptions().getOptions();
+    assertEquals("All options present", 4, options.size());
   }
 }
