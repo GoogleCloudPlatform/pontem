@@ -21,6 +21,7 @@ package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.cloud.spanner.SpannerOptions;
 import com.google.cloud.spanner.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -330,12 +331,24 @@ public class SpannerUtilTest {
   }
 
   @Test(expected = RuntimeException.class)
-  public void testGetSpannerType_error1() {
+  public void testGetSpannerType_error0() {
     SpannerUtil.getSpannerType("ARRAY<BTES(1024)>");
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testGetSpannerType_error1() {
+    SpannerUtil.getSpannerType("ARRAY<BTES@#@(1024)>");
   }
 
   @Test(expected = RuntimeException.class)
   public void testGetSpannerType_error2() {
     SpannerUtil.getSpannerType("STR(1024)");
   }
+
+  @Test
+  public void testGetSpannerOptionsBuilder() {
+    SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
+    assertEquals(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME, options.getHost());
+  }
+
 }

@@ -327,6 +327,36 @@ public class TableInformationTest {
   }
 
   @Test(expected = RuntimeException.class)
+  public void testTableInformation_error2() {
+    String brokenDdl =
+        "CREATETABLE word (\n"
+            + "    word STRING(MAX) NOT NULL,\n"
+            + "    arrBytes ARRAY<BYTES(1024)>,\n"
+            + "    arrString ARRAY<STRING(100)>,\n"
+            + "    bytes BYTES(MAX)\n"
+            + "    bytes BYTES(1024),\n"
+            + "    bytes2 BYTES(3923902),\n"
+            + ") PRIMARY KEY (word)";
+
+    TableInformation tableInfo = new TableInformation(brokenDdl);
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testTableInformation_error3() {
+    String brokenDdl =
+        "CREATE TABLE word (\n"
+            + "    word STRING(MAX) NOT NULL,\n"
+            + "    arrBytes ARRAY<BYTES(1024)>,\n"
+            + "    arrString ARRAY<STRING(100)>,\n"
+            + "    bytesFoo2392@@# BYTES(MAX)\n"
+            + "    bytes BYTES(1024),\n"
+            + "    bytes2 BYTES(3923902),\n"
+            + ") PRIMARY KEY (word)";
+
+    TableInformation tableInfo = new TableInformation(brokenDdl);
+  }
+
+  @Test(expected = RuntimeException.class)
   public void testGetMapOfColumnNamesToSpannerTypesFromTableDdl_error2() {
     String brokenDdl =
         "CREATE TABLE word (\n"
@@ -339,5 +369,42 @@ public class TableInformationTest {
             + ") PRIMARY KEY (word)";
 
     TableInformation tableInformation = new TableInformation(brokenDdl);
+  }
+
+  @Test
+  public void testGetAvroTypeOfColumn() {
+    TableInformation tableInformation = new TableInformation(basicDdl1);
+    assertEquals(SchemaBuilder.builder().longType(), tableInformation.getAvroTypeOfColumn("SingerId"));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testGetAvroTypeOfColumn_exception() {
+    TableInformation tableInformation = new TableInformation(basicDdl1);
+    tableInformation.getAvroTypeOfColumn("NoColumn");
+  }
+
+  @Test
+  public void testGetSpannerTypeOfColumn() {
+    TableInformation tableInformation = new TableInformation(basicDdl1);
+    assertEquals(Type.int64(), tableInformation.getSpannerTypeOfColumn("SingerId"));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testGetSpannerTypeOfColumn_exception() {
+    TableInformation tableInformation = new TableInformation(basicDdl1);
+    tableInformation.getSpannerTypeOfColumn("NoColumn");
+  }
+
+  @Test
+  public void testIsColumnNullable() {
+    TableInformation tableInformation = new TableInformation(basicDdl1);
+    assertEquals(true, tableInformation.isColumnNullable("FirstName"));
+    assertEquals(false, tableInformation.isColumnNullable("SingerId"));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void testIsColumnNullable_error() {
+    TableInformation tableInformation = new TableInformation(basicDdl1);
+    tableInformation.isColumnNullable("NoSuchColumn");
   }
 }
