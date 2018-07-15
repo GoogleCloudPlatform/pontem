@@ -59,7 +59,7 @@ public class AvroUtilTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testGetSingleAvroTypeFromNullableUnion_exception_null() {
+  public void testGetSingleAvroTypeFromNullableUnion_exception_noNullType() {
     AvroUtil.getSingleAvroTypeFromNullableUnion(
         SchemaBuilder.builder().unionOf().stringType().and().type(TestHelper.SCHEMA_1).endUnion());
   }
@@ -190,7 +190,7 @@ public class AvroUtilTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testIllegalType() {
+  public void testGetAvroTypeFromSpannerType_illegalSpannerType() {
     AvroUtil.getAvroTypeFromSpannerType(Type.struct(), true);
   }
 }

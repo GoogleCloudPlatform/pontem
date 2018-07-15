@@ -337,7 +337,7 @@ public class SpannerUtilTest {
 
   @Test(expected = RuntimeException.class)
   public void testGetSpannerType_error1() {
-    SpannerUtil.getSpannerType("ARRAY<BTES@#@(1024)>");
+    SpannerUtil.getSpannerType("ARRAY<BYTES@#@(1024)>");
   }
 
   @Test(expected = RuntimeException.class)

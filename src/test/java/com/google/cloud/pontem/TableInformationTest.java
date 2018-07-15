@@ -405,6 +405,6 @@ public class TableInformationTest {
   @Test(expected = RuntimeException.class)
   public void testIsColumnNullable_error() {
     TableInformation tableInformation = new TableInformation(basicDdl1);
-    tableInformation.isColumnNullable("NoSuchColumn");
+    tableInformation.isColumnNullable("NoColumn");
   }
 }
