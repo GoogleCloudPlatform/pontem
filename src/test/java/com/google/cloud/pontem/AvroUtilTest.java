@@ -40,9 +40,28 @@ public class AvroUtilTest {
             SchemaBuilder.builder().nullable().stringType()));
   }
 
+  @Test
+  public void testGetSingleAvroTypeFromNullableUnion2() {
+    assertEquals(
+        SchemaBuilder.builder().stringType(),
+        AvroUtil.getSingleAvroTypeFromNullableUnion(
+            SchemaBuilder.builder()
+                .unionOf()
+                .stringType()
+                .and()
+                .type(Schema.create(Schema.Type.NULL))
+                .endUnion()));
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void testGetSingleAvroTypeFromNullableUnion_exception() {
     AvroUtil.getSingleAvroTypeFromNullableUnion(SchemaBuilder.builder().stringType());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetSingleAvroTypeFromNullableUnion_exception_noNullType() {
+    AvroUtil.getSingleAvroTypeFromNullableUnion(
+        SchemaBuilder.builder().unionOf().stringType().and().type(TestHelper.SCHEMA_1).endUnion());
   }
 
   @Test
@@ -168,5 +187,10 @@ public class AvroUtilTest {
             .items()
             .type(SchemaBuilder.builder().stringType()),
         AvroUtil.getAvroTypeFromSpannerType(Type.array(Type.timestamp()), true));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetAvroTypeFromSpannerType_illegalSpannerType() {
+    AvroUtil.getAvroTypeFromSpannerType(Type.struct(), true);
   }
 }
