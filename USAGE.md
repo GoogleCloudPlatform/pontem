@@ -46,8 +46,12 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/proje
 - [Restore](#restore)
   - [Restore with an Integrity Check](#restore-with-an-integrity-check)
 
+NOTE: A sample of how to use Gradle is not provided with every usage below
+in order to avoid redundancy. Nonetheless, Gradle or Maven can be used
+interchangably for any function in Pontem.
+
 ## Backup
-To backup in Avro format:
+To backup in Avro format with Maven:
 
 ```bash
 mvn compile exec:java \
@@ -63,7 +67,20 @@ mvn compile exec:java \
   -Pdataflow-runner
 ```
 
-To backup in serialized format:
+To backup in Avro format with Gradle:
+
+```bash
+gradle clean execute \
+  -DmainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
+  -Dexec.args="--runner=DataflowRunner \
+               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
+               --inputSpannerInstanceId=my-cloud-spanner-project-db \
+               --inputSpannerDatabaseId=words2 \
+               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
+               --projectId=my-cloud-spanner-project" -Pdataflow-runner
+```
+
+To backup in serialized format with Maven:
 
 ```bash
 mvn compile exec:java \
@@ -77,6 +94,19 @@ mvn compile exec:java \
                --outputFolder=gs://my-cloud-spanner-project/backups/latest \
                --projectId=my-cloud-spanner-project" \
   -Pdataflow-runner
+```
+
+To backup in serialized format with Gradle:
+
+```bash
+gradle clean execute \
+  -DmainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
+  -Dexec.args="--runner=DataflowRunner \
+               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
+               --inputSpannerInstanceId=my-cloud-spanner-project-db \
+               --inputSpannerDatabaseId=words2 \
+               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
+               --projectId=my-cloud-spanner-project" -Pdataflow-runner
 ```
 
 A sample run that queries and saves the table row counts while not saving table schemas:
