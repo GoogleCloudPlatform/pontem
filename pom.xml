@@ -33,11 +33,11 @@
         <gax.version>1.1.0</gax.version>
 
         <!-- Below are deps inherited from the deprecated parent-pom -->
-        <apache-beam.version>2.5.0</apache-beam.version>
+        <apache-beam.version>2.6.0</apache-beam.version>
         <google-cloud-core.version>1.0.2</google-cloud-core.version>
         <spanner.version>0.20.0b-beta</spanner.version>
         <grpc-google-common-protos.version>0.1.9</grpc-google-common-protos.version>
-        <dataflow.version>v1b3-rev221-1.23.0</dataflow.version>
+        <dataflow.version>v1b3-rev253-1.24.1</dataflow.version>
         <google-clients.version>1.23.0</google-clients.version>
         <guava.version>20.0</guava.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
