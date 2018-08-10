@@ -20,19 +20,21 @@ before_install:
 stages:
 - CODE_STYLE
 - UNIT_TESTS
+- E2E_TESTS
 jobs:
   include:
   - stage: CODE_STYLE
     script: mvn checkstyle:checkstyle
   - stage: UNIT_TESTS
     script: mvn -q clean test
-matrix:
-  include:
-  - name: "Serialized E2E Tests"
-    env: TEST_SUITE=SERIAL
-  - name: "Avro E2E Tests"
-    env: TEST_SUITE=AVRO
-  script: "./travis/run_e2e_tests.sh --test_suite=${TEST_SUITE} --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET}
-      --database=${E2E_TEST_DATABASE}"
+  - stage: E2E_TESTS
+    matrix:
+      include:
+      - name: "Serialized E2E Tests"
+        env: TEST_SUITE=SERIAL
+      - name: "Avro E2E Tests"
+        env: TEST_SUITE=AVRO
+      script: "./travis/run_e2e_tests.sh --test_suite=${TEST_SUITE} --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET}
+          --database=${E2E_TEST_DATABASE}"
 after_success:
 - bash <(curl -s https://codecov.io/bash)
