@@ -80,14 +80,14 @@ echo "Database Name Set: ${DATABASE_NAME}"
 GCP_FOLDER="my-database-"${DATE_STR}
 echo "GCP Folder Name Set: ${GCP_FOLDER}"
 
-if [ "${TEST_SUITE}" = "SERIAL" ]; then
+if [ "${TEST_SUITE}" = "Serialized" ]; then
   ./travis/run_serialized_e2e_tests.sh --project="${GCP_PROJECT}" --bucket="${GCP_BUCKET}" --database="${DATABASE_INSTANCE}" 
-elif [ "${TEST_SUITE}" = "AVRO" ]; then 
+elif [ "${TEST_SUITE}" = "Avro" ]; then 
   ./travis/run_avro_e2e_tests.sh --project="${GCP_PROJECT}" --bucket="${GCP_BUCKET}" --database="${DATABASE_INSTANCE}" 
 else
   echo "Invalid Test Suite"
   exit 1
 fi
 
-echo "All Tests Passed Successfully"
+echo "${TEST_SUITE} Tests Passed Successfully"
 exit 0
