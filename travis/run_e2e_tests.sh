@@ -17,6 +17,10 @@
 for i in "$@"
 do
 case $i in
+    -t=*|--test_suite=*)
+    TEST_SUITE="${i#*=}"
+    shift # past argument=value
+    ;;
     -p=*|--project=*)
     GCP_PROJECT="${i#*=}"
     shift # past argument=value
@@ -38,6 +42,13 @@ case $i in
     ;;
 esac
 done
+
+if [ -z ${TEST_SUITE} ]; then
+  echo "No test suite set."
+  exit 1
+else
+  echo "Test Suite Set: ${TEST_SUITE}"
+fi
 
 if [ -z ${GCP_PROJECT} ]; then
   echo "No project set."
@@ -69,8 +80,14 @@ echo "Database Name Set: ${DATABASE_NAME}"
 GCP_FOLDER="my-database-"${DATE_STR}
 echo "GCP Folder Name Set: ${GCP_FOLDER}"
 
-./travis/run_avro_e2e_tests.sh --project="${GCP_PROJECT}" --bucket="${GCP_BUCKET}" --database="${DATABASE_INSTANCE}" &&
-./travis/run_serialized_e2e_tests.sh --project="${GCP_PROJECT}" --bucket="${GCP_BUCKET}" --database="${DATABASE_INSTANCE}" || exit 0
+if [ "${TEST_SUITE}" = "Serialized" ]; then
+  ./travis/run_serialized_e2e_tests.sh --project="${GCP_PROJECT}" --bucket="${GCP_BUCKET}" --database="${DATABASE_INSTANCE}" 
+elif [ "${TEST_SUITE}" = "Avro" ]; then 
+  ./travis/run_avro_e2e_tests.sh --project="${GCP_PROJECT}" --bucket="${GCP_BUCKET}" --database="${DATABASE_INSTANCE}" 
+else
+  echo "Invalid Test Suite"
+  exit 1
+fi
 
-echo "FINISHED Avro and Serialized - All Tests Passed Successfully"
+echo "${TEST_SUITE} Tests Passed Successfully"
 exit 0
