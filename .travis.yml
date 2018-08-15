@@ -28,8 +28,8 @@ jobs:
   - stage: UNIT_TESTS
     script: travis_wait mvn -q clean test
   - stage: E2E_TESTS
-    script: travis_wait "./travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
-  - script: travis_wait "./travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+    script: travis_wait 45 "./travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+  - script: travis_wait 45 "./travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
