@@ -24,7 +24,7 @@ stages:
 jobs:
   include:
   - stage: CODE_STYLE
-    script: mvn checkstyle:checkstyle
+    script: travis_wait mvn checkstyle:checkstyle
   - stage: UNIT_TESTS
     script: travis_wait mvn -q clean test
   - stage: E2E_TESTS
