@@ -24,7 +24,7 @@ values.
 
 ## Support
 While this is not an officially supported Google product, we encourage you
-to [file issues](https://github.com/GoogleCloudPlatform/pontem/CloudSpannerBackupRestore/issues/new)
+to [file issues](https://github.com/GoogleCloudPlatform/pontem/issues/new)
 for feature requests and bugs.
 
 ## Getting Started
