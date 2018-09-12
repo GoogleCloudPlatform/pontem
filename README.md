@@ -6,4 +6,4 @@ Google Cloud Storage products.
 
 Our products are:
 
-1 [Cloud Spanner Backup and Restore](cloudSpannerBackupRestore/README.md)
+1 [Cloud Spanner Backup and Restore](CloudSpannerBackupRestore/README.md)
