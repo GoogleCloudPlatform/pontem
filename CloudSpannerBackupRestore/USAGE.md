@@ -18,7 +18,7 @@ Ensure that Java 8 or above is installed.
 Ensure that [Maven 3+ is installed](https://maven.apache.org/install.html).
 
 ### Permissions
-Before using the pontem, you need to first setup a number of permissions
+Before using Pontem Cloud Spanner Backup and Restore, you need to first setup a number of permissions
 in your Google Cloud project. Make sure the service account running the jobs
 has these permissions:
 
@@ -48,7 +48,7 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/proje
 
 NOTE: A sample of how to use Gradle is not provided with every usage below
 in order to avoid redundancy. Nonetheless, Gradle or Maven can be used
-interchangably for any function in Pontem.
+interchangably for any function in Pontem Cloud Spanner Backup and Restore.
 
 ## Backup
 To backup in Avro format with Maven:
