@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.google.cloud</groupId>
-    <artifactId>pontem</artifactId>
+    <artifactId>pontem-cloud-spanner-backup-restore</artifactId>
     <version>0.2</version>
 
     <properties>
