@@ -79,8 +79,7 @@ public class UtilTest {
     Map<String, Long> actualParsedJobMetricsMap = Util.getTableRowCountsFromJobMetrics(jobMetrics);
     assertEquals(
         "Parsing table names and num rows into Map failed",
-      //  expectedParsedJobMetricsMap,
-        null,
+        expectedParsedJobMetricsMap,
         actualParsedJobMetricsMap);
   }
 }
