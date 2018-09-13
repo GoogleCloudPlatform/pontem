@@ -33,8 +33,8 @@ jobs:
   - stage: BUILD_TEST_AND_STYLE
     script: ./gradlew build --stacktrace
   - stage: E2E_TESTS
-    script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
-  - script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+    script: "./travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+  - script: "./travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 
 after_success:
 - bash <(curl -s https://codecov.io/bash) -f ./CloudSpannerBackupRestore/.codecov.yml
