@@ -25,15 +25,12 @@ before_script:
   -in client-secrets.json.enc -out client-secrets.json -d
 
 stages:
-- CODE_STYLE
-- UNIT_TESTS
+- BUILD_TEST_AND_STYLE
 - E2E_TESTS
 jobs:
   include:
-  - stage: CODE_STYLE
-    script: gradle check // (--info) ??
-  - stage: UNIT_TESTS
-    script: gradle clean build
+  - stage: BUILD_TEST_AND_STYLE
+    script: ./gradlew build --info
   - stage: E2E_TESTS
     script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
   - script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
