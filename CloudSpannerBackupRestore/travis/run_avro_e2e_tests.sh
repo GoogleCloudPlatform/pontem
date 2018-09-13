@@ -73,7 +73,7 @@ echo "GCP Folder Name Set: ${GCP_FOLDER}"
 # Tear Down Method
 full_tear_down_and_exit () {
 echo "BEGIN Avro tear down function"
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
@@ -89,7 +89,7 @@ exit 1
 
 ## Setup
 echo "BEGIN Avro running E2E setup."
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
@@ -103,7 +103,7 @@ sleep 20s
 
 ## Backup
 echo "BEGIN Avro backup."
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
    -Dexec.args="--runner=DataflowRunner \
                 --project=${GCP_PROJECT} \
@@ -117,7 +117,7 @@ echo "FINISHED Avro backup phase."
 
 ## Verify Backup
 echo "BEGIN Avro verify backup."
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
@@ -129,7 +129,7 @@ echo "FINISHED Avro verify backup phase."
 
 ## Tear Down Database
 echo "BEGIN Avro database teardown."
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
@@ -143,7 +143,7 @@ sleep 20s
 
 ## Restore From Backup
 echo "BEGIN Avro restore from backup."
-./gradlew clean execute \
+./gradlew clean run \
  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseRestore \
  -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
@@ -157,7 +157,7 @@ echo "FINISHED Avro restore from backup phase."
 
 ## Verify Database Restore
 echo "BEGIN Avro database restore verify."
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
@@ -169,7 +169,7 @@ echo "FINISHED Avro database restore verify."
 
 ## Tear Down
 echo "BEGIN Avro final tear down."
-./gradlew clean execute \
+./gradlew clean run \
    -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
