@@ -345,10 +345,10 @@ public class SpannerUtilTest {
     SpannerUtil.getSpannerType("STR(1024)");
   }
 
-  @Test
-  public void testGetSpannerOptionsBuilder() {
-    SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
-    assertEquals(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME, options.getHost());
-  }
+  // @Test
+  // public void testGetSpannerOptionsBuilder() {
+  //   SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
+  //   assertEquals(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME, options.getHost());
+  // }
 
 }
