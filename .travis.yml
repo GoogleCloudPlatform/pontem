@@ -13,12 +13,17 @@ install:
 - true
 jdk:
 - openjdk8
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-  - "$HOME/.m2/repository"
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
 before_script:
 - openssl aes-256-cbc -K $encrypted_d25b186b6dd5_key -iv $encrypted_d25b186b6dd5_iv
   -in client-secrets.json.enc -out client-secrets.json -d
+
 stages:
 - CODE_STYLE
 - UNIT_TESTS
@@ -26,12 +31,12 @@ stages:
 jobs:
   include:
   - stage: CODE_STYLE
-    script: mvn checkstyle:checkstyle
+    script: gradle check // (--info) ??
   - stage: UNIT_TESTS
-    script: mvn -q clean test
+    script: gradle clean build
   - stage: E2E_TESTS
     script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
   - script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash) -f ./CloudSpannerBackupRestore/.codecov.yml
