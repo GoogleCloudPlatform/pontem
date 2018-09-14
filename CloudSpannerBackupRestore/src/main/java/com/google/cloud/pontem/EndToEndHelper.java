@@ -37,6 +37,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
@@ -305,6 +306,19 @@ public class EndToEndHelper {
       final String gcsRootBackupFolderPath = cmd.getOptionValue("gcsRootBackupFolderPath");
       final boolean shouldFailIfContentAlreadyExists =
           Boolean.valueOf(cmd.getOptionValue("shouldFailIfContentAlreadyExists", "false"));
+
+
+      LOG.info("projectId missing? "
+          + Strings.isNullOrEmpty(projectId)
+          + "\ninstanceId missing? "
+          + Strings.isNullOrEmpty(instanceId)
+          + "\ndatabaseId missing? "
+          + Strings.isNullOrEmpty(databaseId)
+          + "\ngcsRootBackupFolderPath missing? "
+          + Strings.isNullOrEmpty(gcsRootBackupFolderPath)
+          + "\ngcsBucketName missing? "
+          + Strings.isNullOrEmpty(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath)));
+
 
       final GcsUtil gcsUtil = new GcsUtil();
       final SpannerUtil spannerUtil = new SpannerUtil();

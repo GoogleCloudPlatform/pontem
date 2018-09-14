@@ -18,6 +18,7 @@ package com.google.cloud.pontem;
 import com.google.cloud.Timestamp;
 import com.google.cloud.spanner.Struct;
 import com.google.cloud.spanner.TimestampBound;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -82,6 +83,18 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
         PipelineOptionsFactory.fromArgs(args)
             .withValidation()
             .as(BaseCloudSpannerBackupOptions.class);
+
+
+    LOG.info("options.getProjectId() missing? " + Strings.isNullOrEmpty(options.getProjectId())
+        + "\noptions.getInputSpannerInstanceId() missing? "
+        + Strings.isNullOrEmpty(options.getInputSpannerInstanceId())
+        + "\noptions.getInputSpannerDatabaseId() missing? "
+        + Strings.isNullOrEmpty(options.getInputSpannerDatabaseId())
+        + "\noptions.getOutputFolder() missing? "
+        + Strings.isNullOrEmpty(options.getOutputFolder())
+        + "\noptions.getSpannerHost() missing? "
+        + Strings.isNullOrEmpty(options.getSpannerHost()));
+
 
     final String newUserAgent = Util.USER_AGENT_PREFIX + options.getUserAgent();
     options.setUserAgent(newUserAgent);

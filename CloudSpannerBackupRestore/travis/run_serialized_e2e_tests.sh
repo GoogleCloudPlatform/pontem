@@ -73,13 +73,14 @@ echo "GCP Folder Name Set: ${GCP_FOLDER}"
 # Tear Down Method
 full_tear_down_and_exit () {
 echo "BEGIN Serialized tear down function"
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=teardown" || exit 1
+
 echo "END Serialized tear down function"
 exit 1
 }
@@ -88,8 +89,8 @@ exit 1
 
 ## Setup
 echo "BEGIN Serialized running E2E setup."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
@@ -102,20 +103,22 @@ sleep 20s
 
 ## Backup
 echo "BEGIN Serialized backup."
-mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
- --project=${GCP_PROJECT} \
- --gcpTempLocation=gs://${GCP_BUCKET}/tmpserialized \
- --inputSpannerInstanceId=${DATABASE_INSTANCE} \
- --inputSpannerDatabaseId=${DATABASE_NAME} \
- --outputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
- --projectId=${GCP_BUCKET}"  -Pdataflow-runner || full_tear_down_and_exit
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
+   -Dexec.args="--runner=DataflowRunner \
+                --project=${GCP_PROJECT} \
+                --gcpTempLocation=gs://${GCP_BUCKET}/tmpserialized \
+                --inputSpannerInstanceId=${DATABASE_INSTANCE} \
+                --inputSpannerDatabaseId=${DATABASE_NAME} \
+                --outputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
+                --projectId=${GCP_BUCKET}" \ -Pdataflow-runner || full_tear_down_and_exit
 
 echo "FINISHED Serialized backup phase."
 
 ## Verify Backup
 echo "BEGIN Serialized verify backup."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
@@ -126,8 +129,8 @@ echo "FINISHED Serialized verify backup phase."
 
 ## Tear Down Database
 echo "BEGIN Serialized database teardown."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
@@ -140,20 +143,22 @@ sleep 20s
 
 ## Restore From Backup
 echo "BEGIN Serialized restore from backup."
-mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
- --project=${GCP_PROJECT} \
- --gcpTempLocation=gs://${GCP_BUCKET}/tmpserialized \
- --outputSpannerInstanceId=${DATABASE_INSTANCE} \
- --outputSpannerDatabaseId=${DATABASE_NAME} \
- --inputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
- --projectId=${GCP_PROJECT}"  -Pdataflow-runner || full_tear_down_and_exit
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore
+   -Dexec.args="--runner=DataflowRunner \
+                --project=${GCP_PROJECT} \
+                --gcpTempLocation=gs://${GCP_BUCKET}/tmpserialized \
+                --outputSpannerInstanceId=${DATABASE_INSTANCE} \
+                --outputSpannerDatabaseId=${DATABASE_NAME} \
+                --inputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
+                --projectId=${GCP_PROJECT}"  -Pdataflow-runner || full_tear_down_and_exit
 
 echo "FINISHED Serialized restore from backup phase."
 
 ## Verify Database Restore
 echo "BEGIN Serialized database restore verify."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
@@ -164,8 +169,8 @@ echo "FINISHED Serialized database restore verify."
 
 ## Tear Down
 echo "BEGIN Serialized final tear down."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \

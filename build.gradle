@@ -25,6 +25,25 @@ mainClassName = System.getProperty("mainClass") ? System.getProperty("mainClass"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ['CloudSpannerBackupRestore/src/main']
+        }
+        resources {
+            srcDirs = ['CloudSpannerBackupRestore/src/main/resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['CloudSpannerBackupRestore/src/test']
+        }
+        resources {
+            srcDirs = ['CloudSpannerBackupRestore/src/test/resources']
+        }
+    }
+}
+
 repositories {
      maven { url "https://repository.apache.org/content/repositories/snapshots/" }
      maven { url "http://repo.maven.apache.org/maven2" }
