@@ -315,7 +315,9 @@ public class EndToEndHelper {
           + "\ndatabaseId missing? "
           + Strings.isNullOrEmpty(databaseId)
           + "\ngcsRootBackupFolderPath missing? "
-          + Strings.isNullOrEmpty(gcsRootBackupFolderPath));
+          + Strings.isNullOrEmpty(gcsRootBackupFolderPath)
+          + "\ngcsBucketName missing? "
+          + Strings.isNullOrEmpty(GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath)));
 
 
       final GcsUtil gcsUtil = new GcsUtil();
