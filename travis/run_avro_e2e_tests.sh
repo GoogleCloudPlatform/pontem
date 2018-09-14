@@ -60,116 +60,121 @@ else
   echo "Database Instance Set: ${DATABASE_INSTANCE}"
 fi
 
-echo "FINISHED parsing flags."
+echo "FINISHED (Avro) parsing flags."
 
 DATE_STR=`date +%s`
 RAND_NUM=$((1 + RANDOM % 10000))
-DATABASE_NAME="my-ser-db-"${DATE_STR}"-"${RAND_NUM}
+DATABASE_NAME="my-av-db-"${DATE_STR}"-"${RAND_NUM}
 echo "Database Name Set: ${DATABASE_NAME}"
 
-GCP_FOLDER="my-ser-db-"${DATE_STR}"-"${RAND_NUM}
+GCP_FOLDER="my-av-db-"${DATE_STR}"-"${RAND_NUM}
 echo "GCP Folder Name Set: ${GCP_FOLDER}"
 
 # Tear Down Method
 full_tear_down_and_exit () {
-echo "BEGIN Serialized tear down function"
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+echo "BEGIN Avro tear down function"
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=teardown" || exit 1
-echo "END Serialized tear down function"
+
+echo "END Avro tear down function"
 exit 1
 }
 
 # Run End-To-End (E2E) Tests
 
 ## Setup
-echo "BEGIN Serialized running E2E setup."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+echo "BEGIN Avro running E2E setup."
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=setup" || full_tear_down_and_exit
 
-echo "FINISHED Serialized setup phase."
+echo "FINISHED Avro setup phase."
 
 sleep 20s
 
 ## Backup
-echo "BEGIN Serialized backup."
-mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup  -Dexec.args="--runner=DataflowRunner \
- --project=${GCP_PROJECT} \
- --gcpTempLocation=gs://${GCP_BUCKET}/tmpserialized \
- --inputSpannerInstanceId=${DATABASE_INSTANCE} \
- --inputSpannerDatabaseId=${DATABASE_NAME} \
- --outputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
- --projectId=${GCP_BUCKET}"  -Pdataflow-runner || full_tear_down_and_exit
+echo "BEGIN Avro backup."
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
+   -Dexec.args="--runner=DataflowRunner \
+                --project=${GCP_PROJECT} \
+                --gcpTempLocation=gs://${GCP_BUCKET}/tmpavro \
+                --inputSpannerInstanceId=${DATABASE_INSTANCE} \
+                --inputSpannerDatabaseId=${DATABASE_NAME} \
+                --outputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
+                --projectId=${GCP_BUCKET}"  -Pdataflow-runner || full_tear_down_and_exit
 
-echo "FINISHED Serialized backup phase."
+echo "FINISHED Avro backup phase."
 
 ## Verify Backup
-echo "BEGIN Serialized verify backup."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+echo "BEGIN Avro verify backup."
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=verifyGcsBackup" || full_tear_down_and_exit
 
-echo "FINISHED Serialized verify backup phase."
+echo "FINISHED Avro verify backup phase."
 
 ## Tear Down Database
-echo "BEGIN Serialized database teardown."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+echo "BEGIN Avro database teardown."
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=teardownDatabase" || full_tear_down_and_exit
 
-echo "FINISHED Serialized tear down database phase."
+echo "FINISHED Avro tear down database phase."
 
 sleep 20s
 
 ## Restore From Backup
-echo "BEGIN Serialized restore from backup."
-mvn -q clean compile exec:java  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore  -Dexec.args="--runner=DataflowRunner \
+echo "BEGIN Avro restore from backup."
+./gradlew clean execute \
+ -DmainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseRestore \
+ -Dexec.args="--runner=DataflowRunner \
  --project=${GCP_PROJECT} \
- --gcpTempLocation=gs://${GCP_BUCKET}/tmpserialized \
+ --gcpTempLocation=gs://${GCP_BUCKET}/tmpavro \
  --outputSpannerInstanceId=${DATABASE_INSTANCE} \
  --outputSpannerDatabaseId=${DATABASE_NAME} \
  --inputFolder=gs://${GCP_BUCKET}/${GCP_FOLDER} \
  --projectId=${GCP_PROJECT}"  -Pdataflow-runner || full_tear_down_and_exit
 
-echo "FINISHED Serialized restore from backup phase."
+echo "FINISHED Avro restore from backup phase."
 
 ## Verify Database Restore
-echo "BEGIN Serialized database restore verify."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+echo "BEGIN Avro database restore verify."
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=verifyDatabase" || full_tear_down_and_exit
 
-echo "FINISHED Serialized database restore verify."
+echo "FINISHED Avro database restore verify."
 
 ## Tear Down
-echo "BEGIN Serialized final tear down."
-mvn -q compile exec:java \
-   -Dexec.mainClass=com.google.cloud.pontem.EndToEndHelper \
+echo "BEGIN Avro final tear down."
+./gradlew clean execute \
+   -DmainClass=com.google.cloud.pontem.EndToEndHelper \
    -Dexec.args="--projectId=${GCP_PROJECT} \
                 --gcsRootBackupFolderPath=gs://${GCP_BUCKET}/${GCP_FOLDER} \
                 --databaseInstanceId=${DATABASE_INSTANCE} \
                 --databaseId=${DATABASE_NAME} \
                 --operation=teardown" || exit 1
-echo "FINISHED Serialized All Tests Passed Successfully"
+echo "FINISHED Avro All Tests Passed Successfully"
 exit 0

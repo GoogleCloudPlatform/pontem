@@ -13,25 +13,28 @@ install:
 - true
 jdk:
 - openjdk8
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-  - "$HOME/.m2/repository"
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.m2/repository/
 before_script:
 - openssl aes-256-cbc -K $encrypted_d25b186b6dd5_key -iv $encrypted_d25b186b6dd5_iv
   -in client-secrets.json.enc -out client-secrets.json -d
+
 stages:
-- CODE_STYLE
-- UNIT_TESTS
+- BUILD_TEST_AND_STYLE
 - E2E_TESTS
 jobs:
   include:
-  - stage: CODE_STYLE
-    script: mvn checkstyle:checkstyle
-  - stage: UNIT_TESTS
-    script: mvn -q clean test
+  - stage: BUILD_TEST_AND_STYLE
+    script: ./gradlew build --stacktrace
   - stage: E2E_TESTS
-    script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
-  - script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+    script: "./travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+  - script: "./travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash) -f ./CloudSpannerBackupRestore/.codecov.yml
