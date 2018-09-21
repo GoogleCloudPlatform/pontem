@@ -7,31 +7,35 @@ env:
   - secure: ppj07RXkflLzn/oXljfV9Ghdfa8OvU/kkKifYJx4f3y9f+KPJXwYS0wKWdQ6zhfY0EtMnU/UM1psj/TvfpWPLf+EeoDeyrpi5Dinov0yZ5Zc9M3xa2XnX+++BiZv69z1YBlu1PAvADSpHu8nss0FaM2a67dugd/J/lo4ahYKaJcc/nO64i3JYSHNwnpNhMl2mgGVo9/M5Mk/khXwqaejH/sDovsfx6REqw0JueuSYqgrRxQHdZSaLfYJKh0V5HdHf03vvckSeBTBqHnryYfxx/FyXOCfSQP9zFs6qtmllADJA1NzkYg+7ZlUozlBRBOYXQwAMp2vW3S8bFxuJ5lFAd7frtW+HJjP4hMiaMBfaMvO3wcgpX1fVWyrXaF/awdgGFZviZe9hUArBiLRRfrVEo7KJw5t2B2KO3heLZwGymi4n/bIs0dfFPUnxVxGLB3u7LLLenO2Z4hwJFybwQ7cVRwhB3Yv720RKWt3YsXDVUZivlIjBSqRSEjlrjdVf5M73R1j7Pid5eOPZwl2ju/5/ysQzCAHDP7zHRgivlySre1+HYpiW0SAg6yTUy8sMKgInIMEhyzLlt8cngRCk75LOpsfoTHnV7z3nvc86qcgplhFF9XTgot2a2OUfGeszLZef0dv1VNEKa4qBLjDaslAqRsUTUywxFFizER4gnqgfzU=
   - secure: dfJrl3TZv0SZ/YFZen0bZwySUubWaaJ3gMkXAgIJxMfnT8akdhKpVyY/Xx8P9V0aLqQd3qZx7/vkkM7J8/PX+CXc9tZc2n/EY8XIfm/tDOakNteCqM6CwNLBSc2Z3yjRHifTuyFnQUwN1v12Oi6SD+KmtfBHq+O3PCWF4u//77vl3OK8q59YIE2ENzLkZcQfr9inFV0apwU8kIpZ6yTdTLZl77j0clGVxvMnIUpfTqYLtzaXr0sBwGN9klo42U8MvtgKV7/LB3JwE3et9h3/owr7t/5wTRjPj6biRwiTpAwX+Lo9fj+nf76xZMMcxrty9CCr+EaWn0L7w64fYxxf2fq/imD7A1AOAurkifWf9Gdh3ThzUjAjzSUKITpsVYqp55emvRbfFnp6aj3l0IpJVkgBNEU3IlnfK7lUa2DnaNsWhLj4KU1aIQxStniefWrgHLiZ4iAr5yjVaKJ8jXHOIOdK7Jr/SYkIPqJiYW+/zXgxLmCkKEw0Y6gUKWiwcLLzp2pnjcYFxUojs8NELZd+NJCWKjRbZBlq3Z0wo5rJygTPfWZuKBx/MaroAaS+vk5rgNCM1uOzklNPINj5EovObWOiFLxjeL0ktLUi/yo2yOxbvPosovCsF9DYyolwBBeB7phytP0g84cf0lIZcFA4wStAb92n5iJmEVRlIIl3n+A=
   - GOOGLE_APPLICATION_CREDENTIALS="client-secrets.json"
+# Warning: Even though each subproject's client-secrets.json file is located in the corresponding subproject's folder when setting GOOGLE_APPLICATION_CREDENTIALS we need to just declare the json filename!
+# This way the JVM which is running for each subproject will properly resolve the file's path relative to it's CWD.
+# For example: CloudSpannerBackupRestore's CWD + GOOGLE_APPLICATION_CREDENTIALS == /Pontem/CloudSpannerBackupRestore + client-secrets.json
 language: java
 sudo: false
 install:
 - true
 jdk:
 - openjdk8
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-  - "$HOME/.m2/repository"
+    - $HOME/.gradle/caches/
+    - $HOME/.m2/repository/
 before_script:
 - openssl aes-256-cbc -K $encrypted_d25b186b6dd5_key -iv $encrypted_d25b186b6dd5_iv
-  -in client-secrets.json.enc -out client-secrets.json -d
+  -in CloudSpannerBackupRestore/client-secrets.json.enc -out CloudSpannerBackupRestore/client-secrets.json -d
 stages:
-- CODE_STYLE
-- UNIT_TESTS
+- BUILD_AND_TEST
 - E2E_TESTS
 jobs:
   include:
-  - stage: CODE_STYLE
-    script: mvn checkstyle:checkstyle
-  - stage: UNIT_TESTS
-    script: mvn -q clean test
+  - stage: BUILD_AND_TEST
+    script: gradle clean build --info --stacktrace 
   - stage: E2E_TESTS
     script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
   - script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+- bash <(curl -s https://codecov.io/bash) -f ./CloudSpannerBackupRestore/.codecov.yml
