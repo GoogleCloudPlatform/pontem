@@ -27,10 +27,13 @@ before_script:
 - openssl aes-256-cbc -K $encrypted_d25b186b6dd5_key -iv $encrypted_d25b186b6dd5_iv
   -in CloudSpannerBackupRestore/client-secrets.json.enc -out CloudSpannerBackupRestore/client-secrets.json -d
 stages:
+- STYLE
 - BUILD_AND_TEST
 - E2E_TESTS
 jobs:
   include:
+  - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
+    script: gradle clean check
   - stage: BUILD_AND_TEST
     script: gradle clean build --info --stacktrace 
   - stage: E2E_TESTS
