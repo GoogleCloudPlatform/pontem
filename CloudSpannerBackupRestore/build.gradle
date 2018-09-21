@@ -30,6 +30,29 @@ repositories {
      maven { url "http://repo.maven.apache.org/maven2" }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main']
+            srcDirs = ['src/main']
+        }
+        resources {
+           srcDirs = ['src/main/resources']
+           srcDirs = ['src/main/resources']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test']
+            srcDirs = ['src/test']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+            srcDirs = ['src/test/resources']
+        }
+    }
+}
+
 dependencies {
     compile group: 'org.apache.beam', name: 'beam-sdks-java-core', version:'2.6.0'
     compile group: 'org.apache.beam', name: 'beam-sdks-java-io-google-cloud-platform', version:'2.6.0'
