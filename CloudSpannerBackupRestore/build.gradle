@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'application'
+apply plugin: "application"
 
 group = 'com.google.cloud'
 version = '0.3'
 
+ext.java = true
 mainClassName = System.getProperty("mainClass") ? System.getProperty("mainClass") : 'com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup'
 
 sourceCompatibility = 1.8
@@ -28,29 +27,6 @@ targetCompatibility = 1.8
 repositories {
      maven { url "https://repository.apache.org/content/repositories/snapshots/" }
      maven { url "http://repo.maven.apache.org/maven2" }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main']
-            srcDirs = ['src/main']
-        }
-        resources {
-           srcDirs = ['src/main/resources']
-           srcDirs = ['src/main/resources']
-        }
-    }
-    test {
-        java {
-            srcDirs = ['src/test']
-            srcDirs = ['src/test']
-        }
-        resources {
-            srcDirs = ['src/test/resources']
-            srcDirs = ['src/test/resources']
-        }
-    }
 }
 
 dependencies {
