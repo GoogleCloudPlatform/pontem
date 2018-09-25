@@ -10,6 +10,7 @@ env:
 # Warning: Even though each subproject's client-secrets.json file is located in the corresponding subproject's folder when setting GOOGLE_APPLICATION_CREDENTIALS we need to just declare the json filename!
 # This way the JVM which is running for each subproject will properly resolve the file's path relative to it's CWD.
 # For example: CloudSpannerBackupRestore's CWD + GOOGLE_APPLICATION_CREDENTIALS == /Pontem/CloudSpannerBackupRestore + client-secrets.json
+  - JACOCO_REPORT_PATH="build/reports/jacoco/test/jacocoTestReport.xml"
 language: java
 sudo: false
 install:
@@ -28,17 +29,17 @@ before_script:
   -in CloudSpannerBackupRestore/client-secrets.json.enc -out CloudSpannerBackupRestore/client-secrets.json -d
 stages:
 - STYLE
-- BUILD_AND_TEST
+- BUILD_TEST_AND_COVERAGE
 - E2E_TESTS
 jobs:
   include:
   - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
     script: gradle clean check
-  - stage: BUILD_AND_TEST
-    script: gradle clean build --info --stacktrace 
+  - stage: BUILD_TEST_AND_COVERAGE
+    script:
+    - gradle clean build jacocoTestReport --info --stacktrace 
+    - bash <(curl -s https://codecov.io/bash) -f CloudSpannerBackupRestore/$JACOCO_REPORT_PATH -F CloudSpannerBackupRestore
   - stage: E2E_TESTS
     script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
   - script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Serialized --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
 
-after_success:
-- bash <(curl -s https://codecov.io/bash)

@@ -39,5 +39,15 @@ subprojects { subproject ->
         dependencies {
             checkstyle group: 'com.puppycrawl.tools', name: 'checkstyle', version:'8.12'
         }
+
+        jacocoTestReport {
+            sourceDirectories = files("${projectDir}/src")
+            classDirectories = files("${buildDir}/classes")
+             reports {
+                xml.enabled true
+                csv.enabled false
+                html.enabled false
+             }
+        }
     }
 }
