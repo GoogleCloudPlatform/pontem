@@ -178,43 +178,43 @@ public class EndToEndHelper {
   public static final ImmutableList<Struct> FOO_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("colFloat", Value.float64(FOO_TABLE_MUTATION_0__COL_FLOAT))
-              .add("colTimestamp", Value.timestamp(FOO_TABLE_MUTATION_0__COL_TIMESTAMP))
-              .add("colDate", Value.date(FOO_TABLE_MUTATION_0__COL_DATE))
-              .add("colString", Value.string(FOO_TABLE_MUTATION_0__COL_STRING))
-              .add("colInt", Value.int64(FOO_TABLE_MUTATION_0__COL_INT))
+              .set("colFloat").to(Value.float64(FOO_TABLE_MUTATION_0__COL_FLOAT))
+              .set("colTimestamp").to(Value.timestamp(FOO_TABLE_MUTATION_0__COL_TIMESTAMP))
+              .set("colDate").to(Value.date(FOO_TABLE_MUTATION_0__COL_DATE))
+              .set("colString").to(Value.string(FOO_TABLE_MUTATION_0__COL_STRING))
+              .set("colInt").to(Value.int64(FOO_TABLE_MUTATION_0__COL_INT))
               .build(),
           Struct.newBuilder()
-              .add("colFloat", Value.float64(FOO_TABLE_MUTATION_1__COL_FLOAT))
-              .add("colString", Value.string(FOO_TABLE_MUTATION_1__COL_STRING))
-              .add("colTimestamp", Value.timestamp(FOO_TABLE_MUTATION_1__COL_TIMESTAMP))
-              .add("colDate", Value.date(FOO_TABLE_MUTATION_1__COL_DATE))
+              .set("colFloat").to(Value.float64(FOO_TABLE_MUTATION_1__COL_FLOAT))
+              .set("colString").to(Value.string(FOO_TABLE_MUTATION_1__COL_STRING))
+              .set("colTimestamp").to(Value.timestamp(FOO_TABLE_MUTATION_1__COL_TIMESTAMP))
+              .set("colDate").to(Value.date(FOO_TABLE_MUTATION_1__COL_DATE))
               .build(),
           Struct.newBuilder()
-              .add("colFloat", Value.float64(FOO_TABLE_MUTATION_2__COL_FLOAT))
-              .add("colString", Value.string(FOO_TABLE_MUTATION_2__COL_STRING))
-              .add("colTimestamp", Value.timestamp(FOO_TABLE_MUTATION_2__COL_TIMESTAMP))
-              .add("colDate", Value.date(FOO_TABLE_MUTATION_2__COL_DATE))
-              .add("colArrayInt", Value.int64Array(FOO_TABLE_MUTATION_2__COL_ARRAY_INT))
-              .add("colArrayBool", Value.boolArray(FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL))
-              .add("colInt", Value.int64(FOO_TABLE_MUTATION_2__COL_INT))
+              .set("colFloat").to(Value.float64(FOO_TABLE_MUTATION_2__COL_FLOAT))
+              .set("colString").to(Value.string(FOO_TABLE_MUTATION_2__COL_STRING))
+              .set("colTimestamp").to(Value.timestamp(FOO_TABLE_MUTATION_2__COL_TIMESTAMP))
+              .set("colDate").to(Value.date(FOO_TABLE_MUTATION_2__COL_DATE))
+              .set("colArrayInt").to(Value.int64Array(FOO_TABLE_MUTATION_2__COL_ARRAY_INT))
+              .set("colArrayBool").to(Value.boolArray(FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL))
+              .set("colInt").to(Value.int64(FOO_TABLE_MUTATION_2__COL_INT))
               .build());
 
   public static final ImmutableList<Struct> PARENT_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("foo_id", Value.int64(PARENT_TABLE_MUTATION_0__COL_FOO_ID))
-              .add("bar_string", Value.string(PARENT_TABLE_MUTATION_0__COL_BAR_STRING))
+              .set("foo_id").to(Value.int64(PARENT_TABLE_MUTATION_0__COL_FOO_ID))
+              .set("bar_string").to(Value.string(PARENT_TABLE_MUTATION_0__COL_BAR_STRING))
               .build(),
           Struct.newBuilder()
-              .add("foo_id", Value.int64(PARENT_TABLE_MUTATION_1__COL_FOO_ID))
-              .add("bar_string", Value.string(PARENT_TABLE_MUTATION_1__COL_BAR_STRING))
+              .set("foo_id").to(Value.int64(PARENT_TABLE_MUTATION_1__COL_FOO_ID))
+              .set("bar_string").to(Value.string(PARENT_TABLE_MUTATION_1__COL_BAR_STRING))
               .build());
   public static final ImmutableList<Struct> CHILD_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
-              .add("foo_id", Value.int64(CHILD_TABLE_MUTATION_0__COL_FOO_ID))
-              .add("child_bar_string", Value.string(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING))
+              .set("foo_id").to(Value.int64(CHILD_TABLE_MUTATION_0__COL_FOO_ID))
+              .set("child_bar_string").to(Value.string(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING))
               .build());
 
   public static final ImmutableList<String> GOOGLE_CLOUD_SPANNER_DDL =
