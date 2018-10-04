@@ -19,7 +19,7 @@ group = 'com.google.cloud'
 version = '0.3'
 
 ext.java = true
-mainClassName = System.getProperty("mainClass") ? System.getProperty("mainClass") : 'com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup'
+mainClassName = System.getProperty("mainClass") ? System.getProperty("mainClass") : 'com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

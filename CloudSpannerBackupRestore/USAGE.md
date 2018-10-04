@@ -53,7 +53,7 @@ To backup in Avro format with Gradle:
 
 ```bash
 gradle clean execute \
-  -DmainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
+  -DmainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
                --inputSpannerInstanceId=my-cloud-spanner-project-db \
@@ -63,24 +63,12 @@ gradle clean execute \
 ```
 
 
-To backup in serialized format with Gradle:
-
-```bash
-gradle clean execute \
-  -DmainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
-  -Dexec.args="--runner=DataflowRunner \
-               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
-               --inputSpannerInstanceId=my-cloud-spanner-project-db \
-               --inputSpannerDatabaseId=words2 \
-               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
-               --projectId=my-cloud-spanner-project" -Pdataflow-runner
-```
 
 A sample run that queries and saves the table row counts while not saving table schemas:
 
 ```bash
 gradle clean execute \
-  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
+  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
                --region=us-central1 \
@@ -122,29 +110,13 @@ gradle clean execute \
   -Pdataflow-runner
 ```
 
-A simple restore of a database from serialized format:
-
-```bash
-gradle clean execute \
-  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
-  -Dexec.args="--runner=DataflowRunner \
-               --project=my-cloud-spanner-project \
-               --region=us-central1 \
-               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
-               --outputSpannerInstanceId=my-cloud-spanner-project-db \
-               --outputSpannerDatabaseId=words2 \
-               --inputFolder=gs://my-cloud-spanner-project/backups/latest \
-               --projectId=my-cloud-spanner-project" \
-  -Pdataflow-runner
-```
-
 A sample restore of a database with a smaller Spanner write batch size. Note
 that you will need to get the number of mutations down to 20000 in order
 to comply with [Spanner's limits](https://cloud.google.com/spanner/quotas):
 
 ```bash
 gradle clean execute \
-  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
+  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
                --region=us-central1 \
