@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
@@ -38,16 +39,17 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link CloudSpannerDatabaseRestoreIntegrityCheck}. */
 @RunWith(JUnit4.class)
 public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
+  private static final String PROJECT_ID = "cloud-spanner-successful-restore";
+  private static final String[] RESTORE_JOB_IDS = {
+    "dataflow-restore-job-id-1", "dataflow-restore-job-id-2"
+  };
+  private static final String BACKUP_JOB_ID = "dataflow-backup-job-id";
+  private static final String GCS_BUCKET_NAME = "cloud-spanner-backup-bucket-success";
+  private static final String GCS_FOLDER_PATH = "subFolder/";
+  boolean requireAllTablesRestored = true;
 
   @Test
   public void testPerformDatabaseBackupIntegrityCheck_valid() throws Exception {
-    String projectId = "cloud-spanner-successful-restore";
-    String[] restoreJobIds = {"dataflow-restore-job-id-1", "dataflow-restore-job-id-2"};
-    String backupJobId = "dataflow-backup-job-id";
-    String gcsBucketName = "cloud-spanner-backup-bucket-success";
-    String gcsFolderPath = "subFolder/";
-    boolean requireAllTablesRestored = true;
-
     Map<String, Long> tableRowCountsBackup = ImmutableMap.of("MyTable100", 100L, "tableName2", 2L);
     JobMetrics jobMetricsBackup = TestHelper.getJobMetrics(tableRowCountsBackup);
 
@@ -59,22 +61,23 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
 
     GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(
+            eq(PROJECT_ID), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
-    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(backupJobId)))
+    when(mockUtil.fetchMetricsForDataflowJob(eq(PROJECT_ID), eq(BACKUP_JOB_ID)))
         .thenReturn(jobMetricsBackup);
-    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(restoreJobIds[0])))
+    when(mockUtil.fetchMetricsForDataflowJob(eq(PROJECT_ID), eq(RESTORE_JOB_IDS[0])))
         .thenReturn(jobMetricsRestore0);
-    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(restoreJobIds[1])))
+    when(mockUtil.fetchMetricsForDataflowJob(eq(PROJECT_ID), eq(RESTORE_JOB_IDS[1])))
         .thenReturn(jobMetricsRestore1);
 
     assertTrue(
         CloudSpannerDatabaseRestoreIntegrityCheck.performDatabaseRestoreIntegrityCheck(
-            projectId,
-            restoreJobIds,
-            backupJobId,
-            gcsBucketName,
-            gcsFolderPath,
+            PROJECT_ID,
+            RESTORE_JOB_IDS,
+            BACKUP_JOB_ID,
+            GCS_BUCKET_NAME,
+            GCS_FOLDER_PATH,
             requireAllTablesRestored,
             mockGcsUtil,
             mockUtil));
@@ -82,13 +85,6 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
 
   @Test(expected = Exception.class)
   public void testPerformDatabaseBackupIntegrityCheck_invalid() throws Exception {
-    String projectId = "cloud-spanner-successful-restore";
-    String[] restoreJobIds = {"dataflow-restore-job-id-1", "dataflow-restore-job-id-2"};
-    String backupJobId = "dataflow-backup-job-id";
-    String gcsBucketName = "cloud-spanner-backup-bucket-success";
-    String gcsFolderPath = "subFolder/";
-    boolean requireAllTablesRestored = true;
-
     Map<String, Long> tableRowCountsBackup =
         ImmutableMap.of("MyTable100", 100L, "tableName2", 2L, "third_table", 300L);
     JobMetrics jobMetricsBackup = TestHelper.getJobMetrics(tableRowCountsBackup);
@@ -101,21 +97,22 @@ public class CloudSpannerDatabaseRestoreIntegrityCheckTest {
 
     GcsUtil mockGcsUtil = mock(GcsUtil.class);
     Util mockUtil = mock(Util.class);
-    when(mockGcsUtil.getContentsOfFileFromGcs(eq(projectId), anyString(), anyString(), anyString()))
+    when(mockGcsUtil.getContentsOfFileFromGcs(
+            eq(PROJECT_ID), anyString(), anyString(), anyString()))
         .thenReturn("MyTable100\ntableName2");
-    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(backupJobId)))
+    when(mockUtil.fetchMetricsForDataflowJob(eq(PROJECT_ID), eq(BACKUP_JOB_ID)))
         .thenReturn(jobMetricsBackup);
-    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(restoreJobIds[0])))
+    when(mockUtil.fetchMetricsForDataflowJob(eq(PROJECT_ID), eq(RESTORE_JOB_IDS[0])))
         .thenReturn(jobMetricsRestore0);
-    when(mockUtil.fetchMetricsForDataflowJob(eq(projectId), eq(restoreJobIds[1])))
+    when(mockUtil.fetchMetricsForDataflowJob(eq(PROJECT_ID), eq(RESTORE_JOB_IDS[1])))
         .thenReturn(jobMetricsRestore1);
 
     CloudSpannerDatabaseRestoreIntegrityCheck.performDatabaseRestoreIntegrityCheck(
-        projectId,
-        restoreJobIds,
-        backupJobId,
-        gcsBucketName,
-        gcsFolderPath,
+        PROJECT_ID,
+        RESTORE_JOB_IDS,
+        BACKUP_JOB_ID,
+        GCS_BUCKET_NAME,
+        GCS_FOLDER_PATH,
         requireAllTablesRestored,
         mockGcsUtil,
         mockUtil);

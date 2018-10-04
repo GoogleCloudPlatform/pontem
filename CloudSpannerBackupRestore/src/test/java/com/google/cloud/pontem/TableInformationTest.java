@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
@@ -374,7 +375,8 @@ public class TableInformationTest {
   @Test
   public void testGetAvroTypeOfColumn() {
     TableInformation tableInformation = new TableInformation(basicDdl1);
-    assertEquals(SchemaBuilder.builder().longType(), tableInformation.getAvroTypeOfColumn("SingerId"));
+    assertEquals(
+        SchemaBuilder.builder().longType(), tableInformation.getAvroTypeOfColumn("SingerId"));
   }
 
   @Test(expected = RuntimeException.class)

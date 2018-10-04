@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Mutation;
@@ -85,6 +86,7 @@ import org.apache.beam.sdk.values.PCollection;
  */
 public class SerializedCloudSpannerDatabaseRestore extends BaseCloudSpannerDatabaseRestore {
 
+  /** Entry point for performing a restore from backup of an entire Cloud Spanner database. */
   public static void main(String[] args) throws Exception {
     // STEP 1a: Parse Pipeline options
     final BaseCloudSpannerRestoreOptions options =

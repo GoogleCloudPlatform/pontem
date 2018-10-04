@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.Timestamp;
@@ -60,6 +61,8 @@ import org.apache.beam.sdk.values.PCollectionView;
  * </pre>
  */
 public class AvroCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBackup {
+
+  /** Entry point for backing up a Cloud Spanner database into Avro format. */
   public static void main(String[] args) throws Exception {
     // STEP 1: Setup pipeline and Spanner configuration
     final BaseCloudSpannerBackupOptions options =
@@ -148,7 +151,7 @@ public class AvroCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBack
     pipelineResult.waitUntilFinish();
   }
 
-  public static void constructPipeline(
+  protected static void constructPipeline(
       Pipeline p,
       BaseCloudSpannerBackupOptions options,
       SpannerConfig spannerConfig,

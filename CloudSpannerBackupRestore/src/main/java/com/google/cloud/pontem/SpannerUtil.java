@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.api.gax.paging.Page;
@@ -51,22 +52,22 @@ import java.util.regex.Pattern;
 
 /** Utility function for Spanner operations. */
 public class SpannerUtil {
+  public static final String CLOUD_SPANNER_API_ENDPOINT_HOSTNAME = "https://spanner.googleapis.com";
+  public static final String FILE_PATH_FOR_DATABASE_DDL = "metadata/database_ddl.txt";
+  // Use a delimeter to delinate the statements in a database DDL.
+  public static final String DDL_DELIMITER = "\n##\n";
   private static final Logger LOG = Logger.getLogger(SpannerUtil.class.getName());
-
   // parse out the name of the table
   private static final Pattern COMPILED_TABLE_PATTERN =
       Pattern.compile("^CREATE TABLE[\\s]*([a-zA-Z0-9_]+)[\\s]?\\(.*$", Pattern.DOTALL);
-
   // parse out the specific column statements
   private static final Pattern COMPILED_ARRAY_PATTERN =
       Pattern.compile("^ARRAY<([a-zA-Z0-9()]+)>$", Pattern.DOTALL);
 
-  public static final String CLOUD_SPANNER_API_ENDPOINT_HOSTNAME = "https://spanner.googleapis.com";
-  public static final String FILE_PATH_FOR_DATABASE_DDL = "metadata/database_ddl.txt";
-
-  // Use a delimeter to delinate the statements in a database DDL.
-  public static final String DDL_DELIMITER = "\n##\n";
-
+  /**
+   * Returns a SpannerOptions.Builder pre-configured with the correct API endpoint and Pontem's User
+   * Agent
+   */
   public static SpannerOptions.Builder getSpannerOptionsBuilder() {
     SpannerOptions.Builder options =
         SpannerOptions.newBuilder()
@@ -76,9 +77,10 @@ public class SpannerUtil {
   }
 
   /**
-   * Convert the Cloud Spanner type from {@type String} to {@type Type}
+   * Convert the Cloud Spanner type from {@type String} to {@type Type}.
    *
-   * @see /google-cloud-java/google-cloud-clients/apidocs/com/google/cloud/spanner/Type.Code.html
+   * @see:
+   *     https://googleapis.github.io/google-cloud-java/google-cloud-clients/apidocs/com/google/cloud/spanner/Type.Code.html
    */
   public static Type getSpannerType(String typeAsString) {
     typeAsString = typeAsString.trim();
@@ -163,6 +165,79 @@ public class SpannerUtil {
     }
     LOG.info("End getting list of database names, size: " + databaseNames.size());
     return ImmutableList.copyOf(databaseNames);
+  }
+
+  public static String convertDdlListIntoRawText(ImmutableList<String> ddlStatements) {
+    String databaseDdlAsString = String.join(DDL_DELIMITER, ddlStatements);
+    return databaseDdlAsString;
+  }
+
+  /**
+   * Take in raw text version of a database's DDL and return a list of DDL statements. The list of
+   * DDL statements can be executed sequentially.
+   *
+   * @see: https://cloud.google.com/spanner/docs/data-definition-language
+   */
+  public static ImmutableList<String> convertRawDdlIntoDdlList(String rawDdl) {
+    List<String> statements = new ArrayList<String>(Arrays.asList(rawDdl.split(DDL_DELIMITER)));
+    return ImmutableList.copyOf(statements);
+  }
+
+  /** Convert a Spanner {@type Struct} into a {@type Mutation}. */
+  public static Mutation convertStructToMutation(Struct struct, String tableName) {
+    // STEP 2: Convert a Struct to a Mutation
+    Mutation.WriteBuilder mutationBuilder = Mutation.newInsertOrUpdateBuilder(tableName);
+
+    Type tableType = struct.getType();
+
+    for (Type.StructField field : tableType.getStructFields()) {
+      Type type = field.getType();
+      String name = field.getName();
+
+      // If a column's value is NULL, skip it.
+      if (struct.isNull(name)) {
+        continue;
+      }
+
+      // Using switch produced errors switching on an enum
+      // see https://cloud.google.com/spanner/docs/data-types
+      if (type.getCode() == Code.STRING) {
+        mutationBuilder.set(name).to((String) struct.getString(name));
+      } else if (type.getCode() == Code.BOOL) {
+        mutationBuilder.set(name).to((boolean) struct.getBoolean(name));
+      } else if (type.getCode() == Code.BYTES) {
+        mutationBuilder.set(name).to((ByteArray) struct.getBytes(name));
+      } else if (type.getCode() == Code.DATE) {
+        mutationBuilder.set(name).to((Date) struct.getDate(name));
+      } else if (type.getCode() == Code.FLOAT64) {
+        mutationBuilder.set(name).to((double) struct.getDouble(name));
+      } else if (type.getCode() == Code.TIMESTAMP) {
+        mutationBuilder.set(name).to((Timestamp) struct.getTimestamp(name));
+      } else if (type.getCode() == Code.INT64) {
+        mutationBuilder.set(name).to((long) struct.getLong(name));
+      } else if (type.getCode() == Code.ARRAY) {
+        // Go through different types of arrays.
+        if (type.getArrayElementType().getCode() == Code.STRING) {
+          mutationBuilder.set(name).toStringArray(struct.getStringList(name));
+        } else if (type.getArrayElementType().getCode() == Code.BOOL) {
+          mutationBuilder.set(name).toBoolArray(struct.getBooleanList(name));
+        } else if (type.getArrayElementType().getCode() == Code.BYTES) {
+          mutationBuilder.set(name).toBytesArray(struct.getBytesList(name));
+        } else if (type.getArrayElementType().getCode() == Code.DATE) {
+          mutationBuilder.set(name).toDateArray(struct.getDateList(name));
+        } else if (type.getArrayElementType().getCode() == Code.FLOAT64) {
+          mutationBuilder.set(name).toFloat64Array(struct.getDoubleList(name));
+        } else if (type.getArrayElementType().getCode() == Code.INT64) {
+          mutationBuilder.set(name).toInt64Array(struct.getLongArray(name));
+        } else if (type.getArrayElementType().getCode() == Code.TIMESTAMP) {
+          mutationBuilder.set(name).toTimestampArray(struct.getTimestampList(name));
+        }
+      } else {
+        throw new RuntimeException(
+            "Not handling type for field '" + name + "' of type " + type.getCode());
+      }
+    }
+    return mutationBuilder.build();
   }
 
   /**
@@ -286,78 +361,5 @@ public class SpannerUtil {
       spanner.close();
     }
     LOG.info("End creating Cloud Spanner database " + databaseId);
-  }
-
-  public static String convertDdlListIntoRawText(ImmutableList<String> ddlStatements) {
-    String databaseDdlAsString = String.join(DDL_DELIMITER, ddlStatements);
-    return databaseDdlAsString;
-  }
-
-  /**
-   * Take in raw text version of a database's DDL and return a list of DDL statements. The list of
-   * DDL statements can be executed sequentially.
-   *
-   * <p>See https://cloud.google.com/spanner/docs/data-definition-language
-   */
-  public static ImmutableList<String> convertRawDdlIntoDdlList(String rawDdl) {
-    List<String> statements = new ArrayList<String>(Arrays.asList(rawDdl.split(DDL_DELIMITER)));
-    return ImmutableList.copyOf(statements);
-  }
-
-  /** Convert a Spanner {@type Struct} into a {@type Muutation} */
-  public static Mutation convertStructToMutation(Struct struct, String tableName) {
-    // STEP 2: Convert a Struct to a Mutation
-    Mutation.WriteBuilder mutationBuilder = Mutation.newInsertOrUpdateBuilder(tableName);
-
-    Type tableType = struct.getType();
-
-    for (Type.StructField field : tableType.getStructFields()) {
-      Type type = field.getType();
-      String name = field.getName();
-
-      // If a column's value is NULL, skip it.
-      if (struct.isNull(name)) {
-        continue;
-      }
-
-      // Using switch produced errors switching on an enum
-      // see https://cloud.google.com/spanner/docs/data-types
-      if (type.getCode() == Code.STRING) {
-        mutationBuilder.set(name).to((String) struct.getString(name));
-      } else if (type.getCode() == Code.BOOL) {
-        mutationBuilder.set(name).to((boolean) struct.getBoolean(name));
-      } else if (type.getCode() == Code.BYTES) {
-        mutationBuilder.set(name).to((ByteArray) struct.getBytes(name));
-      } else if (type.getCode() == Code.DATE) {
-        mutationBuilder.set(name).to((Date) struct.getDate(name));
-      } else if (type.getCode() == Code.FLOAT64) {
-        mutationBuilder.set(name).to((double) struct.getDouble(name));
-      } else if (type.getCode() == Code.TIMESTAMP) {
-        mutationBuilder.set(name).to((Timestamp) struct.getTimestamp(name));
-      } else if (type.getCode() == Code.INT64) {
-        mutationBuilder.set(name).to((long) struct.getLong(name));
-      } else if (type.getCode() == Code.ARRAY) {
-        // Go through different types of arrays.
-        if (type.getArrayElementType().getCode() == Code.STRING) {
-          mutationBuilder.set(name).toStringArray(struct.getStringList(name));
-        } else if (type.getArrayElementType().getCode() == Code.BOOL) {
-          mutationBuilder.set(name).toBoolArray(struct.getBooleanList(name));
-        } else if (type.getArrayElementType().getCode() == Code.BYTES) {
-          mutationBuilder.set(name).toBytesArray(struct.getBytesList(name));
-        } else if (type.getArrayElementType().getCode() == Code.DATE) {
-          mutationBuilder.set(name).toDateArray(struct.getDateList(name));
-        } else if (type.getArrayElementType().getCode() == Code.FLOAT64) {
-          mutationBuilder.set(name).toFloat64Array(struct.getDoubleList(name));
-        } else if (type.getArrayElementType().getCode() == Code.INT64) {
-          mutationBuilder.set(name).toInt64Array(struct.getLongArray(name));
-        } else if (type.getArrayElementType().getCode() == Code.TIMESTAMP) {
-          mutationBuilder.set(name).toTimestampArray(struct.getTimestampList(name));
-        }
-      } else {
-        throw new RuntimeException(
-            "Not handling type for field '" + name + "' of type " + type.getCode());
-      }
-    }
-    return mutationBuilder.build();
   }
 }

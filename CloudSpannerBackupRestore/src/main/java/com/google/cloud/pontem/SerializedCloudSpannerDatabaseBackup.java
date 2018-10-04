@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.Timestamp;
@@ -76,6 +77,9 @@ import org.apache.beam.sdk.values.PCollectionView;
  */
 public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDatabaseBackup {
 
+  /**
+   * Entry point for performing a backup of an entire Cloud Spanner database using serialization.
+   */
   public static void main(String[] args) throws Exception {
     // STEP 1: Setup pipeline and Spanner configuration
     final BaseCloudSpannerBackupOptions options =
@@ -154,7 +158,7 @@ public class SerializedCloudSpannerDatabaseBackup extends BaseCloudSpannerDataba
     pipelineResult.waitUntilFinish();
   }
 
-  public static void constructPipeline(
+  protected static void constructPipeline(
       Pipeline p,
       BaseCloudSpannerBackupOptions options,
       SpannerConfig spannerConfig,
