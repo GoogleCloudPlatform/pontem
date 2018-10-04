@@ -71,8 +71,8 @@ public class SpannerUtil {
   public static SpannerOptions.Builder getSpannerOptionsBuilder() {
     SpannerOptions.Builder options =
         SpannerOptions.newBuilder()
-            .setHost(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME)
-            .setUserAgentPrefix(Util.USER_AGENT_PREFIX);
+            .setHost(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME);
+            //.setUserAgentPrefix(Util.USER_AGENT_PREFIX);
     return options;
   }
 
