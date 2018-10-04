@@ -12,10 +12,10 @@ and follow the [Usage](#usage) guide below.
 
 ## Local Command Line
 
-### Java and Maven
+### Java and Gradle
 Ensure that Java 8 or above is installed.
 
-Ensure that [Maven 3+ is installed](https://maven.apache.org/install.html).
+Ensure that [Gradle 4+ is installed](https://gradle.org/install/).
 
 ### Permissions
 Before using Pontem Cloud Spanner Backup and Restore, you need to first setup a number of permissions
@@ -46,26 +46,8 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my/downloaded/credentials/proje
 - [Restore](#restore)
   - [Restore with an Integrity Check](#restore-with-an-integrity-check)
 
-NOTE: A sample of how to use Gradle is not provided with every usage below
-in order to avoid redundancy. Nonetheless, Gradle or Maven can be used
-interchangably for any function in Pontem Cloud Spanner Backup and Restore.
 
 ## Backup
-To backup in Avro format with Maven:
-
-```bash
-mvn compile exec:java \
-  -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseBackup \
-  -Dexec.args="--runner=DataflowRunner \
-               --project=my-cloud-spanner-project \
-               --region=us-central1 \
-               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
-               --inputSpannerInstanceId=my-cloud-spanner-project-db \
-               --inputSpannerDatabaseId=words2 \
-               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
-               --projectId=my-cloud-spanner-project" \
-  -Pdataflow-runner
-```
 
 To backup in Avro format with Gradle:
 
@@ -80,21 +62,6 @@ gradle clean execute \
                --projectId=my-cloud-spanner-project" -Pdataflow-runner
 ```
 
-To backup in serialized format with Maven:
-
-```bash
-mvn compile exec:java \
-  -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
-  -Dexec.args="--runner=DataflowRunner \
-               --project=my-cloud-spanner-project \
-               --region=us-central1 \
-               --gcpTempLocation=gs://my-cloud-spanner-project/tmp \
-               --inputSpannerInstanceId=my-cloud-spanner-project-db \
-               --inputSpannerDatabaseId=words2 \
-               --outputFolder=gs://my-cloud-spanner-project/backups/latest \
-               --projectId=my-cloud-spanner-project" \
-  -Pdataflow-runner
-```
 
 To backup in serialized format with Gradle:
 
@@ -112,7 +79,7 @@ gradle clean execute \
 A sample run that queries and saves the table row counts while not saving table schemas:
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseBackup \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
@@ -131,7 +98,7 @@ mvn compile exec:java \
 A simple sample run:
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
      -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseBackupIntegrityCheck \
      -Dexec.args="--project=my-cloud-spanner-project \
                   --databaseBackupLocation=gs://my-cloud-spanner-project/multi-backup \
@@ -142,7 +109,7 @@ mvn compile exec:java \
 A simple restore of a database from Avro format:
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
   -Dexec.mainClass=com.google.cloud.pontem.AvroCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
@@ -158,7 +125,7 @@ mvn compile exec:java \
 A simple restore of a database from serialized format:
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
@@ -176,7 +143,7 @@ that you will need to get the number of mutations down to 20000 in order
 to comply with [Spanner's limits](https://cloud.google.com/spanner/quotas):
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
   -Dexec.mainClass=com.google.cloud.pontem.SerializedCloudSpannerDatabaseRestore \
   -Dexec.args="--runner=DataflowRunner \
                --project=my-cloud-spanner-project \
@@ -194,7 +161,7 @@ mvn compile exec:java \
 A sample run:
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestoreIntegrityCheck \
   -Dexec.args="--project=my-cloud-spanner-project \
                --backupJobId=2017-12-28_08_21_49-14004506096652894727 \
@@ -212,7 +179,7 @@ mvn compile exec:java \
 A sample run that requires every table to have been restored:
 
 ```bash
-mvn compile exec:java \
+gradle clean execute \
   -Dexec.mainClass=com.google.cloud.pontem.CloudSpannerDatabaseRestoreIntegrityCheck \
   -Dexec.args="--project=my-cloud-spanner-project \
                --backupJobId=2017-12-28_08_21_49-14004506096652894727 \
