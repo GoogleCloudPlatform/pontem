@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.api.services.dataflow.model.JobMetrics;
@@ -43,12 +44,13 @@ import org.apache.commons.cli.ParseException;
  *                --databaseBackupLocation=gs://my-cloud-spanner-project/multi-backup \
  *                --job=2017-10-25_11_18_28-6233650047978038157"
  * </pre>
- *
- * </pre>
  */
 public class CloudSpannerDatabaseBackupIntegrityCheck {
 
-  public static Options configureCommandlineOptions() {
+  private static final Logger LOG =
+      Logger.getLogger(CloudSpannerDatabaseBackupIntegrityCheck.class.getName());
+
+  protected static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud project ID. */
@@ -90,9 +92,7 @@ public class CloudSpannerDatabaseBackupIntegrityCheck {
     return options;
   }
 
-  private static final Logger LOG =
-      Logger.getLogger(CloudSpannerDatabaseBackupIntegrityCheck.class.getName());
-
+  /** Entry point to verify the integrity of a backup of a Cloud Spanner database. */
   public static void main(String[] args) throws Exception {
     // STEP 1: Parse inputs.
     Options options = configureCommandlineOptions();

@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.Date;
@@ -64,14 +65,35 @@ import org.apache.commons.cli.ParseException;
  * </pre>
  */
 public class EndToEndHelper {
-  private static final Logger LOG = Logger.getLogger(EndToEndHelper.class.getName());
-
   public static final String FOO_TABLE_NAME = "foo_table";
   public static final String PARENT_TABLE_NAME = "parent_table";
   public static final String CHILD_TABLE_NAME = "child_table";
   public static final ImmutableSet<String> TABLE_NAMES =
       ImmutableSet.of(FOO_TABLE_NAME, PARENT_TABLE_NAME, CHILD_TABLE_NAME);
-
+  public static final ImmutableList<String> GOOGLE_CLOUD_SPANNER_DDL =
+      ImmutableList.of(
+          "CREATE TABLE foo_table (\n"
+              + "  colFloat FLOAT64 NOT NULL,\n"
+              + "  colArrayInt ARRAY<INT64>,\n"
+              + "  colBool BOOL,\n"
+              + "  colBytes BYTES(MAX),\n"
+              + "  colDate DATE NOT NULL,\n"
+              + "  colString STRING(MAX) NOT NULL,\n"
+              + "  colTimestamp TIMESTAMP NOT NULL,\n"
+              + "  colInt INT64,\n"
+              + "  colArrayBool ARRAY<BOOL>,\n"
+              + ") PRIMARY KEY(colFloat)",
+          "CREATE TABLE parent_table (\n"
+              + "  foo_id INT64 NOT NULL,\n"
+              + "  bar_string STRING(MAX),\n"
+              + ") PRIMARY KEY(foo_id)",
+          "CREATE NULL_FILTERED INDEX parent_table_index ON parent_table(foo_id DESC)",
+          "CREATE TABLE child_table (\n"
+              + "  foo_id INT64 NOT NULL,\n"
+              + "  child_bar_string STRING(MAX),\n"
+              + ") PRIMARY KEY(foo_id, child_bar_string DESC),\n"
+              + "  INTERLEAVE IN PARENT parent_table ON DELETE CASCADE");
+  private static final Logger LOG = Logger.getLogger(EndToEndHelper.class.getName());
   private static final double FOO_TABLE_MUTATION_0__COL_FLOAT = 32.53829d;
   private static final Timestamp FOO_TABLE_MUTATION_0__COL_TIMESTAMP =
       Timestamp.parseTimestamp("2017-09-15T00:00:00.111111Z");
@@ -91,7 +113,6 @@ public class EndToEndHelper {
           .set("colInt")
           .to(FOO_TABLE_MUTATION_0__COL_INT)
           .build();
-
   private static final double FOO_TABLE_MUTATION_1__COL_FLOAT = 309.53829d;
   private static final Timestamp FOO_TABLE_MUTATION_1__COL_TIMESTAMP =
       Timestamp.parseTimestamp("2018-01-21T00:00:00.111111Z");
@@ -108,7 +129,6 @@ public class EndToEndHelper {
           .set("colString")
           .to(FOO_TABLE_MUTATION_1__COL_STRING)
           .build();
-
   private static final double FOO_TABLE_MUTATION_2__COL_FLOAT = 3009.53829d;
   private static final Timestamp FOO_TABLE_MUTATION_2__COL_TIMESTAMP =
       Timestamp.parseTimestamp("2017-09-15T00:00:00.111111Z");
@@ -136,45 +156,6 @@ public class EndToEndHelper {
           .set("colInt")
           .to(FOO_TABLE_MUTATION_2__COL_INT)
           .build();
-
-  private static final Long PARENT_TABLE_MUTATION_0__COL_FOO_ID = 10l;
-  private static final String PARENT_TABLE_MUTATION_0__COL_BAR_STRING = "hello";
-  public static final Mutation PARENT_TABLE_MUTATION_0 =
-      Mutation.newInsertBuilder(PARENT_TABLE_NAME)
-          .set("foo_id")
-          .to(PARENT_TABLE_MUTATION_0__COL_FOO_ID)
-          .set("bar_string")
-          .to(PARENT_TABLE_MUTATION_0__COL_BAR_STRING)
-          .build();
-
-  private static final Long PARENT_TABLE_MUTATION_1__COL_FOO_ID = Long.MAX_VALUE;
-  private static final String PARENT_TABLE_MUTATION_1__COL_BAR_STRING = "hello_2";
-  public static final Mutation PARENT_TABLE_MUTATION_1 =
-      Mutation.newInsertBuilder(PARENT_TABLE_NAME)
-          .set("foo_id")
-          .to(PARENT_TABLE_MUTATION_1__COL_FOO_ID)
-          .set("bar_string")
-          .to(PARENT_TABLE_MUTATION_1__COL_BAR_STRING)
-          .build();
-
-  private static final Long CHILD_TABLE_MUTATION_0__COL_FOO_ID = 10l;
-  private static final String CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING = "child_hello";
-  public static final Mutation CHILD_TABLE_MUTATION_0 =
-      Mutation.newInsertBuilder(CHILD_TABLE_NAME)
-          .set("foo_id")
-          .to(CHILD_TABLE_MUTATION_0__COL_FOO_ID)
-          .set("child_bar_string")
-          .to(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING)
-          .build();
-
-  public static final ImmutableList<Mutation> MUTATIONS =
-      ImmutableList.of(
-          FOO_TABLE_MUTATION_0,
-          FOO_TABLE_MUTATION_1,
-          FOO_TABLE_MUTATION_2,
-          PARENT_TABLE_MUTATION_0,
-          PARENT_TABLE_MUTATION_1,
-          CHILD_TABLE_MUTATION_0);
   public static final ImmutableList<Struct> FOO_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
@@ -199,7 +180,24 @@ public class EndToEndHelper {
               .set("colArrayBool").to(Value.boolArray(FOO_TABLE_MUTATION_2__COL_ARRAY_BOOL))
               .set("colInt").to(Value.int64(FOO_TABLE_MUTATION_2__COL_INT))
               .build());
-
+  private static final Long PARENT_TABLE_MUTATION_0__COL_FOO_ID = 10L;
+  private static final String PARENT_TABLE_MUTATION_0__COL_BAR_STRING = "hello";
+  public static final Mutation PARENT_TABLE_MUTATION_0 =
+      Mutation.newInsertBuilder(PARENT_TABLE_NAME)
+          .set("foo_id")
+          .to(PARENT_TABLE_MUTATION_0__COL_FOO_ID)
+          .set("bar_string")
+          .to(PARENT_TABLE_MUTATION_0__COL_BAR_STRING)
+          .build();
+  private static final Long PARENT_TABLE_MUTATION_1__COL_FOO_ID = Long.MAX_VALUE;
+  private static final String PARENT_TABLE_MUTATION_1__COL_BAR_STRING = "hello_2";
+  public static final Mutation PARENT_TABLE_MUTATION_1 =
+      Mutation.newInsertBuilder(PARENT_TABLE_NAME)
+          .set("foo_id")
+          .to(PARENT_TABLE_MUTATION_1__COL_FOO_ID)
+          .set("bar_string")
+          .to(PARENT_TABLE_MUTATION_1__COL_BAR_STRING)
+          .build();
   public static final ImmutableList<Struct> PARENT_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
@@ -210,38 +208,31 @@ public class EndToEndHelper {
               .set("foo_id").to(Value.int64(PARENT_TABLE_MUTATION_1__COL_FOO_ID))
               .set("bar_string").to(Value.string(PARENT_TABLE_MUTATION_1__COL_BAR_STRING))
               .build());
+  private static final Long CHILD_TABLE_MUTATION_0__COL_FOO_ID = 10L;
+  private static final String CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING = "child_hello";
+  public static final Mutation CHILD_TABLE_MUTATION_0 =
+      Mutation.newInsertBuilder(CHILD_TABLE_NAME)
+          .set("foo_id")
+          .to(CHILD_TABLE_MUTATION_0__COL_FOO_ID)
+          .set("child_bar_string")
+          .to(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING)
+          .build();
   public static final ImmutableList<Struct> CHILD_TABLE_STRUCTS =
       ImmutableList.of(
           Struct.newBuilder()
               .set("foo_id").to(Value.int64(CHILD_TABLE_MUTATION_0__COL_FOO_ID))
               .set("child_bar_string").to(Value.string(CHILD_TABLE_MUTATION_0_COL_CHILD_BAR_STRING))
               .build());
-
-  public static final ImmutableList<String> GOOGLE_CLOUD_SPANNER_DDL =
+  public static final ImmutableList<Mutation> MUTATIONS =
       ImmutableList.of(
-          "CREATE TABLE foo_table (\n"
-              + "  colFloat FLOAT64 NOT NULL,\n"
-              + "  colArrayInt ARRAY<INT64>,\n"
-              + "  colBool BOOL,\n"
-              + "  colBytes BYTES(MAX),\n"
-              + "  colDate DATE NOT NULL,\n"
-              + "  colString STRING(MAX) NOT NULL,\n"
-              + "  colTimestamp TIMESTAMP NOT NULL,\n"
-              + "  colInt INT64,\n"
-              + "  colArrayBool ARRAY<BOOL>,\n"
-              + ") PRIMARY KEY(colFloat)",
-          "CREATE TABLE parent_table (\n"
-              + "  foo_id INT64 NOT NULL,\n"
-              + "  bar_string STRING(MAX),\n"
-              + ") PRIMARY KEY(foo_id)",
-          "CREATE NULL_FILTERED INDEX parent_table_index ON parent_table(foo_id DESC)",
-          "CREATE TABLE child_table (\n"
-              + "  foo_id INT64 NOT NULL,\n"
-              + "  child_bar_string STRING(MAX),\n"
-              + ") PRIMARY KEY(foo_id, child_bar_string DESC),\n"
-              + "  INTERLEAVE IN PARENT parent_table ON DELETE CASCADE");
+          FOO_TABLE_MUTATION_0,
+          FOO_TABLE_MUTATION_1,
+          FOO_TABLE_MUTATION_2,
+          PARENT_TABLE_MUTATION_0,
+          PARENT_TABLE_MUTATION_1,
+          CHILD_TABLE_MUTATION_0);
 
-  public static Options configureCommandlineOptions() {
+  protected static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud Storage Absolute Path to Backup Folder. */
@@ -254,23 +245,23 @@ public class EndToEndHelper {
     projectId.setRequired(true);
     options.addOption(projectId);
 
-    /** The Google Cloud Spanner database instance id */
+    /** The Google Cloud Spanner database instance ID. */
     Option databaseInstanceId =
         new Option("i", "databaseInstanceId", true, "Google Cloud Spanner Instance ID");
     databaseInstanceId.setRequired(true);
     options.addOption(databaseInstanceId);
 
-    /** The Google Cloud Spanner database id (i.e., name) */
+    /** The Google Cloud Spanner database ID (i.e., name). */
     Option databaseid = new Option("d", "databaseId", true, "Google Cloud Spanner Database ID");
     databaseid.setRequired(true);
     options.addOption(databaseid);
 
-    /** The operation for the end to end test helper to perform */
+    /** The operation for the end to end test helper to perform. */
     Option operation = new Option("o", "operation", true, "End to End Helper Operation Requested");
     operation.setRequired(true);
     options.addOption(operation);
 
-    /** The operation should fail if it content (e.g., test database) already exists */
+    /** The operation should fail if it content (e.g., test database) already exists. */
     Option shouldFailIfContentAlreadyExists =
         new Option(
             "s", "shouldFailIfContentAlreadyExists", true, "End to End Helper Operation Requested");
@@ -280,6 +271,7 @@ public class EndToEndHelper {
     return options;
   }
 
+  /** Entry point to the helper class for performing end to end tests. */
   public static void main(String[] args) throws Exception {
     // STEP 1: Parse inputs.
     Options options = configureCommandlineOptions();
@@ -339,7 +331,7 @@ public class EndToEndHelper {
     }
   }
 
-  public static void tearDownEnvironmentForEndToEndTests(
+  private static void tearDownEnvironmentForEndToEndTests(
       String projectId,
       String instanceId,
       String databaseId,
@@ -356,7 +348,7 @@ public class EndToEndHelper {
     deleteGcsFolder(projectId, gcsBucketName, gcsFolderPath);
   }
 
-  public static void setupEnvironmentForEndToEndTests(
+  private static void setupEnvironmentForEndToEndTests(
       String projectId,
       String instanceId,
       String databaseId,
@@ -372,6 +364,7 @@ public class EndToEndHelper {
         projectId, instanceId, databaseId, shouldFailIfAlreadyExists);
   }
 
+  /** Attempts to delete the given Spanner database and logs any errors. */
   public static void deleteCloudSpannerDatabase(
       String projectId, String instanceId, String databaseId) {
     LOG.info("Beginning deletion of Cloud Spanner database " + databaseId);
@@ -381,7 +374,6 @@ public class EndToEndHelper {
       DatabaseId db = DatabaseId.of(projectId, instanceId, databaseId);
       DatabaseAdminClient dbAdminClient = spanner.getDatabaseAdminClient();
 
-      dbAdminClient = spanner.getDatabaseAdminClient();
       LOG.info(
           "Attempting to drop database named '"
               + databaseId
@@ -404,6 +396,7 @@ public class EndToEndHelper {
     LOG.info("End deletion of Cloud Spanner database " + databaseId);
   }
 
+  /** Attempts to delete the given GCS bucket. */
   public static void deleteGcsFolder(String projectId, String gcsBucketName, String gcsFolderPath) {
     LOG.info("Begin deletion of content in GCS bucket " + gcsBucketName);
     LOG.info("Begin deletion of GCS folder " + gcsFolderPath);
@@ -492,7 +485,7 @@ public class EndToEndHelper {
     LOG.info("End population of Cloud Spanner database with basic content: " + databaseId);
   }
 
-  public static void verifyGcsBackupMetaData(
+  protected static void verifyGcsBackupMetaData(
       String projectId, String gcsRootBackupFolderPath, GcsUtil gcsUtil) throws Exception {
     LOG.info("Begin verify of GCS backup");
     String rawFileContentsOfTableList =
@@ -501,7 +494,7 @@ public class EndToEndHelper {
             GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(gcsRootBackupFolderPath),
             GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(gcsRootBackupFolderPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
-    String tables[] = rawFileContentsOfTableList.split("\\r?\\n");
+    String[] tables = rawFileContentsOfTableList.split("\\r?\\n");
     if (tables.length != TABLE_NAMES.size()) {
       throw new Exception("Table names not backed-up");
     }
@@ -529,7 +522,7 @@ public class EndToEndHelper {
     LOG.info("End verify of GCS backup");
   }
 
-  public static void verifyDatabaseStructureAndContent(
+  protected static void verifyDatabaseStructureAndContent(
       String projectId, String instanceId, String databaseId, SpannerUtil spannerUtil)
       throws Exception {
     // STEP 1: Check DDL

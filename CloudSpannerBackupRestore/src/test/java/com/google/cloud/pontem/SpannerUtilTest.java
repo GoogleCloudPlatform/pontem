@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import static org.junit.Assert.assertEquals;
@@ -350,5 +351,4 @@ public class SpannerUtilTest {
     SpannerOptions options = SpannerUtil.getSpannerOptionsBuilder().build();
     assertEquals(SpannerUtil.CLOUD_SPANNER_API_ENDPOINT_HOSTNAME, options.getHost());
   }
-
 }

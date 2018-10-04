@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Mutation;
@@ -54,6 +55,8 @@ import org.apache.beam.sdk.values.PCollection;
  * </pre>
  */
 public class AvroCloudSpannerDatabaseRestore extends BaseCloudSpannerDatabaseRestore {
+
+  /** Entry point for restoring a database from Avro. */
   public static void main(String[] args) throws Exception {
     // STEP 1a: Parse Pipeline options
     final BaseCloudSpannerRestoreOptions options =
