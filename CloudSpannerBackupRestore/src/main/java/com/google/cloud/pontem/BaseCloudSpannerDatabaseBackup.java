@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.Timestamp;
@@ -26,13 +27,12 @@ import java.util.logging.Logger;
 
 /** Base class for performing a backup of a Cloud Spanner database. */
 public abstract class BaseCloudSpannerDatabaseBackup {
-  protected static final Logger LOG =
-      Logger.getLogger(BaseCloudSpannerDatabaseBackup.class.getName());
-
   public static final String LIST_ALL_TABLES_SQL_QUERY =
       "SELECT table_name, parent_table_name FROM information_schema.tables AS t WHERE t"
           + ".table_catalog = '' and t.table_schema = '' ORDER BY"
           + " parent_table_name, table_name DESC";
+  protected static final Logger LOG =
+      Logger.getLogger(BaseCloudSpannerDatabaseBackup.class.getName());
 
   /**
    * Fetch all the table names in a specific cloud spanner database.

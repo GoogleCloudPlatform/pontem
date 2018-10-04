@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.common.collect.HashMultimap;
@@ -74,7 +75,7 @@ public abstract class BaseCloudSpannerDatabaseRestore {
             GcsUtil.getGcsBucketNameFromDatabaseBackupLocation(inputGcsPath),
             GcsUtil.getGcsFolderPathFromDatabaseBackupLocation(inputGcsPath),
             Util.FILE_PATH_FOR_DATABASE_TABLE_NAMES);
-    String lines[] = rawFileContents.split("\\r?\\n");
+    String[] lines = rawFileContents.split("\\r?\\n");
 
     // Step 2: Store all table names without a parent as well as
     // a multi-map mapping parent -> children.
@@ -164,6 +165,7 @@ public abstract class BaseCloudSpannerDatabaseRestore {
     return mapOfParentToAllChildrenTablesInOrderToFetch;
   }
 
+  /** Creates a Spanner Database and corresponding tables from the DDL stored in GCS. */
   public static void createDatabaseAndTablesFromStoredDdl(
       String projectId,
       String instanceId,

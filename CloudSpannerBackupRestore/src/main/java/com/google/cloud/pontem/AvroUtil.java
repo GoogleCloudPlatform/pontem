@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Type;
@@ -22,12 +23,12 @@ import java.util.logging.Logger;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
-/** Utils for Avro */
+/** Utils for Avro. */
 public class AvroUtil {
-  private static final Logger LOG = Logger.getLogger(AvroUtil.class.getName());
   public static final String AVRO_SCHEMA_FOLDER_LOCATION = "avro_schemas";
   public static final String AVRO_SCHEMA_NAMESPACE = "com.google.cloud.pontem";
   public static final String AVRO_RECORD_VERSION = "1";
+  private static final Logger LOG = Logger.getLogger(AvroUtil.class.getName());
 
   /**
    * Since the Avro column schema could be a UNION of types (e.g., [STRING, NULL]), we need to
@@ -52,8 +53,9 @@ public class AvroUtil {
   /**
    * Build the Avro schema for a specific Cloud Spanner table.
    *
-   * @see http://avro.apache.org/docs/1.7.7/api/java/index.html?org/apache/avro/Schema.Type.html
-   * @see /google-cloud-java/google-cloud-clients/apidocs/com/google/cloud/spanner/Type.Code.html
+   * @see: http://avro.apache.org/docs/1.7.7/api/java/index.html?org/apache/avro/Schema.Type.html
+   * @see:
+   *     https://googleapis.github.io/google-cloud-java/google-cloud-clients/apidocs/com/google/cloud/spanner/Type.Code.html
    */
   public static Schema buildSchemaForTable(String recordName, TableInformation tableInformation) {
     SchemaBuilder.RecordBuilder<Schema> baseRecordBuilder =
@@ -75,6 +77,11 @@ public class AvroUtil {
     return schema;
   }
 
+  /**
+   * Returns the corresponding Avro Type for the provided Spanner Type.
+   *
+   * @throws IllegalArgumentException if the provided SpannerType is invalid
+   */
   public static Schema getAvroTypeFromSpannerType(Type cloudSpannerType, boolean isNullable) {
     SchemaBuilder.TypeBuilder<Schema> builder = SchemaBuilder.builder();
     switch (cloudSpannerType.getCode()) {
@@ -136,6 +143,7 @@ public class AvroUtil {
     }
   }
 
+  /** Returns the file location of the provided table's Avro Schema. */
   public static String getAvroSchemaFileLocation(String tableName) {
     return "metadata"
         + File.separator

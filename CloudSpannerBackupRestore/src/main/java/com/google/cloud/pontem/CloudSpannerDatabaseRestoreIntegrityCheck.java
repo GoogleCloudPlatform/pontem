@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.api.services.dataflow.model.JobMetrics;
@@ -75,7 +76,10 @@ import org.apache.commons.cli.ParseException;
  */
 public class CloudSpannerDatabaseRestoreIntegrityCheck {
 
-  public static Options configureCommandlineOptions() {
+  private static final Logger LOG =
+      Logger.getLogger(CloudSpannerDatabaseRestoreIntegrityCheck.class.getName());
+
+  protected static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** The Google Cloud project id. */
@@ -126,9 +130,7 @@ public class CloudSpannerDatabaseRestoreIntegrityCheck {
     return options;
   }
 
-  private static final Logger LOG =
-      Logger.getLogger(CloudSpannerDatabaseRestoreIntegrityCheck.class.getName());
-
+  /** Entry point to verify the integrity of a restore of a Cloud Spanner database. */
   public static void main(String[] args) throws Exception {
     // STEP 1: Parse inputs.
     Options options = configureCommandlineOptions();

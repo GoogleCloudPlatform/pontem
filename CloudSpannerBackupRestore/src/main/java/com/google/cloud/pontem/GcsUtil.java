@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.storage.Blob;
@@ -31,6 +32,56 @@ import java.util.logging.Logger;
 /** Utility function for GCS calls in Cloud Spanner backup and restore. */
 public class GcsUtil {
   private static final Logger LOG = Logger.getLogger(GcsUtil.class.getName());
+
+  /** Get path to write output of backup to. */
+  public static String getFormattedOutputPath(String baseFolderPath) {
+    if (baseFolderPath.endsWith("/")) {
+      return baseFolderPath;
+    } else {
+      return baseFolderPath + "/";
+    }
+  }
+
+  /**
+   * Returns the root GCS bucket from the database backup path in GCS.
+   *
+   * @param databaseBackupLocation E.g., gs://my-cloud-spanner-project/multi-backup
+   * @return GCS bucket E.g., "my-cloud-spanner-project"
+   */
+  public static String getGcsBucketNameFromDatabaseBackupLocation(String databaseBackupLocation)
+      throws Exception {
+    URI uri = new URI(databaseBackupLocation);
+    if (!uri.getScheme().toLowerCase().equals("gs")) {
+      throw new Exception("Database backup location looks malformed");
+    }
+    return uri.getAuthority();
+  }
+
+  /**
+   * Returns the path from the GCS bucket root (excluded) to the database backup path in GCS.
+   *
+   * @param databaseBackupLocation E.g., gs://my-cloud-spanner-project/multi-backup
+   * @return Path from root of GCS bucket to root of database backup E.g., /multi-backup/
+   */
+  public static String getGcsFolderPathFromDatabaseBackupLocation(String databaseBackupLocation)
+      throws Exception {
+    URI uri = new URI(databaseBackupLocation);
+    if (!uri.getScheme().toLowerCase().equals("gs")) {
+      throw new Exception("Database backup location looks malformed");
+    }
+    String path = uri.getPath();
+    if (path.length() == 0) {
+      path = "/";
+    }
+    if (path.length() > 1 && path.charAt(0) != '/') {
+      path = '/' + path;
+    }
+    if (path.charAt(path.length() - 1) != '/') {
+      path += '/';
+    }
+    return path;
+  }
+
   /** Get the number of GCS blobs in a file path. */
   public int getNumGcsBlobsInGcsFilePath(
       String projectId, String gcsBucketName, String gcsFolderPath) {
@@ -58,15 +109,6 @@ public class GcsUtil {
             + "' is: "
             + numGcsBlobs);
     return numGcsBlobs;
-  }
-
-  /** Get path to write output of backup to. */
-  public static String getFormattedOutputPath(String baseFolderPath) {
-    if (baseFolderPath.endsWith("/")) {
-      return baseFolderPath;
-    } else {
-      return baseFolderPath + "/";
-    }
   }
 
   /**
@@ -145,41 +187,5 @@ public class GcsUtil {
     byte[] bytes = contents.getBytes();
     // since file will be less than 1MB, create the blob in one request.
     storage.create(blobInfo, bytes);
-  }
-
-  /**
-   * @param databaseBackupLocation E.g., gs://my-cloud-spanner-project/multi-backup
-   * @return GCS bucket E.g., "my-cloud-spanner-project"
-   */
-  public static String getGcsBucketNameFromDatabaseBackupLocation(String databaseBackupLocation)
-      throws Exception {
-    URI uri = new URI(databaseBackupLocation);
-    if (!uri.getScheme().toLowerCase().equals("gs")) {
-      throw new Exception("Database backup location looks malformed");
-    }
-    return uri.getAuthority();
-  }
-
-  /**
-   * @param databaseBackupLocation E.g., gs://my-cloud-spanner-project/multi-backup
-   * @return Path from root of GCS bucket to root of database backup E.g., /multi-backup/
-   */
-  public static String getGcsFolderPathFromDatabaseBackupLocation(String databaseBackupLocation)
-      throws Exception {
-    URI uri = new URI(databaseBackupLocation);
-    if (!uri.getScheme().toLowerCase().equals("gs")) {
-      throw new Exception("Database backup location looks malformed");
-    }
-    String path = uri.getPath();
-    if (path.length() == 0) {
-      path = "/";
-    }
-    if (path.length() > 1 && path.charAt(0) != '/') {
-      path = '/' + path;
-    }
-    if (path.charAt(path.length() - 1) != '/') {
-      path += '/';
-    }
-    return path;
   }
 }

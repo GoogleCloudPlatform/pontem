@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.spanner.Type;
@@ -44,6 +45,12 @@ public class TableInformation {
   private final ImmutableMap<String, Schema> mapOfColumnNamesToAvroTypes;
   private final ImmutableMap<String, Boolean> mapOfColumnNamesToNullable;
 
+  /**
+   * The TableInformation constructor parses the provided DDL mapping column name to type and
+   * nullability.
+   *
+   * @throws RuntimeException if there is an error parsing the provided Table DDL.
+   */
   public TableInformation(String tableDdl) {
 
     // Parse out the specific column statements from the entire Table DDL.
@@ -121,6 +128,11 @@ public class TableInformation {
     return mapOfColumnNamesToAvroTypes;
   }
 
+  /**
+   * Returns the Spanner type for the given column name.
+   *
+   * @throws RuntimeException if columnName not found
+   */
   public Type getSpannerTypeOfColumn(String columnName) {
     if (!mapOfColumnNamesToSpannerTypes.containsKey(columnName)) {
       throw new RuntimeException("Unable to find column name " + columnName);
@@ -128,6 +140,11 @@ public class TableInformation {
     return mapOfColumnNamesToSpannerTypes.get(columnName);
   }
 
+  /**
+   * Returns the Avro type for the given column name.
+   *
+   * @throws RuntimeException if columnName not found
+   */
   public Schema getAvroTypeOfColumn(String columnName) {
     if (!mapOfColumnNamesToAvroTypes.containsKey(columnName)) {
       throw new RuntimeException("Unable to find column name " + columnName);
@@ -135,6 +152,11 @@ public class TableInformation {
     return mapOfColumnNamesToAvroTypes.get(columnName);
   }
 
+  /**
+   * Determines whether the given column name is nullable or not.
+   *
+   * @throws RuntimeException if columnName not found
+   */
   public boolean isColumnNullable(String columnName) {
     if (!mapOfColumnNamesToNullable.containsKey(columnName)) {
       throw new RuntimeException("Unable to find column name " + columnName);

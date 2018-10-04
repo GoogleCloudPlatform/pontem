@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -39,8 +40,6 @@ import java.util.logging.Logger;
 
 /** Utility function for Cloud Spanner backup and restore. */
 public class Util {
-  private static final Logger LOG = Logger.getLogger(Util.class.getName());
-
   public static final String READ_DATA_TRANSFORM_NODE_NAME = "Read_Data";
   public static final String WRITE_DATA_TRANSFORM_NODE_NAME = "Write_Data";
   public static final String MAP_DATA_TRANSFORM_NODE_NAME = "Map_Data_to_Write";
@@ -49,15 +48,15 @@ public class Util {
   public static final String FILE_PATH_FOR_TABLE_NAMES_ROW_COUNTS_FROM_JOB_METRICS =
       "metadata/table_row_counts_from_backup_job_metrics.txt";
   public static final String USER_AGENT_PREFIX = "pontem/0.0.3";
-
   // Use a delimeter that cannot be a part of a Cloud Spanner table name.
   public static final String TRANSFORM_NODE_NAME_DELIMITER = "-#-";
+  private static final Logger LOG = Logger.getLogger(Util.class.getName());
 
   /**
    * Receive contents of meta-data file listing table names and return {@code Set} of table names.
    */
   public static Set<String> convertTablenamesIntoSet(String rawFileContents) {
-    String lines[] = rawFileContents.split("\\r?\\n");
+    String[] lines = rawFileContents.split("\\r?\\n");
     Set<String> tableNames = new HashSet<String>();
     for (int i = 0; i < lines.length; i++) {
       if (lines[i].indexOf(',') < 0) {
@@ -76,7 +75,7 @@ public class Util {
   public static Map<String, Long> convertTableMetadataContentsToMap(String rawFileContents)
       throws Exception {
     Map<String, Long> metadataMap = new HashMap<String, Long>();
-    String lines[] = rawFileContents.split("\\r?\\n");
+    String[] lines = rawFileContents.split("\\r?\\n");
     for (int i = 0; i < lines.length; i++) {
       if (lines[i].indexOf(',') < 0) {
         throw new Exception("Formatting issue in metadata file");
@@ -90,39 +89,6 @@ public class Util {
     }
     LOG.warning("Found " + metadataMap.size() + " tables in metadata");
     return metadataMap;
-  }
-
-  /**
-   * Fetch Google Cloud Dataflow job metrics {@code JobMetrics} for a specific Dataflow job that is
-   * a part of a Cloud project.
-   */
-  public JobMetrics fetchMetricsForDataflowJob(String projectId, String jobId) throws Exception {
-    // Authentication is provided by gcloud tool when running locally
-    // and by built-in service accounts when running on GAE, GCE or GKE.
-    GoogleCredential credential = GoogleCredential.getApplicationDefault();
-
-    // The createScopedRequired method returns true when running on GAE or a local developer
-    // machine. In that case, the desired scopes must be passed in manually. When the code is
-    // running in GCE, GKE or a Managed VM, the scopes are pulled from the GCE metadata server.
-    // See https://developers.google.com/identity/protocols/application-default-credentials for more
-    // information.
-    if (credential.createScopedRequired()) {
-      credential =
-          credential.createScoped(
-              Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
-    }
-
-    HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-    Dataflow dataflowService =
-        new Dataflow.Builder(httpTransport, jsonFactory, credential)
-            .setApplicationName("Cloud Spanner Backup & Restore")
-            .build();
-
-    Dataflow.Projects.Jobs.GetMetrics request =
-        dataflowService.projects().jobs().getMetrics(projectId, jobId);
-    JobMetrics jobMetrics = request.execute();
-    return jobMetrics;
   }
 
   /**
@@ -231,5 +197,38 @@ public class Util {
               + tableRowCounts.get(tableName));
     }
     tableRowCounts.put(tableName, rowCount);
+  }
+
+  /**
+   * Fetch Google Cloud Dataflow job metrics {@code JobMetrics} for a specific Dataflow job that is
+   * a part of a Cloud project.
+   */
+  public JobMetrics fetchMetricsForDataflowJob(String projectId, String jobId) throws Exception {
+    // Authentication is provided by gcloud tool when running locally
+    // and by built-in service accounts when running on GAE, GCE or GKE.
+    GoogleCredential credential = GoogleCredential.getApplicationDefault();
+
+    // The createScopedRequired method returns true when running on GAE or a local developer
+    // machine. In that case, the desired scopes must be passed in manually. When the code is
+    // running in GCE, GKE or a Managed VM, the scopes are pulled from the GCE metadata server.
+    // See https://developers.google.com/identity/protocols/application-default-credentials for more
+    // information.
+    if (credential.createScopedRequired()) {
+      credential =
+          credential.createScoped(
+              Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+    }
+
+    HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+    Dataflow dataflowService =
+        new Dataflow.Builder(httpTransport, jsonFactory, credential)
+            .setApplicationName("Cloud Spanner Backup & Restore")
+            .build();
+
+    Dataflow.Projects.Jobs.GetMetrics request =
+        dataflowService.projects().jobs().getMetrics(projectId, jobId);
+    JobMetrics jobMetrics = request.execute();
+    return jobMetrics;
   }
 }

@@ -17,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.common.collect.ImmutableList;
@@ -45,7 +46,7 @@ import org.apache.commons.cli.ParseException;
 public class EndToEndCleanupUtil {
   private static final Logger LOG = Logger.getLogger(EndToEndCleanupUtil.class.getName());
 
-  public static Options configureCommandlineOptions() {
+  protected static Options configureCommandlineOptions() {
     Options options = new Options();
 
     /** Google Cloud Storage Bucket. */
@@ -58,13 +59,13 @@ public class EndToEndCleanupUtil {
     projectId.setRequired(true);
     options.addOption(projectId);
 
-    /** The Google Cloud Spanner database instance id */
+    /** The Google Cloud Spanner database instance ID. */
     Option databaseInstanceId =
         new Option("i", "databaseInstanceId", true, "Google Cloud Spanner Instance ID");
     databaseInstanceId.setRequired(true);
     options.addOption(databaseInstanceId);
 
-    /** The operation for the end to end test cleanup util to perform */
+    /** The operation for the end to end test cleanup util to perform. */
     Option operation = new Option("o", "operation", true, "Util Operation Requested");
     operation.setRequired(true);
     options.addOption(operation);
@@ -72,6 +73,7 @@ public class EndToEndCleanupUtil {
     return options;
   }
 
+  /** Entry point for the util class for cleaning up End to End tests. */
   public static void main(String[] args) throws Exception {
     // STEP 1: Parse inputs.
     Options options = configureCommandlineOptions();
