@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Pontem Cloud SQL Replicator Setup Util"""
+"""Errors associated with SQL Replicator Util package."""
+class MySQLDumpError(Exception)
