@@ -30,7 +30,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Constants used for replicating MySQL to Cloud SQL."""
+"""Constants used for installing Cloud SQL Replicator."""
 
 import os
 from enum import Enum
@@ -58,13 +58,6 @@ GCLOUD_MIN_VERSION = (180, 0, 0)
 GCLOUD_VERSION_REGEX = r'Google Cloud SDK (.*)'
 GCLOUD_ALPHA_REGEX = r'alpha.*'
 
-SUPPORTED_MYSQL_VERSIONS = [(5, 6), (5, 7)]
-MY_SQL_VERSION_QUERY = 'SELECT @@GLOBAL.version;'
-MY_SQL_GTID_MODE_QUERY = 'SELECT VARIABLE_VALUE FROM ' \
-                         'information_schema.global_variables ' \
-                         'WHERE variable_name = \'gtid_mode\''
-MY_SQL_LIST_VIEWS_QUERY = 'SHOW FULL TABLES IN {} WHERE TABLE_TYPE ' \
-                          'LIKE \'VIEW\''
 
 SERVICE_ACCT_NAME_FMT = 'pontem-{}-{}-{}'
 SERVICE_ACCT_EMAIL_FMT = '{}@{}.iam.gserviceaccount.com'
