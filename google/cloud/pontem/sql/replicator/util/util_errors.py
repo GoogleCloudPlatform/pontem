@@ -13,4 +13,7 @@
 # limitations under the License.
 
 """Errors associated with SQL Replicator Util package."""
-class MySQLDumpError(Exception)
+
+
+class MySQLDumpError(Exception):
+  """MySQLDump error"""
