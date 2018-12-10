@@ -14,49 +14,56 @@
 
 """GCP API utility functions."""
 import logging
-
 from google.auth import compute_engine
 from google.cloud import storage
 
 # Storage
 def create_bucket(bucket_name,
-                  project_id,
-                  credentials=compute_engine.Credentials()):
+    credentials=None):
   """Creates a new bucket.
 
   Creates a new Cloud Storage Bucket using credentials of the of the
   compute engine credentials by default.
   """
 
-  storage_client = storage.Client(credentials=credentials, project=project_id)
+  if not credentials:
+    credentials = compute_engine.Credentials()
+
+  storage_client = storage.Client(credentials=credentials)
   bucket = storage_client.create_bucket(bucket_name)
   logging.info('Created bucket {}'.format(bucket.name))
 
 def delete_bucket(bucket_name,
-    project_id,
-    credentials=compute_engine.Credentials()):
+    credentials=None):
   """Deletes a bucket.
 
   Deletes a Cloud Storage Bucket using credentials of the of the
   compute engine credentials by default.
   """
 
-  storage_client = storage.Client(credentials=credentials, project=project_id)
+  if not credentials:
+    credentials = compute_engine.Credentials()
+
+  storage_client = storage.Client(credentials=credentials)
   bucket = storage_client.get_bucket(bucket_name)
   bucket.delete()
   logging.info('Deleted bucket {}'.format(bucket.name))
 
 
 def delete_blob(bucket_name,
-                blob_name,
-                project_id,
-                credentials=compute_engine.Credentials()):
-  """Deletes a blob from the bucket."""
+    blob_name,
+    credentials=None):
+  """Deletes a blob from the bucket.
 
-  storage_client = storage.Client(credentials=credentials, project=project_id)
+  Deletes a Cloud Storage Blob using credentials of the of the
+  compute engine credentials by default.
+  """
+
+  if not credentials:
+    credentials = compute_engine.Credentials()
+
+  storage_client = storage.Client(credentials=credentials)
   bucket = storage_client.get_bucket(bucket_name)
   blob = bucket.blob(blob_name)
   blob.delete()
   logging.info('Deleted {}'.format(blob_name))
-
-
