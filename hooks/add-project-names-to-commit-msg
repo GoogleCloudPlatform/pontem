@@ -35,18 +35,19 @@ function get_projects_touched_in_files(){
 }
 
 function get_project_from_filepath(){
+  # If file does not have a known project we assume it to be related to root
+  project_header="[Root]" 
   file=$1
   
   for project in ${PROJECTS[@]}
   do
    if [[ "${file}" == *"${project}"* ]]; then
-          echo "[${project}]"
+          project_header="[${project}]"
     fi
   done
   
-  # If file does not have a known project we assume it to be related to root
-  echo "[Root]"
- }
+  echo "${project_header}"
+ }  
 
 # Main
 COMMIT_MESSAGE=`cat ${COMMIT_MESSAGE_FILEPATH}`
