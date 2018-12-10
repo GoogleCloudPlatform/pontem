@@ -17,8 +17,6 @@
 
 # Constants
 COMMIT_MESSAGE_FILEPATH=$1
-echo "COMMIT_MESSAGE_FILEPATH $COMMIT_MESSAGE_FILEPATH"
-
 PROJECTS=("CloudSpannerBackupRestore" "CloudSqlConnector")
 
 # Functions
