@@ -38,13 +38,6 @@ jobs:
     OR commit_message !~ /(\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
     script: 
     - gradle clean check
-    - echo "Testing echo"
-    - echo $BUILD_ALL
-    - echo env(BUILD_ALL)
-    - if: env(BUILD_ALL) IS PRESENT
-    - echo "env is present"
-    - if: $BUILD_ALL IS PRESENT
-    - echo "$ is present"
   - stage: BUILD_TEST_AND_COVERAGE
     if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
     OR commit_message !~ /(\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
