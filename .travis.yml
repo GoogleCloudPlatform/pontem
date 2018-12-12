@@ -41,6 +41,12 @@ jobs:
     script: 
     - gradle clean check
     - echo "Testing echo"
+    - echo $BUILD_ALL
+    - echo env(BUILD_ALL)
+    - if: env(BUILD_ALL) IS PRESENT
+    - echo "env is present"
+    - if: $BUILD_ALL IS PRESENT
+    - echo "$ is present"
   - stage: BUILD_TEST_AND_COVERAGE
     if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR env(BUILD_ALL) IS PRESENT
     script:
