@@ -13,7 +13,7 @@ env:
   - JACOCO_REPORT_PATH="build/reports/jacoco/test/jacocoTestReport.xml"
 # If commit message does not match any of our known tags we default to building everything.
   - if: commit_message !~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
-  BUILD_ALL="yup"
+  - BUILD_ALL="yup"
 language: java
 sudo: false
 install:
@@ -37,6 +37,7 @@ stages:
 jobs:
   include:
   - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR env(BUILD_ALL) IS PRESENT
     script: 
     - gradle clean check
     - echo "Testing echo"
