@@ -11,6 +11,9 @@ env:
 # This way the JVM which is running for each subproject will properly resolve the file's path relative to it's CWD.
 # For example: CloudSpannerBackupRestore's CWD + GOOGLE_APPLICATION_CREDENTIALS == /Pontem/CloudSpannerBackupRestore + client-secrets.json
   - JACOCO_REPORT_PATH="build/reports/jacoco/test/jacocoTestReport.xml"
+# If commit message does not match any of our known tags we default to building everything.
+if: commit_message !~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
+  - BUILD_ALL="yup"
 language: java
 sudo: false
 install:
@@ -34,13 +37,13 @@ stages:
 jobs:
   include:
   - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
-    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR env(BUILD_ALL) IS PRESENT
     script: gradle clean check
   - stage: BUILD_TEST_AND_COVERAGE
-    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR env(BUILD_ALL) IS PRESENT
     script:
     - gradle clean build jacocoTestReport --info --stacktrace 
     - bash <(curl -s https://codecov.io/bash) -f CloudSpannerBackupRestore/$JACOCO_REPORT_PATH -F CloudSpannerBackupRestore
   - stage: E2E_TESTS
-    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR env(BUILD_ALL) IS PRESENT
     script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
