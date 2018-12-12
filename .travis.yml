@@ -12,8 +12,8 @@ env:
 # For example: CloudSpannerBackupRestore's CWD + GOOGLE_APPLICATION_CREDENTIALS == /Pontem/CloudSpannerBackupRestore + client-secrets.json
   - JACOCO_REPORT_PATH="build/reports/jacoco/test/jacocoTestReport.xml"
 # If commit message does not match any of our known tags we default to building everything.
-if: commit_message !~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
-  - BUILD_ALL="yup"
+  - if: commit_message !~ /(\[CloudSpannerBackupRestore\]|\[Root\])/
+  BUILD_ALL="yup"
 language: java
 sudo: false
 install:
