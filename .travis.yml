@@ -37,7 +37,6 @@ stages:
 jobs:
   include:
   - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
-    # if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR env(BUILD_ALL) IS PRESENT
     script: 
     - gradle clean check
     - echo $BUILD_ALL
