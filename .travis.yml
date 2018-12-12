@@ -34,7 +34,7 @@ stages:
 jobs:
   include:
   - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
-    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR commit_message !~ /(\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR commit_message !~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ # If no tag is matched run everything
     script: 
     - gradle clean check
   - stage: BUILD_TEST_AND_COVERAGE
