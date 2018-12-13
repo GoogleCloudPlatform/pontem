@@ -52,11 +52,12 @@ class MySQL(object):
         print(err)
 
   def __del__(self):
-    """Closes connection object and allows for cleanup"""
+    """Closes connection object and allows for cleanup."""
     self._connection.close()
 
   def get_mysql_version(self):
-    """ Gets MySQL version
+    """ Gets MySQL version.
+
     Returns:
           tuple: MySQL version
     """
@@ -64,7 +65,8 @@ class MySQL(object):
     return version
 
   def get_gtid_mode_on(self):
-    """Gets GTID mode
+    """Gets GTID mode.
+
     Returns:
       bool: whether GTID mode is on
     """
@@ -74,7 +76,8 @@ class MySQL(object):
     return row[0] == 'ON'
 
   def get_views(self):
-    """ Returns a list of views on the database
+    """ Returns a list of views on the database.
+    
     Returns:
         list: list of views for the current database
     """
