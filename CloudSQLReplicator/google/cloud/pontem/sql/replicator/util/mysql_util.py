@@ -26,6 +26,7 @@ class MySQL(object):
 
   def __init__(self, host, database, user, password, port='3306'):
     """Inits MySQL with a connection to target DB
+
     Args:
       host (str): MySQL server
       database (str): Database to connect to
