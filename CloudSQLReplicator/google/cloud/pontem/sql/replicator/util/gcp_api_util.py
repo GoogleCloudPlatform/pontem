@@ -14,9 +14,7 @@
 
 """GCP API utility functions."""
 import logging
-
 import google.auth
-from google.auth import compute_engine
 from google.cloud import storage
 
 from google.cloud.pontem.sql import replicator
