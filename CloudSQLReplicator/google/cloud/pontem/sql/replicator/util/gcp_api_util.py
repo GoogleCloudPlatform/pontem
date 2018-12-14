@@ -24,7 +24,7 @@ from googleapiclient import discovery
 
 from google.cloud.pontem.sql import replicator
 
-
+DEFAULT_TIER = 'db-n1-standard-2'
 
 def _get_user_agent():
   """Returns user agent based on packagage info."""
@@ -84,7 +84,7 @@ def create_cloudsql_instance(database_instance_body=None,
     'project': default_project,
     'name': 'cloudsql-db-{}'.format(uuid.uuid4()),
     'settings': {
-      'tier': 'db-n1-standard-2'
+      'tier': DEFAULT_TIER
     }
   }
   service = build_sql_admin_service(credentials or default_credentials)
@@ -134,7 +134,9 @@ def is_sql_operation_done(operation, project=None, credentials=None):
   """Returns True if a SQL operation is done."""
   default_credentials, default_project = google.auth.default()
   service = build_sql_admin_service(credentials or default_credentials)
-  request = service.operations().get(project=project, operation=operation)
+  request = service.operations().get(
+      project=project or default_project,
+      operation=operation)
   response = request.execute()
 
   return response['status'] == 'DONE'
