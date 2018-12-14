@@ -15,11 +15,14 @@
 """GCP API utility functions."""
 import httplib2
 import logging
-import google.auth
-import google_auth_httplib2
 import uuid
+
+import google.auth
 from google.cloud import storage
+import google_auth_httplib2
 from googleapiclient import discovery
+
+
 
 from google.cloud.pontem.sql import replicator
 
