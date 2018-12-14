@@ -22,8 +22,6 @@ from google.cloud import storage
 import google_auth_httplib2
 from googleapiclient import discovery
 
-
-
 from google.cloud.pontem.sql import replicator
 
 
