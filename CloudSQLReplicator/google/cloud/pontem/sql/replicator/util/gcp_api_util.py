@@ -19,7 +19,7 @@ from google.cloud import storage
 
 from google.cloud.pontem.sql import replicator
 
-
+STORAGE_SCOPE = ['https://www.googleapis.com/auth/devstorage.read_write']
 
 def _get_user_agent():
   """Returns user agent based on packagage info."""
@@ -42,8 +42,7 @@ def build_storage_client(project=None, credentials=None):
 
   """
   google.cloud._http.Connection.USER_AGENT = _get_user_agent()
-  scopes = ['https://www.googleapis.com/auth/devstorage.read_write']
-  default_credentials, default_project = google.auth.default(scopes=scopes)
+  default_credentials, default_project = google.auth.default(scopes=STORAGE_SCOPE)
   storage_client = (
     storage.Client(project=project or default_project,
                    credentials=credentials or default_credentials)
