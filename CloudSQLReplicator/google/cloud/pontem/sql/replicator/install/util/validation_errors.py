@@ -33,14 +33,13 @@
 """Errors regarding Cloud SQL Replicator validation."""
 
 class InstallerError(Exception):
-  """Installer Error."""
+    """Installer Error."""
 
 class SSHError(InstallerError):
-  """SSH Error."""
+    """SSH Error."""
 
 class ValidatorError(Exception):
-  """Validator Error."""
+    """Validator Error."""
 
 class MySQLVersionError(ValidatorError):
-  """Wrong Version of MySQL"""
-
+    """Wrong Version of MySQL"""

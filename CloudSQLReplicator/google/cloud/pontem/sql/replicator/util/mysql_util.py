@@ -15,116 +15,124 @@
 """MySQL utility functions."""
 
 from __future__ import print_function
+import subprocess
+
 import mysql.connector
 from mysql.connector import errorcode
-import subprocess
 
 import mysql_constants
 import util_errors
 
+
 class MySQL(object):
+    """Helper to check MySQL requirements before replication to Cloud SQL."""
 
-  def __init__(self, host, database, user, password, port='3306'):
-    """Inits MySQL with a connection to target DB
+    def __init__(self, host, database, user, password, port='3306'):
+        """Inits MySQL with a connection to target DB
 
-    Args:
-      host (str): MySQL server
-      database (str): Database to connect to
-      user (str): User to use when connecting
-      password (str): Password to use when connecting
-      port (str): Port to connect over
-    """
-    try:
-      self._user = user
-      self._password = password
-      self._host = host
-      self._database = database
-      self._port = port
-      self._connection = mysql.connector.connect(user=user, password=password,
-                                                 host=host,
-                                                 database=database, port=port)
-    except mysql.connector.Error as err:
-      if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-        print("Something is wrong with your user name or password")
-      elif err.errno == errorcode.ER_BAD_DB_ERROR:
-        print("Database does not exist")
-      else:
-        print(err)
+        Args:
+          host (str): MySQL server
+          database (str): Database to connect to
+          user (str): User to use when connecting
+          password (str): Password to use when connecting
+          port (str): Port to connect over
+        """
+        try:
+            self._user = user
+            self._password = password
+            self._host = host
+            self._database = database
+            self._port = port
+            self._connection = mysql.connector.connect(
+                user=user, password=password,
+                host=host,
+                database=database, port=port)
+        except mysql.connector.Error as err:
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                print('Something is wrong with your user name or password')
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                print('Database does not exist')
+            else:
+                print(err)
 
-  def __del__(self):
-    """Closes connection object and allows for cleanup."""
-    self._connection.close()
+    def __del__(self):
+        """Closes connection object and allows for cleanup."""
+        self._connection.close()
 
-  def get_mysql_version(self):
-    """ Gets MySQL version.
+    def get_mysql_version(self):
+        """ Gets MySQL version.
 
-    Returns:
-          tuple: MySQL version
-    """
-    version = self._connection.get_server_version()
-    return version
+        Returns:
+              tuple: MySQL version
+        """
+        version = self._connection.get_server_version()
+        return version
 
-  def get_gtid_mode_on(self):
-    """Gets GTID mode.
+    def get_gtid_mode_on(self):
+        """Gets GTID mode.
 
-    Returns:
-      bool: whether GTID mode is on
-    """
-    cursor = self._connection.cursor()
-    cursor.execute(mysql_constants.MY_SQL_GTID_MODE_QUERY)
-    row = cursor.fetchone()
-    return row[0] == 'ON'
+        Returns:
+          bool: whether GTID mode is on
+        """
+        cursor = self._connection.cursor()
+        cursor.execute(mysql_constants.MY_SQL_GTID_MODE_QUERY)
+        row = cursor.fetchone()
+        return row[0] == 'ON'
 
-  def get_views(self):
-    """ Returns a list of views on the database.
-    
-    Returns:
-        list: list of views for the current database
-    """
+    def get_views(self):
+        """ Returns a list of views on the database.
 
-    views = []
-    cursor = self._connection.cursor()
-    cursor.execute(mysql_constants.MY_SQL_LIST_VIEWS_QUERY.format(self._database))
-    for(view_name, _) in cursor:
-      views.append(view_name)
+        Returns:
+            list: list of views for the current database
+        """
 
-    return views
+        views = []
+        cursor = self._connection.cursor()
+        cursor.execute(
+            mysql_constants.MY_SQL_LIST_VIEWS_QUERY.format(self._database)
+        )
+        for (view_name, _) in cursor:
+            views.append(view_name)
 
-  def dump_sql(self, bucket_url):
-    """Performs mysqldump
+        return views
 
-    Generates a gzipped SQL dump of the database that can be used to
-    create a Cloud SQL replica. Because of the potentially large files
-    created, mysqldump is not checked for errors.  The caller should validate a
-    dump file was created in the Cloud Storage Bucket.
+    def dump_sql(self, bucket_url):
+        """Performs mysqldump
 
-    Args:
-      bucket_url (str): The URL of the Cloud Storage Bucket
-    """
-    command_args = ['mysqldump',
-                    '-h', self._host,
-                    '-P', self._port,
-                    '-u', self._user,
-                    '--password=' + self._password,
-                    '--databases', self._database,
-                    '--skip-comments',
-                    '--hex-blob',
-                    '--skip-triggers',
-                    '--master-data=1',
-                    '--order-by-primary',
-                    '--no-autocommit',
-                    '--default-character-set=utf8',
-                    '--single-transaction',
-                    '--set-gtid-purged=on'
-                    ]
-    for view in self.get_views():
-      command_args.append('--ignore-table=' + self._database + '.' + view)
+        Generates a gzipped SQL dump of the database that can be used to
+        create a Cloud SQL replica. Because of the potentially large files
+        created, mysqldump is not checked for errors.  The caller should
+        validate a dump file was created in the Cloud Storage Bucket.
 
-    ms = subprocess.Popen(command_args, stdout=subprocess.PIPE)
-    gz = subprocess.Popen(('gzip'), stdin=ms.stdout, stdout=subprocess.PIPE)
-    gs = subprocess.Popen(('gsutil', 'cp', '-', bucket_url), stdin=gz.stdout)
-    _, error = gs.communicate()
-    if error:
-      raise util_errors.MySQLDumpError(error.strip())
+        Args:
+          bucket_url (str): The URL of the Cloud Storage Bucket
+        """
+        command_args = ['mysqldump',
+                        '-h', self._host,
+                        '-P', self._port,
+                        '-u', self._user,
+                        '--password=' + self._password,
+                        '--databases', self._database,
+                        '--skip-comments',
+                        '--hex-blob',
+                        '--skip-triggers',
+                        '--master-data=1',
+                        '--order-by-primary',
+                        '--no-autocommit',
+                        '--default-character-set=utf8',
+                        '--single-transaction',
+                        '--set-gtid-purged=on'
+                       ]
+        for view in self.get_views():
+            command_args.append('--ignore-table=' + self._database + '.' + view)
 
-
+        mysql_dump = subprocess.Popen(command_args, stdout=subprocess.PIPE)
+        gzip = subprocess.Popen(('gzip'),
+                                stdin=mysql_dump.stdout,
+                                stdout=subprocess.PIPE)
+        gsutil = subprocess.Popen(('gsutil',
+                                   'cp', '-', bucket_url),
+                                  stdin=gzip.stdout)
+        _, error = gsutil.communicate()
+        if error:
+            raise util_errors.MySQLDumpError(error.strip())

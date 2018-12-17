@@ -16,4 +16,4 @@
 
 
 class MySQLDumpError(Exception):
-  """Error associated with MySQLDump command."""
+    """Error associated with MySQLDump command."""
