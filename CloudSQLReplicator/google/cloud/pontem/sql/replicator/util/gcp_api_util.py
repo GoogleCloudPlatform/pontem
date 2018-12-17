@@ -115,8 +115,8 @@ def create_cloudsql_source_representation(
   """Creates a source representation of an external master.
 
 
-  If source representation is included source_representation_name, ip_address
-  and port are ignored.
+  If source representation is included source_representation_name, ip_address,
+  port, db_version and region are ignored.
 
   Args:
     source_representation_name (str): The instance name of the external master.
