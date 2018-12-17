@@ -17,24 +17,31 @@
 import unittest
 import mock
 from mock import MagicMock
-from google.auth import compute_engine
+
+import google.auth
 from google.cloud import storage
+from google.oauth2 import credentials
 
 from google.cloud.pontem.sql.replicator.util import gcp_api_util
 
+STORAGE_SCOPE = ['https://www.googleapis.com/auth/devstorage.read_write']
 
-@mock.patch.object(
-    compute_engine, 'Credentials',
-    return_value=(None)
-)
+
+class TestSQLAdminMethods(unittest.TestCase):
+  """Test SQL Admin methods."""
+
 @mock.patch.object(
     storage, 'Client'
 )
+@mock.patch.object(
+    google.auth, 'default',
+    return_value=(mock.Mock(spec_set=credentials.Credentials),
+                  'test-project')
+)
 class TestStorageMethods(unittest.TestCase):
-  """Test Storage methods"""
+  """Test Storage methods."""
 
-
-  def test_create_bucket(self, mock_compute_credentials, mock_storage_client):
+  def test_create_bucket(self, mock_auth_default, mock_storage_client):
     """Test that create bucket calls client correctly."""
     bucket_name = 'test_bucket'
     mock_storage_client.return_value = MagicMock()
@@ -43,11 +50,11 @@ class TestStorageMethods(unittest.TestCase):
 
     gcp_api_util.create_bucket(bucket_name)
 
-    mock_compute_credentials.assert_called_with()
+    mock_auth_default.assert_called_with(scopes=STORAGE_SCOPE)
     mock_create_bucket.assert_called_with(bucket_name)
 
 
-  def test_delete_bucket(self, mock_compute_credentials, mock_storage_client):
+  def test_delete_bucket(self, mock_auth_default, mock_storage_client):
     """Test that delete bucket calls client correctly."""
     bucket_name = 'test_bucket'
     mock_storage_client.return_value = MagicMock()
@@ -58,11 +65,11 @@ class TestStorageMethods(unittest.TestCase):
 
     gcp_api_util.delete_bucket(bucket_name)
 
-    mock_compute_credentials.assert_called_with()
+    mock_auth_default.assert_called_with(scopes=STORAGE_SCOPE)
     mock_get_bucket.assert_called_with(bucket_name)
     mock_delete_bucket.assert_called_once_with()
 
-  def test_delete_blob(self, mock_compute_credentials, mock_storage_client):
+  def test_delete_blob(self, mock_auth_default, mock_storage_client):
     """Test that delete bucket calls client correctly."""
     bucket_name = 'test_bucket'
     blob_name = 'test_blob'
@@ -72,11 +79,11 @@ class TestStorageMethods(unittest.TestCase):
     mock_get_bucket.return_value.blob = MagicMock()
     mock_blob = mock_get_bucket.return_value.blob
     mock_blob.return_value.delete = MagicMock()
-    mock_delete_blob = mock_blob.delete
+    mock_delete_blob = mock_blob.return_value.delete
 
     gcp_api_util.delete_blob(bucket_name, blob_name)
 
-    mock_compute_credentials.assert_called_with()
+    mock_auth_default.assert_called_with(scopes=STORAGE_SCOPE)
     mock_get_bucket.assert_called_with(bucket_name)
     mock_blob.assert_called_once_with(blob_name)
     mock_delete_blob.assert_called_once_with()

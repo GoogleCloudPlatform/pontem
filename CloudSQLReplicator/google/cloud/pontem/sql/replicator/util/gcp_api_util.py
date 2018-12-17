@@ -13,13 +13,27 @@
 # limitations under the License.
 
 """GCP API utility functions."""
+import httplib2
 import logging
+import uuid
+
 import google.auth
 from google.cloud import storage
+import google_auth_httplib2
+from googleapiclient import discovery
 
 from google.cloud.pontem.sql import replicator
 
+
 STORAGE_SCOPE = ['https://www.googleapis.com/auth/devstorage.read_write']
+SQL_ADMIN_SVC = 'sqladmin'
+SQL_ADMIN_SVC_VERSION = 'v1beta4'
+DEFAULT_1ST_GEN_DB_VERSION = 'MYSQL_5_6'
+DEFAULT_2ND_GEN_DB_VERSION = 'MYSQL_5_7'
+DEFAULT_1ST_GEN_TIER = 'd2'
+DEFAULT_2ND_GEN_TIER = 'db-n1-standard-2'
+DEFAULT_1ST_GEN_REGION = 'us-central'
+DEFAULT_2ND_GEN_REGION = 'us-central1'
 
 def _get_user_agent():
   """Returns user agent based on packagage info."""
@@ -27,6 +41,222 @@ def _get_user_agent():
   user_agent = 'pontem,{}/{} (gzip)'.format(replicator.__package_name__, replicator.__version__)
   return user_agent
 
+def _get_user_agent_header():
+  """Returns custom User-Agent header."""
+
+  user_agent = _get_user_agent()
+  headers = {'User-Agent': user_agent}
+  return headers
+
+# SQL Admin
+def build_sql_admin_service(credentials=None):
+  """Authorizes and sets custom CloudSQL Replicator user agent.
+
+    Args:
+      credentials (google.auth.Credentials): Credentials to authorize client
+
+    Returns:
+      Authorized sqladmin service with CloudSQL Replicator user agent.
+  """
+  headers = _get_user_agent_header()
+  httplib2.Http.request.__func__.func_defaults = ('GET', None, headers, 5, None)
+  default_credentials, _ = google.auth.default()
+  authorized_http = google_auth_httplib2.AuthorizedHttp(
+      credentials or default_credentials
+  )
+
+  service = discovery.build(
+      SQL_ADMIN_SVC,
+      SQL_ADMIN_SVC_VERSION,
+      http=authorized_http
+  )
+
+  return service
+
+def create_cloudsql_instance(database_instance_body=None,
+                             project=None,
+                             credentials=None):
+  """Provisions a Cloud SQL instance.
+
+    Args:
+      database_instance_body(JSON): Cloud SQL instance creation options.
+      project(str): Project ID
+      credentials (google.auth.Credentials): Credentials to authorize client
+
+    Returns:
+      JSON: response from sqladmin.instances().insert() call
+  """
+
+  default_credentials, default_project = google.auth.default()
+  default_database_intance_body = {
+    'name': 'cloudsql-db-{}'.format(uuid.uuid4()),
+    'settings': {
+      'tier': DEFAULT_2ND_GEN_TIER
+    }
+  }
+  service = build_sql_admin_service(credentials or default_credentials)
+  request = service.instances().insert(
+      project=project or default_project,
+      body=database_instance_body or default_database_intance_body
+  )
+  response = request.execute()
+
+  return response
+
+def create_cloudsql_source_representation(
+      ip_address,
+      port,
+      db_version=DEFAULT_2ND_GEN_DB_VERSION,
+      region=DEFAULT_2ND_GEN_REGION,
+      source_representation_name=None,
+      source_representation_body=None,
+      project=None,
+      credentials=None):
+  """Creates a source representation of an external master.
+
+
+  If source representation is included source_representation_name, ip_address
+  and port are ignored.
+
+  Args:
+    source_representation_name (str): The instance name of the external master.
+    ip_address (str): The ip address of the external master.
+    port (str): Port that will be used for replication.
+    region (str): Region source representation will be created.
+    database_version (str): MySQL database version
+    source_representation_body (JSON): Creation options for source
+      representation.
+    project (str): Project ID where replica will be created.
+      credentials (google.auth.Credentials): Credentials to authorize client.
+    https://cloud.google.com/sql/docs/mysql/admin-api/v1beta4/instances
+  Returns:
+      JSON: response from sqladmin.instances().insert() call.
+  """
+  default_source_representation_body = {
+    'name': source_representation_name or 'external-mysql-representation-{}'.format(uuid.uuid4()),
+    'databaseVersion': db_version,
+    'region': region,
+    'onPremisesConfiguration': {
+      "kind": "sql#onPremisesConfiguration",
+      "hostPort": '{}:{}'.format(ip_address, port)
+    }
+
+  }
+
+  response = create_cloudsql_instance(
+      source_representation_body or default_source_representation_body,
+      project,
+      credentials
+  )
+
+  return response
+
+
+def create_cloudsql_replica_instance(
+      master_instance_name,
+      dumpfile_path,
+      replica_user,
+      replica_pwd,
+      replica_instance_name=None,
+      replica_instance_body=None,
+      project=None,
+      credentials=None):
+  """Provisions a Cloud SQL Replica instance.
+
+    Will create a second generation replica by default, specify tier and
+    region if creating a first generation replica.
+
+    If replica_instance_body is supplied, master_instance_name, dumpfile_path
+      replica_user, replica_pwd, and replica_instance_name will be ignored.
+
+    Args:
+      master_instance_name (str): Instanc name of master  that will be
+        replicated.
+      dumpfile_path (str): SQL file path (possibly gzipped) that contains dump
+        from master.
+      replica_user (str): User name of replica user.
+      replica_pwd (str): Password of replica user.
+      replica_instance_name (str): Name of replica instance to create.
+      replica_instance_body (JSON): Options for replica instance creation.
+      project (str): Project ID where replica will be created.
+      credentials (google.auth.Credentials): Credentials to authorize client
+
+    Returns:
+      JSON: response from sqladmin.instances().insert() call
+  """
+
+  default_replica_intance_body = {
+    'name': replica_instance_name or 'cloudsql-replica-{}'.format(uuid.uuid4()),
+    'settings': {
+      'tier': DEFAULT_2ND_GEN_TIER,
+
+    },
+    'databaseVersion': DEFAULT_2ND_GEN_DB_VERSION,
+    'masterInstanceName': master_instance_name,
+    'region': DEFAULT_2ND_GEN_REGION,
+    'replicaConfiguration': {
+      'mysqlReplicaConfiguration': {
+        'dumpFilePath': dumpfile_path,
+        'username': replica_user,
+        'password': replica_pwd,
+      }
+
+    }
+  }
+
+  response = create_cloudsql_instance(
+      replica_instance_body or default_replica_intance_body,
+      project,
+      credentials
+  )
+
+  return response
+
+
+def import_sql_database(database_instance,
+                        import_file_uri,
+                        project=None,
+                        credentials=None):
+  """Import database from SQL import file.
+
+    Args:
+      database_instance(str): Database instance id
+      project(str): Project ID
+      credentials (google.auth.Credentials): Credentials to authorize client
+
+    Returns:
+      JSON: response from sqladmin.instances().insert() call
+  """
+  default_credentials, default_project = google.auth.default()
+  service = build_sql_admin_service(credentials or default_credentials)
+  instances_import_request_body = {
+    "importContext": {
+      "kind": "sql#importContext",
+      "fileType": 'SQL',
+      "uri": import_file_uri,
+    }
+  }
+
+  request = service.instances().import_(
+      project=project or default_project,
+      instance=database_instance,
+      body=instances_import_request_body
+  )
+  response = request.execute()
+
+  return response
+
+
+def is_sql_operation_done(operation, project=None, credentials=None):
+  """Returns True if a SQL operation is done."""
+  default_credentials, default_project = google.auth.default()
+  service = build_sql_admin_service(credentials or default_credentials)
+  request = service.operations().get(
+      project=project or default_project,
+      operation=operation)
+  response = request.execute()
+
+  return response['status'] == 'DONE'
 
 # Storage
 def build_storage_client(project=None, credentials=None):
@@ -39,7 +269,6 @@ def build_storage_client(project=None, credentials=None):
     Returns:
       Storage.Client: returns authorized storage client with CloudSQL Replicator
         user agent.
-
   """
   google.cloud._http.Connection.USER_AGENT = _get_user_agent()
   default_credentials, default_project = google.auth.default(scopes=STORAGE_SCOPE)
@@ -77,7 +306,6 @@ def delete_bucket(bucket_name,
       project (str): Project ID where bucket will be deleted.
       credentials (google.auth.Credentials): credentials to authorize client.
   """
-
   storage_client = build_storage_client(project, credentials)
   bucket = storage_client.get_bucket(bucket_name)
   bucket.delete()
@@ -93,13 +321,32 @@ def delete_blob(bucket_name,
   Deletes a Cloud Storage Blob.
 
   Args:
+      bucket_name (str): where blob will be deleted.
+      blob_name (str): blob that will be deleted.
       project (str): Project ID where blob will be deleted.
       credentials (google.auth.Credentials): credentials to authorize client.
-
   """
-
   storage_client = build_storage_client(project, credentials)
   bucket = storage_client.get_bucket(bucket_name)
   blob = bucket.blob(blob_name)
   blob.delete()
   logging.info('Deleted {}'.format(blob_name))
+
+def grant_read_access_to_bucket(bucket_name,
+                                email,
+                                project=None,
+                                credentials=None
+                           ):
+  """Grants read access to a specific bucket.
+
+    Args:
+        bucket_name (str): name of bucket that the user will be able to read.
+        email (str): email of user who will be granted read privileges.
+        project (str): Project ID where blob will be deleted.
+       credentials (google.auth.Credentials): credentials to authorize client.
+  """
+  storage_client = build_storage_client(project, credentials)
+  bucket = storage_client.get_bucket(bucket_name)
+  acl = bucket.acl
+  acl.user(email).grant_read()
+  acl.save()
