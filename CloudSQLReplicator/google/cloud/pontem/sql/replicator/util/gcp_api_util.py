@@ -13,20 +13,29 @@
 # limitations under the License.
 
 """GCP API utility functions."""
-import httplib2
+
 import logging
 import uuid
 
-import google.auth
-from google.cloud import storage
 import google_auth_httplib2
 from googleapiclient import discovery
+import httplib2
+
+
+import google.auth
+from google.cloud import storage
+
 
 from google.cloud.pontem.sql import replicator
 
-GCP_STORAGE_SCOPE = ['https://www.googleapis.com/auth/devstorage.read_write']
+# GCP API constants
+GCP_STORAGE_SCOPE = frozenset(
+    ['https://www.googleapis.com/auth/devstorage.read_write']
+)
 SQL_ADMIN_SVC = 'sqladmin'
 SQL_ADMIN_SVC_VERSION = 'v1beta4'
+
+# Defaults for Cloud SQL instances
 DEFAULT_1ST_GEN_DB_VERSION = 'MYSQL_5_6'
 DEFAULT_2ND_GEN_DB_VERSION = 'MYSQL_5_7'
 DEFAULT_1ST_GEN_TIER = 'd2'
@@ -240,12 +249,13 @@ def import_sql_database(database_instance,
     """Import database from SQL import file.
 
       Args:
-        database_instance(str): Database instance id
+        database_instance (str): Database instance id.
+        import_file_uri (str): URI of sql file to import.
         project(str): Project ID
-        credentials (google.auth.Credentials): Credentials to authorize client
+        credentials (google.auth.Credentials): Credentials to authorize client.
 
       Returns:
-        JSON: response from sqladmin.instances().insert() call
+        JSON: response from sqladmin.instances().insert() call.
     """
     default_credentials, default_project = google.auth.default()
     service = build_sql_admin_service(credentials or default_credentials)
@@ -268,7 +278,16 @@ def import_sql_database(database_instance,
 
 
 def is_sql_operation_done(operation, project=None, credentials=None):
-    """Returns True if a SQL operation is done."""
+    """Returns True if a SQL operation is done.
+
+    Args:
+        operation (str): operation id to check.
+        project(str): Project ID
+        credentials (google.auth.Credentials): Credentials to authorize client.
+
+    Returns:
+          bool: whether operation is done.
+    """
     default_credentials, default_project = google.auth.default()
     service = build_sql_admin_service(credentials or default_credentials)
     request = service.operations().get(
@@ -281,17 +300,18 @@ def is_sql_operation_done(operation, project=None, credentials=None):
 
 # Storage
 def build_storage_client(project=None, credentials=None):
-    """Authorize Storage.Client and set custom CloudSQL Replicator user agent
+    """Authorize Storage.Client and set custom CloudSQL Replicator user agent.
 
       Args:
-        project (str): Project ID
-        credentials (google.auth.Credentials): credentials to authorize client
+        project (str): Project ID.
+        credentials (google.auth.Credentials): credentials to authorize client.
 
       Returns:
         Storage.Client: returns authorized storage client with CloudSQL
         Replicator user agent.
     """
-    google.cloud._http.Connection.USER_AGENT = _get_user_agent()
+
+    google.cloud._http.Connection.USER_AGENT = _get_user_agent() # pylint: disable=protected-access
     default_credentials, default_project = google.auth.default(
         scopes=GCP_STORAGE_SCOPE
     )
@@ -311,13 +331,14 @@ def create_bucket(bucket_name,
     Creates a new Cloud Storage Bucket.
 
     Args:
+        bucket_name (str): Name of bucket to create.
         project (str): Project ID where bucket will be created.
         credentials (google.auth.Credentials): credentials to authorize client.
 
     """
     storage_client = build_storage_client(project, credentials)
     bucket = storage_client.create_bucket(bucket_name)
-    logging.info('Created bucket {}'.format(bucket.name))
+    logging.info('Created bucket %s', bucket.name)
 
 
 def delete_bucket(bucket_name,
@@ -328,13 +349,14 @@ def delete_bucket(bucket_name,
     Deletes a Cloud Storage Bucket.
 
     Args:
+        bucket_name (str): name of bucket that will be deleted.
         project (str): Project ID where bucket will be deleted.
         credentials (google.auth.Credentials): credentials to authorize client.
     """
     storage_client = build_storage_client(project, credentials)
     bucket = storage_client.get_bucket(bucket_name)
     bucket.delete()
-    logging.info('Deleted bucket {}'.format(bucket.name))
+    logging.info('Deleted bucket %s', bucket.name)
 
 
 def delete_blob(bucket_name,
@@ -355,7 +377,7 @@ def delete_blob(bucket_name,
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(blob_name)
     blob.delete()
-    logging.info('Deleted {}'.format(blob_name))
+    logging.info('Deleted %s', blob_name)
 
 
 def grant_read_access_to_bucket(bucket_name,
