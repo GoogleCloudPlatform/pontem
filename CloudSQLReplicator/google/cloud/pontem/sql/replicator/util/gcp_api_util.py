@@ -50,7 +50,7 @@ def _get_user_agent_header():
 
 
 def build_authorized_svc(service, version, credentials=None):
-    """Builds an authorized service proxy with customer user agent.
+    """Builds an authorized service proxy with custom user agent.
 
     Args:
         service (str): name of service requested.

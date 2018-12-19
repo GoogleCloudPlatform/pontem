@@ -25,7 +25,7 @@ GCP_STORAGE_SCOPE = frozenset(
 )
 
 def build_storage_client(project=None, credentials=None):
-    """Authorize Storage.Client and set custom CloudSQL Replicator user agent.
+    """Builds Authorized Storage.Client with custom user agent.
 
       Args:
         project (str): Project ID.
