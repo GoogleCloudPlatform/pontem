@@ -51,9 +51,7 @@ def build_storage_client(project=None, credentials=None):
 def create_bucket(bucket_name,
                   project=None,
                   credentials=None):
-    """Creates a new bucket.
-
-    Creates a new Cloud Storage Bucket.
+    """Creates a new Cloud Storage bucket.
 
     Args:
         bucket_name (str): Name of bucket to create.
@@ -69,9 +67,9 @@ def create_bucket(bucket_name,
 def delete_bucket(bucket_name,
                   project=None,
                   credentials=None):
-    """Deletes a bucket.
+    """Deletes a Cloud Storage bucket.
 
-    Deletes a Cloud Storage Bucket.
+
 
     Args:
         bucket_name (str): name of bucket that will be deleted.
@@ -88,9 +86,7 @@ def delete_blob(bucket_name,
                 blob_name,
                 project=None,
                 credentials=None):
-    """Deletes a blob from the bucket.
-
-    Deletes a Cloud Storage Blob.
+    """Deletes a blob in the Cloud Storage bucket.
 
     Args:
         bucket_name (str): where blob will be deleted.

@@ -25,7 +25,7 @@ from google.cloud.pontem.sql import replicator
 # GCP API constants
 
 def _get_user_agent():
-    """Returns user agent based on packagage info.
+    """Returns user agent based on package info.
 
     Returns:
         str: User agent based on package info

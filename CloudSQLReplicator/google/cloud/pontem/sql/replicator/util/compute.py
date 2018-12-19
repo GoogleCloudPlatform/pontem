@@ -27,7 +27,7 @@ RFC1035_REGEX = r'(?:[a-z]([-a-z0-9]*[a-z0-9])?)\Z'
 
 
 def build_compute_service(credentials=None):
-    """Authorizes and sets custom CloudSQL Replicator user agent.
+    """Builds an authorized compute service proxy with a custom user agent.
 
     Args:
         credentials (google.auth.Credentials): Credentials to authorize client.

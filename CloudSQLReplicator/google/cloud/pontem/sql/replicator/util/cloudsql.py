@@ -32,7 +32,7 @@ SQL_ADMIN_SERVICE = 'sqladmin'
 SQL_ADMIN_SERVICE_VERSION = 'v1beta4'
 
 def build_sql_admin_service(credentials=None):
-    """Authorizes and sets custom CloudSQL Replicator user agent.
+    """Builds Cloud SQL service proxy with custom user agent.
 
       Args:
         credentials (google.auth.Credentials): Credentials to authorize client
