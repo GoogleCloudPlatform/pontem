@@ -15,6 +15,7 @@
 """GCP API utility functions."""
 
 import logging
+import re
 import uuid
 
 import google_auth_httplib2
@@ -32,6 +33,8 @@ from google.cloud.pontem.sql import replicator
 GCP_STORAGE_SCOPE = frozenset(
     ['https://www.googleapis.com/auth/devstorage.read_write']
 )
+COMPUTE_SVC = 'compute'
+COMPUTE_SVC_VERSION = 'v1'
 SQL_ADMIN_SVC = 'sqladmin'
 SQL_ADMIN_SVC_VERSION = 'v1beta4'
 
@@ -43,6 +46,8 @@ DEFAULT_2ND_GEN_TIER = 'db-n1-standard-2'
 DEFAULT_1ST_GEN_REGION = 'us-central'
 DEFAULT_2ND_GEN_REGION = 'us-central1'
 
+#REGEX
+RFC1035_REGEX = r'(?:[a-z]([-a-z0-9]*[a-z0-9])?)\Z'
 
 def _get_user_agent():
     """Returns user agent based on packagage info.
@@ -69,15 +74,15 @@ def _get_user_agent_header():
     return headers
 
 
-# SQL Admin
-def build_sql_admin_service(credentials=None):
-    """Authorizes and sets custom CloudSQL Replicator user agent.
+def build_authorized_svc(service, version, credentials=None):
+    """Builds an authorized service proxy with customer user agent.
 
-      Args:
-        credentials (google.auth.Credentials): Credentials to authorize client
-
-      Returns:
-        Resource: Authorized sqladmin service proxy with custom user agent.
+    Args:
+        service (str): name of service requested.
+        version (str): version of service requested.
+        credentials (google.auth.Credentials): Credentials to authorize client.
+    Returns:
+        Resource: Authorized compute service proxy with custom user agent.
     """
     headers = _get_user_agent_header()
     httplib2.Http.request.__func__.func_defaults = (
@@ -89,9 +94,90 @@ def build_sql_admin_service(credentials=None):
     )
 
     service = discovery.build(
+        service,
+        version,
+        http=authorized_http
+    )
+
+    return service
+
+# Compute
+def build_compute_service(credentials=None):
+    """Authorizes and sets custom CloudSQL Replicator user agent.
+
+    Args:
+        credentials (google.auth.Credentials): Credentials to authorize client.
+
+    Returns:
+        Resource: Authorized compute service proxy with custom user agent.
+    """
+    service = build_authorized_svc(
+        COMPUTE_SVC,
+        COMPUTE_SVC_VERSION,
+        credentials
+    )
+
+    return service
+
+
+def create_firewall_rule(name, source_ip_range, protocol='TCP',
+                         is_allowed=True, ports=frozenset(['3306']),
+                         is_ingress=True,
+                         project=None, credentials=None):
+    """Creates a firewall rule in a Google Cloud Project.
+
+    Args:
+        name (str): name of resource, must comply with RFC1035.
+        source_ip_range (list): list of source IP ranges in CIDR format.
+        protocol (str): protocol allowed.
+        is_allowed (bool): whether traffic allowed or denied.
+        ports (str): port for traffic.
+        is_ingress (bool): whether traffic is ingress or egress.
+        project (str): Project ID where replica will be created.
+        credentials (google.auth.Credentials): Credentials to authorize client.
+
+    Returns:
+        JSON: Response from request.
+
+    Raises:
+        ValueError: Exception if name does not conform to RFC1035.
+    """
+    if re.match(RFC1035_REGEX, name) is None:
+        raise ValueError('{} does not conform to RFC1035'.format(name))
+    default_credentials, default_project = google.auth.default()
+    service = build_compute_service(credentials or default_credentials)
+    request_body = {
+        'name': name,
+        'sourceRanges': source_ip_range,
+        'allowed' if is_allowed else 'denied': {
+            'IPProtocol': protocol,
+            'ports': ports,
+        },
+        'direction': 'INGRESS' if is_ingress else 'EGRESS',
+    }
+
+    request = service.firewalls().insert(
+        project=project or default_project,
+        body=request_body
+    )
+    response = request.execute()
+
+    return response
+
+# SQL Admin
+def build_sql_admin_service(credentials=None):
+    """Authorizes and sets custom CloudSQL Replicator user agent.
+
+      Args:
+        credentials (google.auth.Credentials): Credentials to authorize client
+
+      Returns:
+        Resource: Authorized sqladmin service proxy with custom user agent.
+    """
+    service = discovery.build(
         SQL_ADMIN_SVC,
         SQL_ADMIN_SVC_VERSION,
-        http=authorized_http
+        credentials
     )
 
     return service
