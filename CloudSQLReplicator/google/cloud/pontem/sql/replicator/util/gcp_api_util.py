@@ -190,8 +190,8 @@ def create_cloudsql_instance(database_instance_body=None,
 
       Args:
         database_instance_body(JSON): Cloud SQL instance creation options.
-        project(str): Project ID
-        credentials (google.auth.Credentials): Credentials to authorize client
+        project(str): Project ID where Cloud SQL instance will be created.
+        credentials (google.auth.Credentials): Credentials to authorize client.
 
       Returns:
         JSON: response from sqladmin.instances().insert() call
