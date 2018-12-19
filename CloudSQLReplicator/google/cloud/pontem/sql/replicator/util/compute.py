@@ -22,7 +22,7 @@ from google.cloud.pontem.sql.replicator.util import gcp_api_util
 COMPUTE_SERVICE = 'compute'
 COMPUTE_SERVICE_VERSION = 'v1'
 
-#RFC 1035 regex (https://www.ietf.org/rfc/rfc1035.txt) for firewall rule names
+# RFC 1035 regex (https://www.ietf.org/rfc/rfc1035.txt) for firewall rule names
 RFC1035_REGEX = r'(?:[a-z]([-a-z0-9]*[a-z0-9])?)\Z'
 
 

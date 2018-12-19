@@ -22,9 +22,11 @@ import google.auth
 from google.cloud import storage
 from google.oauth2 import credentials
 
-from google.cloud.pontem.sql.replicator.util import gcp_api_util
+from google.cloud.pontem.sql.replicator.util import storage as replicator_storage
 
-STORAGE_SCOPE = ['https://www.googleapis.com/auth/devstorage.read_write']
+GCP_STORAGE_SCOPE = frozenset(
+    ['https://www.googleapis.com/auth/devstorage.read_write']
+)
 
 
 class TestSQLAdminMethods(unittest.TestCase):
@@ -48,9 +50,9 @@ class TestStorageMethods(unittest.TestCase):
     mock_create_bucket = mock_storage_client.return_value.create_bucket
     mock_create_bucket.return_value.name = 'test_bucket'
 
-    gcp_api_util.create_bucket(bucket_name)
+    replicator_storage.create_bucket(bucket_name)
 
-    mock_auth_default.assert_called_with(scopes=STORAGE_SCOPE)
+    mock_auth_default.assert_called_with(scopes=GCP_STORAGE_SCOPE)
     mock_create_bucket.assert_called_with(bucket_name)
 
 
@@ -63,9 +65,9 @@ class TestStorageMethods(unittest.TestCase):
     mock_get_bucket.return_value.delete = MagicMock()
     mock_delete_bucket = mock_get_bucket.return_value.delete
 
-    gcp_api_util.delete_bucket(bucket_name)
+    replicator_storage.delete_bucket(bucket_name)
 
-    mock_auth_default.assert_called_with(scopes=STORAGE_SCOPE)
+    mock_auth_default.assert_called_with(scopes=GCP_STORAGE_SCOPE)
     mock_get_bucket.assert_called_with(bucket_name)
     mock_delete_bucket.assert_called_once_with()
 
@@ -81,9 +83,9 @@ class TestStorageMethods(unittest.TestCase):
     mock_blob.return_value.delete = MagicMock()
     mock_delete_blob = mock_blob.return_value.delete
 
-    gcp_api_util.delete_blob(bucket_name, blob_name)
+    replicator_storage.delete_blob(bucket_name, blob_name)
 
-    mock_auth_default.assert_called_with(scopes=STORAGE_SCOPE)
+    mock_auth_default.assert_called_with(scopes=GCP_STORAGE_SCOPE)
     mock_get_bucket.assert_called_with(bucket_name)
     mock_blob.assert_called_once_with(blob_name)
     mock_delete_blob.assert_called_once_with()
