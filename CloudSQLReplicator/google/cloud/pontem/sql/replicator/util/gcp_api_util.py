@@ -14,7 +14,6 @@
 
 """GCP API utility functions."""
 
-
 import logging
 import re
 import uuid
