@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Wrapper for Cloud SQL API service proxy."""
+
 import uuid
 
 import google.auth

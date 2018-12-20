@@ -15,6 +15,16 @@
 # Performs pylint on code being committed.
 #
 echo "Starting pre-commit"
+# Check if pylint is available
+pylint_version=`pip freeze | grep pylint\=`
+if [ -z "$pylint_version" ]
+then
+  echo "pylint missing"
+  exit 1;
+else
+  echo "Running ${pylint_version/==/' version '}"
+fi
+
 # get all files
 files=`git diff --name-only --cached '*.py'`
 if [ ${#files[@]} -eq 0 ]; then
