@@ -81,8 +81,7 @@ the importer:
 *   For each table in your database create a new text file <table_name>.txt and
     copy it's data into said file.
 *   The importer assumes that all .txt files in the dump directory are data
-    files please ensure there are no extra text files in your dump
-    directory. ### Importing your MySQL dump into CloudSQL
+    files please ensure there are no extra text files in your dump directory.
 *   If you wish to verify your imports via checksumming then get your checksum
     all your tables with
     [CHECKSUM TABLE](https://dev.mysql.com/doc/refman/5.7/en/checksum-table.html)
@@ -143,7 +142,10 @@ do so you can provide your credentials by using
 **--do_not_use_credentials_file** alongside the **--user** and **--password**
 options. For example:
 
-        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> --do-not-use-credentials-file --user=<user> --password=<password>
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> \
+          --do-not-use-credentials-file \
+          --user=<user> \
+          --password=<password>
 
 ### SSL / TLS
 
