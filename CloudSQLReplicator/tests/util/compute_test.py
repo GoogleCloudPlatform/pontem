@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests GCP API utility functions."""
+"""Tests GCP API Compute utility functions."""
 
 import unittest
 import mock
