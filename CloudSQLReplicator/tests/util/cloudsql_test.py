@@ -25,7 +25,7 @@ from google.oauth2 import credentials
 from google.cloud.pontem.sql.replicator.util import cloudsql
 from google.cloud.pontem.sql.replicator.util import gcp_api_util
 
-TEST_PROJECT = 'test-project'
+TEST_PROJECT_NAME = 'test-project'
 TEST_UUID = uuid.UUID('{12345678-1234-5678-1234-567812345678}')
 TEST_HOST = '127.0.0.1'
 TEST_PORT = '1234'
@@ -37,7 +37,7 @@ TEST_PASSWORD = 'password'
 @mock.patch.object(
     google.auth, 'default',
     return_value=(mock.Mock(spec_set=credentials.Credentials),
-                  TEST_PROJECT)
+                  TEST_PROJECT_NAME)
 )
 @mock.patch.object(
     gcp_api_util, 'build_authorized_service'
@@ -70,7 +70,7 @@ class TestSQLAdminMethods(unittest.TestCase):
         cloudsql.create_cloudsql_instance()
         # Verify that instances.insert is called with arguments and defaults
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             body={
                 'name': 'cloudsql-db-{}'.format(TEST_UUID),
                 'settings': {
@@ -100,7 +100,7 @@ class TestSQLAdminMethods(unittest.TestCase):
         cloudsql.create_cloudsql_instance(test_database_instance_body)
         # Verify that instances.insert is called with specified arguments
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             body={
                 'name': test_db_name,
                 'settings': {
@@ -126,7 +126,7 @@ class TestSQLAdminMethods(unittest.TestCase):
         cloudsql.create_source_representation(TEST_HOST, TEST_PORT)
         # Verify that instances.insert is called with arguments and defaults
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             body={
                 'name': 'external-mysql-representation-{}'.format(TEST_UUID),
                 'databaseVersion': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
@@ -163,7 +163,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                               source_body=test_body)
         # Verify that instances.insert is called with specified arguments
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             body=test_body
         )
 
@@ -189,7 +189,7 @@ class TestSQLAdminMethods(unittest.TestCase):
 
         # Verify that instances.insert is called with arguments and defaults
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             body={
                 'name': 'cloudsql-replica-{}'.format(TEST_UUID),
                 'settings': {
@@ -209,6 +209,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                 }
             }
         )
+        
     def test_create_replica_instance(self,
                                      mock_build,
                                      mock_auth_default):
@@ -253,7 +254,7 @@ class TestSQLAdminMethods(unittest.TestCase):
 
         # Verify that instances.insert is called with arguments and defaults
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             body={
                 'name': test_replica_name,
                 'settings': {
@@ -289,7 +290,7 @@ class TestSQLAdminMethods(unittest.TestCase):
         cloudsql.import_sql_database(TEST_MASTER, test_import_file_uri)
 
         mock_insert_instance.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             instance=TEST_MASTER,
             body={
                 'importContext': {
@@ -314,7 +315,7 @@ class TestSQLAdminMethods(unittest.TestCase):
         cloudsql.is_sql_operation_done(test_operation)
 
         mock_get_operation.assert_called_with(
-            project=TEST_PROJECT,
+            project=TEST_PROJECT_NAME,
             operation=test_operation
         )
 
