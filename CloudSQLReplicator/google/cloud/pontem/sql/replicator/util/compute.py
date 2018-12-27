@@ -35,7 +35,7 @@ def build_compute_service(credentials=None):
     Returns:
         Resource: Authorized compute service proxy with custom user agent.
     """
-    service = gcp_api_util.build_authorized_svc(
+    service = gcp_api_util.build_authorized_service(
         COMPUTE_SERVICE,
         COMPUTE_SERVICE_VERSION,
         credentials
