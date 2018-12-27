@@ -46,7 +46,8 @@ class TestSQLAdminMethods(unittest.TestCase):
     """Test Cloud SQL Admin methods."""
     def test_build_sql_admin_service(self, mock_build, mock_auth_default):
         """Test build sql admin service."""
-        _ = cloudsql.build_sql_admin_service()
+        mock_service = cloudsql.build_sql_admin_service()
+        self.assertEqual(mock_service, mock_build.return_value)
         mock_build.assert_called_with(
             cloudsql.SQL_ADMIN_SERVICE,
             cloudsql.SQL_ADMIN_SERVICE_VERSION,

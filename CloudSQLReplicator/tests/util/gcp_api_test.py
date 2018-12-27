@@ -116,5 +116,6 @@ class TestGCPAPIMethods(unittest.TestCase):
                                       http=mock_authorized_http.return_value
                                       )
 
+
 if __name__ == '__main__':
     unittest.main()
