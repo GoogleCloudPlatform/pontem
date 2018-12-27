@@ -15,8 +15,8 @@
 """Tests GCP API Compute utility functions."""
 
 import unittest
+
 import mock
-from mock import MagicMock
 
 import google.auth
 from google.oauth2 import credentials
@@ -64,7 +64,7 @@ class TestComputeMethods(unittest.TestCase):
         """Tests that create firewall is called correctly"""
         good_firewall_rule = 'good-firewall-rule'
         source_ip_range = frozenset(['127.0.0.1'])
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_firewall = (
             mock_build.return_value.firewalls.return_value.insert
         )

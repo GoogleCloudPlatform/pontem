@@ -16,7 +16,6 @@
 
 import unittest
 import mock
-from mock import MagicMock
 
 import google.auth
 from google.cloud import storage
@@ -42,7 +41,7 @@ class TestStorageMethods(unittest.TestCase):
     def test_create_bucket(self, mock_auth_default, mock_storage_client):
         """Test that create bucket calls client correctly."""
         bucket_name = 'test_bucket'
-        mock_storage_client.return_value = MagicMock()
+        mock_storage_client.return_value = mock.MagicMock()
         mock_create_bucket = mock_storage_client.return_value.create_bucket
         mock_create_bucket.return_value.name = 'test_bucket'
 
@@ -54,10 +53,10 @@ class TestStorageMethods(unittest.TestCase):
     def test_delete_bucket(self, mock_auth_default, mock_storage_client):
         """Test that delete bucket calls client correctly."""
         bucket_name = 'test_bucket'
-        mock_storage_client.return_value = MagicMock()
+        mock_storage_client.return_value = mock.MagicMock()
         mock_get_bucket = mock_storage_client.return_value.get_bucket
         mock_get_bucket.return_value.name = 'test_bucket'
-        mock_get_bucket.return_value.delete = MagicMock()
+        mock_get_bucket.return_value.delete = mock.MagicMock()
         mock_delete_bucket = mock_get_bucket.return_value.delete
 
         replicator_storage.delete_bucket(bucket_name)
@@ -70,12 +69,12 @@ class TestStorageMethods(unittest.TestCase):
         """Test that delete bucket calls client correctly."""
         bucket_name = 'test_bucket'
         blob_name = 'test_blob'
-        mock_storage_client.return_value = MagicMock()
+        mock_storage_client.return_value = mock.MagicMock()
         mock_get_bucket = mock_storage_client.return_value.get_bucket
         mock_get_bucket.return_value.name = 'test_bucket'
-        mock_get_bucket.return_value.blob = MagicMock()
+        mock_get_bucket.return_value.blob = mock.MagicMock()
         mock_blob = mock_get_bucket.return_value.blob
-        mock_blob.return_value.delete = MagicMock()
+        mock_blob.return_value.delete = mock.MagicMock()
         mock_delete_blob = mock_blob.return_value.delete
 
         replicator_storage.delete_blob(bucket_name, blob_name)

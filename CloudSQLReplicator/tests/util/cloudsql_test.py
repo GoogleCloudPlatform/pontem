@@ -15,8 +15,8 @@
 """Tests GCP API Cloud SQL utility functions."""
 
 import unittest
+
 import mock
-from mock import MagicMock
 import uuid
 
 import google.auth
@@ -63,7 +63,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                                mock_auth_default):
         """Test create_cloudsql_instance util function with defaults."""
         del mock_uuid, mock_auth_default  # unused in body of test
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.insert
         )
@@ -84,7 +84,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                       mock_auth_default):
         """Test create_cloudsql_instance util function with instance body."""
         del mock_auth_default  # unused in body of test
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.insert
         )
@@ -119,7 +119,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                                    mock_auth_default):
         """Test create_source_representation util function with defaults."""
         del mock_uuid, mock_auth_default  # unused in body of test
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.insert
         )
@@ -143,7 +143,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                           mock_auth_default):
         """Test create_source_representation util function with defaults."""
         del mock_auth_default  # unused in body of test
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.insert
         )
@@ -177,7 +177,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                               mock_auth_default):
         """Test create_replica_instance util function with defaults."""
         del mock_uuid, mock_auth_default  # unused in body of test
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.insert
         )
@@ -215,7 +215,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                      mock_auth_default):
         """Test create_replica_instance util function with arguments."""
         del mock_auth_default
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.insert
         )
@@ -280,7 +280,7 @@ class TestSQLAdminMethods(unittest.TestCase):
                                  mock_auth_default):
         """Test create_replica_instance util function with arguments."""
         del mock_auth_default
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_insert_instance = (
             mock_build.return_value.instances.return_value.import_
         )
@@ -307,7 +307,7 @@ class TestSQLAdminMethods(unittest.TestCase):
         """Tests is_sql_operation_done."""
         del mock_auth_default
         test_operation = '12345678'
-        mock_build.return_value = MagicMock()
+        mock_build.return_value = mock.MagicMock()
         mock_get_operation = (
             mock_build.return_value.operations.return_value.get
         )
