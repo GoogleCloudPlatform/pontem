@@ -24,7 +24,7 @@ from google.cloud.pontem.sql import replicator
 
 # GCP API constants
 
-def _get_user_agent():
+def get_user_agent():
     """Returns user agent based on package info.
 
     Returns:
@@ -37,19 +37,19 @@ def _get_user_agent():
     return user_agent
 
 
-def _get_user_agent_header():
+def get_user_agent_header():
     """Returns custom User-Agent header.
 
     Returns:
         dict: Key value pair for user agent based on package info
     """
 
-    user_agent = _get_user_agent()
+    user_agent = get_user_agent()
     headers = {'User-Agent': user_agent}
     return headers
 
 
-def build_authorized_svc(service, version, credentials=None):
+def build_authorized_service(service, version, credentials=None):
     """Builds an authorized service proxy with custom user agent.
 
     Args:
@@ -59,7 +59,7 @@ def build_authorized_svc(service, version, credentials=None):
     Returns:
         Resource: Authorized compute service proxy with custom user agent.
     """
-    headers = _get_user_agent_header()
+    headers = get_user_agent_header()
     httplib2.Http.request.__func__.func_defaults = (
         'GET', None, headers, 5, None
     )

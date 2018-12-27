@@ -30,14 +30,16 @@ DEFAULT_1ST_GEN_TIER = 'd2'
 DEFAULT_2ND_GEN_TIER = 'db-n1-standard-2'
 DEFAULT_1ST_GEN_REGION = 'us-central'
 DEFAULT_2ND_GEN_REGION = 'us-central1'
+DEFAULT_REPLICATION_PORT = '3306'
 
 # Cloud SQL Service
 SQL_ADMIN_SERVICE = 'sqladmin'
 SQL_ADMIN_SERVICE_VERSION = 'v1beta4'
 
-# Constants
+# Response Attributes
 IP_ADDRESSES = 'ipAddresses'
 IP_ADDRESS = 'ipAddress'
+
 
 def build_sql_admin_service(credentials=None):
     """Builds Cloud SQL service proxy with custom user agent.
@@ -48,10 +50,11 @@ def build_sql_admin_service(credentials=None):
       Returns:
         Resource: Authorized sqladmin service proxy with custom user agent.
     """
-    service = gcp_api_util.build_authorized_svc(
+    default_credentials, _ = google.auth.default()
+    service = gcp_api_util.build_authorized_service(
         SQL_ADMIN_SERVICE,
         SQL_ADMIN_SERVICE_VERSION,
-        credentials
+        credentials or default_credentials
     )
 
     return service
@@ -72,7 +75,7 @@ def create_cloudsql_instance(database_instance_body=None,
     """
 
     default_credentials, default_project = google.auth.default()
-    default_database_intance_body = {
+    default_database_instance_body = {
         'name': 'cloudsql-db-{}'.format(uuid.uuid4()),
         'settings': {
             'tier': DEFAULT_2ND_GEN_TIER
@@ -81,7 +84,7 @@ def create_cloudsql_instance(database_instance_body=None,
     service = build_sql_admin_service(credentials or default_credentials)
     request = service.instances().insert(
         project=project or default_project,
-        body=database_instance_body or default_database_intance_body
+        body=database_instance_body or default_database_instance_body
     )
     response = request.execute()
 
@@ -90,7 +93,7 @@ def create_cloudsql_instance(database_instance_body=None,
 
 def create_source_representation(
         ip_address,
-        port,
+        port=DEFAULT_REPLICATION_PORT,
         database_version=DEFAULT_2ND_GEN_DB_VERSION,
         region=DEFAULT_2ND_GEN_REGION,
         source_name=None,
