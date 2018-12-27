@@ -47,6 +47,14 @@ def build_storage_client(project=None, credentials=None):
 
     return storage_client
 
+def get_bucket(bucket_name, project=None, credentials=None):
+  storage_client = build_storage_client(project, credentials)
+  try:
+    bucket = storage_client.get_bucket(bucket_name)
+    return bucket
+  except:
+    return None
+
 
 def create_bucket(bucket_name,
                   project=None,
@@ -60,8 +68,12 @@ def create_bucket(bucket_name,
 
     """
     storage_client = build_storage_client(project, credentials)
-    bucket = storage_client.create_bucket(bucket_name)
-    logging.info('Created bucket %s', bucket.name)
+    try:
+      bucket = get_bucket(bucket_name)
+      logging.info('Using existent bucket %s', bucket.name)
+    except:
+      bucket = storage_client.create_bucket(bucket_name)
+      logging.info('Created bucket %s', bucket.name)
 
 
 def delete_bucket(bucket_name,
