@@ -14,10 +14,10 @@
 
 """Wrapper for Cloud SQL API service proxy."""
 
-from httplib2 import HttpLib2Error
 import uuid
 
 from googleapiclient import errors
+from httplib2 import HttpLib2Error
 
 import google.auth
 
@@ -282,9 +282,9 @@ def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
         response = request.execute()
 
         if IP_ADDRESSES in response:
-            for ip in response[IP_ADDRESSES]:
-                if ip['type'] == 'OUTGOING':
-                    return ip[IP_ADDRESS]
+            for ip_address in response[IP_ADDRESSES]:
+                if ip_address['type'] == 'OUTGOING':
+                    return ip_address[IP_ADDRESS]
             raise KeyError('No outgoing IP address found.')
         else:
             raise KeyError('{} not found in response.'.format(IP_ADDRESSES))
