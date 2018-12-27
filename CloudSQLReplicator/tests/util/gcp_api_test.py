@@ -57,11 +57,11 @@ class TestGCPAPIMethods(unittest.TestCase):
     @mock.patch.object(
         discovery, 'build'
     )
-    def test_build_authorized_svc(self,
-                                  mock_build,
-                                  mock_authorized_http,
-                                  mock_auth_default):
-        """Tests build_authorized_svc."""
+    def test_build_authorized_svc_defaults(self,
+                                           mock_build,
+                                           mock_authorized_http,
+                                           mock_auth_default):
+        """Tests build_authorized_svc with default credentials and project."""
         test_svc = 'test-svc'
         test_version = '0.0.1'
         _ = gcp_api_util.build_authorized_service(test_svc, test_version)
@@ -79,6 +79,42 @@ class TestGCPAPIMethods(unittest.TestCase):
                                       http=mock_authorized_http.return_value
                                      )
 
+    @mock.patch.object(
+        google.auth, 'default',
+        return_value=(mock.Mock(spec_set=credentials.Credentials),
+                      'test-project')
+    )
+    @mock.patch.object(
+        google_auth_httplib2, 'AuthorizedHttp'
+    )
+    @mock.patch.object(
+        discovery, 'build'
+    )
+    def test_build_authorized_svc(self,
+                                  mock_build,
+                                  mock_authorized_http,
+                                  mock_auth_default):
+        """Tests build_authorized_svc with non-default credentials."""
+        test_svc = 'test-svc'
+        test_version = '0.0.1'
+        mock_credentials = mock.Mock(spec_set=credentials.Credentials)
+
+        _ = gcp_api_util.build_authorized_service(test_svc,
+                                                  test_version,
+                                                  credentials=mock_credentials)
+        # Verify that default headers have been set correctly
+        self.assertEqual(
+            httplib2.Http.request.__func__.func_defaults[2]['User-Agent'],
+            self.user_agent
+        )
+        mock_auth_default.assert_called_with()
+        mock_authorized_http.assert_called_with(
+            mock_credentials
+        )
+        mock_build.assert_called_with(test_svc,
+                                      test_version,
+                                      http=mock_authorized_http.return_value
+                                      )
 
 if __name__ == '__main__':
     unittest.main()
