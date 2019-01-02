@@ -260,6 +260,7 @@ def is_sql_operation_done(operation, project=None, credentials=None):
 
     return response['status'] == 'DONE'
 
+
 def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
     """Returns outgoing IP address of Cloud SQL instance.
 
@@ -277,7 +278,7 @@ def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
    """
     default_credentials, default_project = google.auth.default()
     service = build_sql_admin_service(credentials or default_credentials)
-    request = service.operations().get(
+    request = service.instances().get(
         project=project or default_project,
         instance=instance)
 

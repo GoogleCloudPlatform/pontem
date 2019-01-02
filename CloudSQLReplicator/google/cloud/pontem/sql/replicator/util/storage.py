@@ -36,7 +36,7 @@ def build_storage_client(project=None, credentials=None):
         Replicator user agent.
     """
 
-    google.cloud._http.Connection.USER_AGENT = gcp_api_util.get_user_agent() # pylint: disable=protected-access
+    google.cloud._http.Connection.USER_AGENT = gcp_api_util.get_user_agent()  # pylint: disable=protected-access
     default_credentials, default_project = google.auth.default(
         scopes=GCP_STORAGE_SCOPE
     )
