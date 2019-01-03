@@ -264,15 +264,15 @@ def is_sql_operation_done(operation, project=None, credentials=None):
 def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
     """Returns outgoing IP address of Cloud SQL instance.
 
-   Args:
+     Args:
        instance (str): name of instance to get IP address from.
        project (str): Project ID
        credentials (google.auth.Credentials): Credentials to authorize client.
 
-   Returns:
-         str: IP address of SQL instance.
+     Returns:
+       str: IP address of SQL instance.
 
-   Raises:
+     Raises:
        KeyError: Exception if no OUTGOING IP Address is not found.
        NameError: Exception if instance is not found.
    """
@@ -286,9 +286,14 @@ def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
         response = request.execute()
 
         if IP_ADDRESSES in response:
-            for ip_address in response[IP_ADDRESSES]:
-                if ip_address['type'] == 'OUTGOING':
-                    return ip_address[IP_ADDRESS]
+            outgoing_ip_address = (
+                next(
+                    ip_address for ip_address in response[IP_ADDRESSES]
+                    if ip_address['type'] == 'OUTGOING'
+                )
+            )
+            if outgoing_ip_address:
+                return outgoing_ip_address[IP_ADDRESS]
             raise KeyError('No outgoing IP address found.')
         else:
             raise KeyError('{} not found in response.'.format(IP_ADDRESSES))

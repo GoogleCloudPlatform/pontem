@@ -20,6 +20,6 @@ MY_SQL_GTID_MODE_QUERY = ('SELECT VARIABLE_VALUE FROM '
                           'WHERE variable_name = \'gtid_mode\'')
 MY_SQL_LIST_VIEWS_QUERY = ('SHOW FULL TABLES IN {} WHERE TABLE_TYPE '
                            'LIKE \'VIEW\'')
-SSL_CIPHER_QUERY = ('SELECT VARIABLE_VALUE FROM '
-                    'information_schema.global_variables WHERE '
-                    'variable_name=\'Ssl_cipher\'')
+MY_SQL_SSL_CIPHER_QUERY = ('SELECT VARIABLE_VALUE FROM '
+                           'information_schema.global_variables WHERE '
+                           'variable_name=\'Ssl_cipher\'')

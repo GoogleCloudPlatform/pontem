@@ -86,7 +86,7 @@ class MySQL(object):
             bool: True if SSL is being used, False otherwise.
         """
         cursor = self._connection.cursor()
-        cursor.execute(mysql_constants.SSL_CIPHER_QUERY)
+        cursor.execute(mysql_constants.MY_SQL_SSL_CIPHER_QUERY)
         row = cursor.fetchone()
         return row[0] is not None
 
