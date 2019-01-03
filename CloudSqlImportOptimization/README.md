@@ -30,6 +30,8 @@ We've also included quality of life features:
 
 ## Prerequisites
 
+*   Ensure the [mysqlclient](https://pypi.org/project/mysqlclient/) library is
+    installed
 *   If you are running our tools on prem please ensure you have configured Cloud
     SQL with
     [Public IP Connectivity](https://cloud.google.com/sql/docs/mysql/connect-admin-ip)
@@ -62,7 +64,21 @@ TIP: Optional parameters have sensible defaults in place.
 
 TIP: You can use the **--verbose** options for extra logging.
 
-#### Limitations
+#### MySQL's Secure File Priv
+
+If
+[--secure-file-priv](https://dev.mysql.com/doc/refman/5.7/en/server-options.html#option_mysqld_secure-file-priv)
+is enabled in your MySQL instance then you should run the **Exporter** with the
+**--using-secure-file-priv** option to ensure that all files written in the
+whitelisted directory and no temp folders are used.
+
+       $ ./mysql_exporter.py <database-name> <destination-folder> \
+         --using-secure-file-priv
+
+TIP: If your user does not have write priveleges over the secure-file-prive but
+you have admin rights then you could use **sudo** to force the writes.
+
+#### Exporter Limitations
 
 WARNING: Please note that the **Exporter** tool **must be run on the same
 computer hosting your MySQL database**. This is because we use **mysqldump's
@@ -94,11 +110,12 @@ with the **Importer**:
 Once you have a dumped copy of your database importing it into Cloud SQL should
 be a straightforward process. You can run the **Importer** by calling:
 
-        $ ./Cloud SQL_importer.py <database-name> <mysql-dump-folder> --host=<cloud_sql_ip>
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> \
+          --host=<cloud_sql_ip>
 
 To get a list of supported arguments run:
 
-        $ ./Cloud SQL_importer.py -h
+        $ ./cloudsql_importer.py -h
 
 TIP: Optional parameters have sensible defaults in place.
 
@@ -108,6 +125,15 @@ TIP: Even though the techniques used in the **Importer** help reduce import
 times considerably you **can achieve even more performance gains by using a
 large Cloud SQL instance** please check [Cloud SQL](#cloud-sql) and
 [Performance Comparissons](#performance-comparissons) more info.
+
+#### Database Encoding
+
+If you are using a non UTF-8 encoding in your database **some Importer
+operations may fail** unless you provide the correct encoding with the
+**--database-encoding** option, please remember to use Python compatible values.
+
+    $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> \
+      --database-encoding=<encoding>
 
 ### Verifying your imports with Checksum
 
@@ -122,7 +148,9 @@ While importing the dump you'll need to provide the **--verify-checksum** option
 so that the dump's checksum can be compared against the imported checksum. For
 example:
 
-        $ ./Cloud SQL_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> --verify-checksum
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> \
+          --host=<cloud-sql-ip> \
+          --verify-checksum
 
 WARNING: Checksumming can be a slow operation and significantly increase your
 import times
@@ -138,7 +166,7 @@ support for
 TIP: You can use the **--login-path** option to select which Option File profile
 to read. For example:
 
-        $ ./Cloud SQL_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> --login-path=<my-profile>
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> --login-path=<my-profile>
 
 TIP: The Option File default profile is **client** therefore, not specifying any
 login path will be equal to using **--login-path=client**.
@@ -155,7 +183,8 @@ do so you can provide your credentials by using
 **--do_not_use_credentials_file** alongside the **--user** and **--password**
 options. For example:
 
-        $ ./Cloud SQL_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> \
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> \
+          --host=<cloud-sql-ip> \
           --do-not-use-credentials-file \
           --user=<user> \
           --password=<password>
@@ -186,11 +215,15 @@ WARNING: **--ssl-ca**, **--ssl-cert** and **--ssl-key** will be ignored if
 
 Example call using **--ssl-mode-required**:
 
-        $ ./Cloud SQL_importer.py <database-name> <mysql-dump-folder> --host=<cloud-sql-ip> --ssl-mode-required
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folder> \
+          --host=<cloud-sql-ip> \
+          --ssl-mode-required
 
 Example call using **--ssl**:
 
-        $ ./Cloud SQL_importer.py <database-name> <mysql-dump-folderr> --host=<cloud-sql-ip> --ssl
+        $ ./cloudsql_importer.py <database-name> <mysql-dump-folderr> \
+          --host=<cloud-sql-ip> \
+          --ssl
 
 WARNING: We just forward your SSL/TLS preferences to your MySQL client. Please
 make sure that you have correctly
@@ -201,8 +234,8 @@ before using this option.
 
 As we've mentioned previously the **Exporter** can only be run on the same
 machine hosting the MySQL instance you'd like to dump the **Importer**, on the
-contrary, can be run on any environment you prefer as long as it can connect to
-your Cloud SQL instance.
+contrary, can be run on any **\*NIX** environment (sorry no Windows for now) as
+long as it can connect to your Cloud SQL instance.
 
 You could, for example, copy your database dump to any computer in your network
 or even a **GCE** instance and run the **Importer** there.
@@ -214,8 +247,9 @@ machine or, a MySQL instance hosted in GCE.
 
 Having said that the main use cases this tool aims to cover are:
 
-*   **Importing a database backup from your local workstation to Cloud SQL.**
-*   **Importing a database backup from GCE to Cloud SQL.**
+*   **Importing a database backup from your local \*NIX workstation to Cloud
+    SQL.**
+*   **Importing a database backup from a \*NIX GCE image to Cloud SQL.**
 
 ## Google Cloud Platform
 
