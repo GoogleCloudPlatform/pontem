@@ -44,7 +44,7 @@ def get_checkpoint_stage_for_function(func_name):
   when constants have not yet been configured.
 
   Args:
-    func_name: Name of the function that we want to checkpoint
+    func_name: Name of the function that we want to checkpoint.
 
   Returns:
     The checkpoint stage i.e. the data needed to restore execution.
