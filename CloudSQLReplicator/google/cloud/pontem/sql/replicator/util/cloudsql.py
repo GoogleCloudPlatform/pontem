@@ -16,6 +16,9 @@
 
 import uuid
 
+from googleapiclient import errors
+from httplib2 import HttpLib2Error
+
 import google.auth
 
 from google.cloud.pontem.sql.replicator.util import gcp_api_util
@@ -28,9 +31,14 @@ DEFAULT_2ND_GEN_TIER = 'db-n1-standard-2'
 DEFAULT_1ST_GEN_REGION = 'us-central'
 DEFAULT_2ND_GEN_REGION = 'us-central1'
 DEFAULT_REPLICATION_PORT = '3306'
+
 # Cloud SQL Service
 SQL_ADMIN_SERVICE = 'sqladmin'
 SQL_ADMIN_SERVICE_VERSION = 'v1beta4'
+
+# Response Attributes
+IP_ADDRESSES = 'ipAddresses'
+IP_ADDRESS = 'ipAddress'
 
 
 def build_sql_admin_service(credentials=None):
@@ -237,7 +245,7 @@ def is_sql_operation_done(operation, project=None, credentials=None):
 
     Args:
         operation (str): operation id to check.
-        project(str): Project ID
+        project (str): Project ID
         credentials (google.auth.Credentials): Credentials to authorize client.
 
     Returns:
@@ -251,3 +259,45 @@ def is_sql_operation_done(operation, project=None, credentials=None):
     response = request.execute()
 
     return response['status'] == 'DONE'
+
+
+def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
+    """Returns outgoing IP address of Cloud SQL instance.
+
+     Args:
+       instance (str): name of instance to get IP address from.
+       project (str): Project ID
+       credentials (google.auth.Credentials): Credentials to authorize client.
+
+     Returns:
+       str: IP address of SQL instance.
+
+     Raises:
+       KeyError: Exception if no OUTGOING IP Address is not found.
+       NameError: Exception if instance is not found.
+   """
+    default_credentials, default_project = google.auth.default()
+    service = build_sql_admin_service(credentials or default_credentials)
+    request = service.instances().get(
+        project=project or default_project,
+        instance=instance)
+
+    try:
+        response = request.execute()
+
+        if IP_ADDRESSES in response:
+            outgoing_ip_address = (
+                next(
+                    ip_address for ip_address in response[IP_ADDRESSES]
+                    if ip_address['type'] == 'OUTGOING'
+                )
+            )
+            if outgoing_ip_address:
+                return outgoing_ip_address[IP_ADDRESS]
+            raise KeyError('No outgoing IP address found.')
+        else:
+            raise KeyError('{} not found in response.'.format(IP_ADDRESSES))
+
+    except (errors.HttpError, HttpLib2Error) as e:
+        if isinstance(e, errors.HttpError) and e.resp.status == 404:
+            raise NameError('Cloud SQL instance {} not found.'.format(instance))

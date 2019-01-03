@@ -72,12 +72,23 @@ class MySQL(object):
         """Gets GTID mode.
 
         Returns:
-          bool: whether GTID mode is on
+          bool: True if GTID mode is on, False otherwise.
         """
         cursor = self._connection.cursor()
         cursor.execute(mysql_constants.MY_SQL_GTID_MODE_QUERY)
         row = cursor.fetchone()
         return row[0] == 'ON'
+
+    def get_ssl_used(self):
+        """Gets SSL use.
+
+        Returns:
+            bool: True if SSL is being used, False otherwise.
+        """
+        cursor = self._connection.cursor()
+        cursor.execute(mysql_constants.MY_SQL_SSL_CIPHER_QUERY)
+        row = cursor.fetchone()
+        return row[0] is not None
 
     def get_views(self):
         """ Returns a list of views on the database.
