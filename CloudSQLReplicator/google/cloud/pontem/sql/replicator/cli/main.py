@@ -17,6 +17,7 @@
 from __future__ import print_function
 
 from builtins import input
+
 import getpass
 import sys
 import uuid
@@ -25,108 +26,126 @@ from absl import app
 from absl.flags import argparse_flags
 from absl import logging
 
+# Used for Python 2/3 compatibility
+from future.utils import iteritems # pylint: disable=unused-import
+
 from google.cloud.pontem.sql import replicator
 from google.cloud.pontem.sql.replicator.util import cloudsql
 
 
+class MissingRequiredParameterError(ValueError):
+    """Raised when a required parameter is missing."""
+
+
 class MasterConfiguration(object):
     """Configuration for External Master Representation."""
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self,
-                 user,
-                 password,
-                 master_ip,
-                 master_port=cloudsql.DEFAULT_REPLICATION_PORT,
-                 database_version=cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
-                 region=cloudsql.DEFAULT_2ND_GEN_REGION,
-                 source_name=None,
-                 ca_certificate=None):
+    master_config_defaults = frozenset({
+        'user': None,
+        'password': None,
+        'master_ip': None,
+        'master_port': cloudsql.DEFAULT_REPLICATION_PORT,
+        'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
+        'region': cloudsql.DEFAULT_2ND_GEN_REGION,
+        'source_name': None,
+        'ca_certificate': None
+    }.items())
+
+    def __init__(self, **kwargs):
         """Constructor.
 
         Args:
-            user (str): User that will be used to perform MySQLDump.
-            password (str): Password of user.
-            master_ip (str): IP address of external master.
-            master_port (str): Replication port.
-            database_version (str): Database version of external master.
-            region (str): Region where external master resides.
-            source_name (str): Name that will be given to the source
-                representation instance.
-            ca_certificate (str): x509 PEM-encoded certificate of the CA that
-                signed the source database server's certificate.
+           kwargs: Parameters that are used to initialize master configuration.
         Raises:
+             TypeError: If unrecognized properties are passed.
+             MissingRequiredParameterError: If required attributes are not set.
              ValueError: If one or more configuration values is not allowed
                 (e.g. 5.6 and 5.7 are the only allowed database versions).
         """
-        if database_version not in cloudsql.SUPPORTED_VERSIONS:
+        # pylint: disable=access-member-before-definition
+
+        # Check for required properties are present
+        if 'user' or 'password' or 'master_ip' not in kwargs:
+            raise MissingRequiredParameterError(
+                'Required property missing for master configuration.'
+            )
+
+        # Set recognized properties
+        for (key, value) in (
+                dict(MasterConfiguration.master_config_defaults).iteritems()
+        ):
+            if key not in MasterConfiguration.master_config_defaults:
+                raise TypeError(
+                    ('Master Configuration does not have a '
+                     '{} property'.format(key)
+                    )
+                )
+            setattr(self, '_{}'.format(key), kwargs.get(key, value))
+
+        if self._database_version not in cloudsql.SUPPORTED_VERSIONS:
             raise ValueError(
                 'Database version {} not supported'.format(
-                    database_version
+                    self.database_version
                 )
             )
 
-        self._master_ip = master_ip
-        self._master_port = master_port
-        self._user = user
-        self._ca_certificate = ca_certificate
-        self._password = password
-        self._database_version = database_version
-        self._region = region
-        self._source_name = source_name
+        if self._source_name is None:
+            self._source_name = (
+                cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(uuid.uuid4())
+            )
 
 
 class ReplicaConfiguration(object):
     """Configuration for External Master Representation."""
-    # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self,
-                 user,
-                 password,
-                 master_instance_name,
-                 dumpfile_path,
-                 database_version,
-                 tier,
-                 region,
-                 replica_name,
-                 client_certificate,
-                 client_key):
+    replica_config_defaults = frozenset({
+        'master_instance_name': None,
+        'dumpfile_path': None,
+        'user': None,
+        'password': None,
+        'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
+        'tier': cloudsql.DEFAULT_2ND_GEN_TIER,
+        'region': cloudsql.DEFAULT_2ND_GEN_REGION,
+        'replica_name': None,
+        'client_certificate': None,
+        'client_key': None
+
+    }.items())
+
+    def __init__(self, **kwargs):
         """Constructor.
 
         Args:
-            user (str): User that will be used to perform MySQLDump.
-            password (str): Password of user.
-            master_instance_name (str): Name of external master.
-            dumpfile_path (str): Path to dumpfile (must start with gs://).
-            database_version (str): Database version of replica.
-            tier (str): Tier of replica
-            region (str): Region where external master resides.
-            replica_name (str): Name that will be given to the
-                replica instance.
-            client_certificate (str): Certificate that will be used to
-                authenticate during replication.
-            client_key (str): PEM-encoded private key associated with
-                the client_certificate
-
+            kwargs: Parameters that are used to initialize master configuration.
         Raises:
+             MissingRequiredParameterError: If required attributes are not set.
+             TypeError: If unrecognized properties are passed.
              ValueError: If one or more configuration values is not allowed
                 (e.g. 5.6 and 5.7 are the only allowed database versions).
         """
-        if database_version not in cloudsql.SUPPORTED_VERSIONS:
+        # pylint: disable=access-member-before-definition
+
+        # Check for required properties are present
+        for (key, value) in (
+                dict(ReplicaConfiguration.replica_config_defaults).iteritems()
+        ):
+            if (
+                    'master_instance_name' or
+                    'dumpfile_path' or
+                    'user' or
+                    'password'
+            ) not in kwargs:
+                setattr(self, '_{}'.format(key), kwargs.get(key, value))
+
+        if self._database_version not in cloudsql.SUPPORTED_VERSIONS:
             raise ValueError(
                 'Database version {} not supported'.format(
-                    database_version
+                    self._database_version
                 )
             )
 
-        self._master_instance_name = master_instance_name
-        self._dumpfile_path = dumpfile_path
-        self._user = user
-        self._password = password
-        self._client_certificate = client_certificate
-        self._client_key = client_key
-        self._database_version = database_version
-        self._tier = tier
-        self._region = region
-        self._replica_name = replica_name
+        if self._replica_name is None:
+            self._replica_name = (
+                cloudsql.DEFAULT_REPLICA_FORMAT_STRING.format(uuid.uuid4())
+            )
 
     def __dict__(self):
         """Converts ReplicaConfiguration into a dict.
@@ -186,15 +205,12 @@ class ReplicationConfiguration(object):
         self._replica_configuration = replica_configuration
 
 
-def replicate_interactive():
-    """Sets up replica interactively.
+def get_master_config_from_user():
+    """Gets master configuration from user.
 
     Returns:
-        ReplicationConfiguration: Replication configuration information to
-            provide to Cloud SQL Admin API calls.
+        MasterConfiguration: configuration for creating source representation.
     """
-    # pylint: disable=too-many-locals
-    # Collect master representation configuration
     master_ip = input('Enter IP address of external master:')
     master_port = input(
         'Enter replication port (leave blank for {}):'.format(
@@ -229,7 +245,15 @@ def replicate_interactive():
                                         source_name=source_name,
                                         ca_certificate=ca_certificate)
 
-    # Collect replica configuration
+    return master_config
+
+
+def get_replica_config_from_user():
+    """Gets master configuration from user.
+
+    Returns:
+        ReplicaConfiguration: configuration for creating replica instance.
+    """
     master_instance_name = input('Enter name of source representation')
     dumpfile_path = input('Enter dumpfile path (must start with gs://):')
     user = input('Enter replication user name:')
@@ -271,6 +295,20 @@ def replicate_interactive():
         client_certificate=client_certificate,
         client_key=client_key
     )
+
+    return replica_config
+
+
+def replicate_interactive():
+    """Sets up replica interactively.
+
+    Returns:
+        ReplicationConfiguration: Replication configuration information to
+            provide to Cloud SQL Admin API calls.
+    """
+    master_config = get_master_config_from_user()
+    replica_config = get_replica_config_from_user()
+
     return ReplicationConfiguration(master_configuration=master_config,
                                     replica_configuration=replica_config)
 
@@ -374,5 +412,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-
     app.run(main, flags_parser=configure)
