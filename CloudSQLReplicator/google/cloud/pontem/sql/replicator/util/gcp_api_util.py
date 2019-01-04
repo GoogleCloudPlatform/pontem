@@ -22,7 +22,6 @@ import google.auth
 
 from google.cloud.pontem.sql import replicator
 
-# GCP API constants
 
 def get_user_agent():
     """Returns user agent based on package info.

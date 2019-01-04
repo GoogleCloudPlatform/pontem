@@ -24,6 +24,7 @@ GCP_STORAGE_SCOPE = frozenset(
     ['https://www.googleapis.com/auth/devstorage.read_write']
 )
 
+
 def build_storage_client(project=None, credentials=None):
     """Builds Authorized Storage.Client with custom user agent.
 

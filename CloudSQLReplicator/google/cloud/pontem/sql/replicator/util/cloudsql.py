@@ -31,6 +31,9 @@ DEFAULT_2ND_GEN_TIER = 'db-n1-standard-2'
 DEFAULT_1ST_GEN_REGION = 'us-central'
 DEFAULT_2ND_GEN_REGION = 'us-central1'
 DEFAULT_REPLICATION_PORT = '3306'
+DEFAULT_CLOUDSQL_FORMAT_STRING = 'cloudsql-db-{}'
+DEFAULT_EXT_MASTER_FORMAT_STRING = 'external-mysql-representation-{}'
+DEFAULT_REPLICA_FORMAT_STRING = 'cloudsql-replica-{}'
 
 # Cloud SQL Service
 SQL_ADMIN_SERVICE = 'sqladmin'
@@ -39,6 +42,9 @@ SQL_ADMIN_SERVICE_VERSION = 'v1beta4'
 # Response Attributes
 IP_ADDRESSES = 'ipAddresses'
 IP_ADDRESS = 'ipAddress'
+
+# Validation
+SUPPORTED_VERSIONS = frozenset(['MYSQL_5_6', 'MYSQL_5_7'])
 
 
 def build_sql_admin_service(credentials=None):
@@ -76,7 +82,7 @@ def create_cloudsql_instance(database_instance_body=None,
 
     default_credentials, default_project = google.auth.default()
     default_database_instance_body = {
-        'name': 'cloudsql-db-{}'.format(uuid.uuid4()),
+        'name': DEFAULT_CLOUDSQL_FORMAT_STRING.format(uuid.uuid4()),
         'settings': {
             'tier': DEFAULT_2ND_GEN_TIER
         }
@@ -124,7 +130,7 @@ def create_source_representation(
     """
     default_source_body = {
         'name': source_name or
-                'external-mysql-representation-{}'.format(uuid.uuid4()),
+                DEFAULT_EXT_MASTER_FORMAT_STRING.format(uuid.uuid4()),
         'databaseVersion': database_version,
         'region': region,
         'onPremisesConfiguration': {
@@ -178,7 +184,7 @@ def create_replica_instance(
 
     default_replica_body = {
         'name': replica_name or
-                'cloudsql-replica-{}'.format(uuid.uuid4()),
+                DEFAULT_REPLICA_FORMAT_STRING.format(uuid.uuid4()),
         'settings': {
             'tier': DEFAULT_2ND_GEN_TIER,
 

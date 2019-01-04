@@ -68,6 +68,16 @@ class MySQL(object):
         version = self._connection.get_server_version()
         return version
 
+    def is_supported_version(self):
+        """ Checks if this version of MySQL.
+
+        Returns:
+            bool: True if this version is supported.
+        """
+        supported = (self.get_mysql_version() in
+                     mysql_constants.SUPPORTED_MYSQL_VERSIONS)
+        return supported
+
     def get_gtid_mode_on(self):
         """Gets GTID mode.
 
