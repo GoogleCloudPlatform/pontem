@@ -41,7 +41,7 @@ public class WorkloadSettings {
   private List<String> queryFiles;
 
   public String getName() {
-    return name;
+    return this.name;
   }
 
   public void setName(String name) {
@@ -49,7 +49,7 @@ public class WorkloadSettings {
   }
 
   public String getProjectId() {
-    return projectId;
+    return this.projectId;
   }
 
   public void setProjectId(String projectId) {
@@ -71,7 +71,7 @@ public class WorkloadSettings {
   }
 
   public String getOutputFileName() {
-    return outputFileName;
+    return this.outputFileName;
   }
 
   public void setOutputFileName(String outputFileName) {
@@ -101,7 +101,7 @@ public class WorkloadSettings {
       isFirstGetQueries = false;
     }
 
-    return queries;
+    return this.queries;
   }
 
   public void setQueries(List<String> queries) {

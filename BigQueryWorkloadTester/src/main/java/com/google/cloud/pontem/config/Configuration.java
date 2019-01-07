@@ -73,7 +73,7 @@ public final class Configuration {
   }
 
   public Integer getConcurrencyLevel() {
-    return concurrencyLevel;
+    return this.concurrencyLevel;
   }
 
   public void setConcurrencyLevel(Integer concurrencyLevel) {
@@ -81,7 +81,7 @@ public final class Configuration {
   }
 
   public String getOutputFileFolder() {
-    return outputFileFolder;
+    return this.outputFileFolder;
   }
 
   public void setOutputFileFolder(String outputFileFolder) {
@@ -89,7 +89,7 @@ public final class Configuration {
   }
 
   public Boolean isRatioBasedBenchmark() {
-    return isRatioBasedBenchmark;
+    return this.isRatioBasedBenchmark;
   }
 
   public void setIsRatioBasedBenchmark(Boolean isRatioBasedBenchmark) {
@@ -97,7 +97,7 @@ public final class Configuration {
   }
 
   public List<WorkloadSettings> getWorkloads() {
-    return workloads;
+    return this.workloads;
   }
 
   public void setWorkloads(List<WorkloadSettings> workloads) {
