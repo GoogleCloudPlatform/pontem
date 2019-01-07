@@ -48,7 +48,7 @@ public final class BigQueryWorkloadTester {
     try {
       for (WorkloadSettings workload : config.getWorkloads()) {
         BigQueryBackend bigQueryBackend =
-            BigQueryBackendFactory.get(bigQueryCredentialManager, workload);
+            BigQueryBackendFactory.getBigQueryBackend(bigQueryCredentialManager, workload);
         ConcurrentWorkloadRunnerFactory runnerFactory =
             new ConcurrentWorkloadRunnerFactory(bigQueryBackend);
         Benchmark benchmark = getBenchmark(config, runnerFactory);
@@ -61,7 +61,8 @@ public final class BigQueryWorkloadTester {
         logger.info("Finished bechmarking phase, processing results");
         String outputPath =
             config.getOutputFileFolder() + File.separator + workload.getOutputFileName();
-        JsonResultProcessor jsonResultProcessor = JsonResultProcessorFactory.get();
+        JsonResultProcessor jsonResultProcessor =
+            JsonResultProcessorFactory.getJsonResultProcessor();
         jsonResultProcessor.run(outputPath, workloadResults);
       }
     } catch (Throwable t) {
