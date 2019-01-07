@@ -36,7 +36,7 @@ public class BigQueryCredentialManager {
    * @return the properly configured GoogleCredentials object
    * @throws IOException if file could not be read
    */
-  public GoogleCredentials getCredentials(final Optional<String> credentialsFile)
+  public GoogleCredentials getCredentialsFromFile(final Optional<String> credentialsFile)
       throws IOException {
     GoogleCredentials googleCredentials;
 
