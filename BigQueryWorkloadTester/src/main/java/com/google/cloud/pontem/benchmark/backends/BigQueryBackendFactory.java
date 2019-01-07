@@ -33,7 +33,7 @@ public class BigQueryBackendFactory {
    *
    * @return a properly configured BigQueryBackend
    */
-  public static BigQueryBackend get(
+  public static BigQueryBackend getBigQueryBackend(
       final BigQueryCredentialManager bigQueryCredentialManager, final WorkloadSettings workload)
       throws IOException {
     logger.fine("Building BigQueryBackend.");

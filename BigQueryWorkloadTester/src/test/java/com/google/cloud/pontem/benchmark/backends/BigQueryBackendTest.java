@@ -41,8 +41,6 @@ import org.mockito.ArgumentCaptor;
 /** Tests for {@link BigQueryBackend}. */
 @RunWith(JUnit4.class)
 public class BigQueryBackendTest {
-  // private static final long START_TIME = 10;
-  // private static final long END_TIME = 100;
 
   private BigQuery bigQueryMock;
   private BigQueryBackend bigQueryBackend;
