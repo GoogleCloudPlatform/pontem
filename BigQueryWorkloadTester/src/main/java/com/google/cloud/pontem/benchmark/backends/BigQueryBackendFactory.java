@@ -39,7 +39,7 @@ public class BigQueryBackendFactory {
     logger.fine("Building BigQueryBackend.");
 
     GoogleCredentials googleCredentials =
-        bigQueryCredentialManager.getCredentials(workload.getCloudCredentialsFile());
+        bigQueryCredentialManager.getCredentialsFromFile(workload.getCloudCredentialsFile());
     BigQuery bigQuery =
         BigQueryOptions.newBuilder()
             .setProjectId(workload.getProjectId())
