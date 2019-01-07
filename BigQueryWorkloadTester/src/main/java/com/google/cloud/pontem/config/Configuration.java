@@ -22,15 +22,12 @@ import java.util.List;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
-/**
- * Class that reads a YAML config file and imports said config into the corresponding objects.
- */
+/** Class that reads a YAML config file and imports said config into the corresponding objects. */
 public final class Configuration {
 
-  /**
-   * The instance of the Configuration that this class is storing.
-   */
+  /** The instance of the Configuration that this class is storing. */
   private static Configuration instance = null;
+
   private Integer concurrencyLevel;
   private String outputFileFolder;
   private Boolean isRatioBasedBenchmark;
@@ -58,13 +55,12 @@ public final class Configuration {
    */
   public static boolean loadConfig(String filename) {
     try {
-      String configYaml = Resources.toString(
-          Resources.getResource(filename), Charset.defaultCharset());
+      String configYaml =
+          Resources.toString(Resources.getResource(filename), Charset.defaultCharset());
 
       Yaml yaml = new Yaml();
       yaml.setBeanAccess(BeanAccess.FIELD);
       instance = yaml.loadAs(configYaml, Configuration.class);
-
 
     } catch (IOException e) {
       throw new RuntimeException(e);

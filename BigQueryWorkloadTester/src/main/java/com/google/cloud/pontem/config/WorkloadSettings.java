@@ -26,9 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/**
- * Workload specific configuration settings.
- */
+/** Workload specific configuration settings. */
 public class WorkloadSettings {
 
   private static final Logger logger = Logger.getLogger(WorkloadSettings.class.getName());
@@ -124,10 +122,11 @@ public class WorkloadSettings {
     List<String> queries = new ArrayList<>();
 
     try {
-      queries = Resources.readLines(
-          Resources.getResource(queryFile),
-          // TODO(ldanielmadariaga): Handle other charsets
-          Charset.defaultCharset());
+      queries =
+          Resources.readLines(
+              Resources.getResource(queryFile),
+              // TODO(ldanielmadariaga): Handle other charsets
+              Charset.defaultCharset());
     } catch (IOException e) {
       logger.warning("Failed to read file " + queryFile + " moving on to the next file");
       logger.log(Level.FINE, "Failed to write to query files: ", e);
@@ -135,5 +134,4 @@ public class WorkloadSettings {
 
     return queries;
   }
-
 }
