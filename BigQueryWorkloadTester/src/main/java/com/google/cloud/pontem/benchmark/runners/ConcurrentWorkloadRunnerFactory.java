@@ -32,8 +32,10 @@ public class ConcurrentWorkloadRunnerFactory {
   private static final Logger logger =
       Logger.getLogger(ConcurrentWorkloadRunnerFactory.class.getName());
 
+  // The max number of Queries that can be run against the backend at once.
+  //
   // See: https://cloud.google.com/bigquery/quotas
-  private static final int CONCURRENCY_LIMIT = 50;
+  private static final int QUERY_CONCURRENCY_LIMIT = 50;
 
   private final BigQueryBackend bigQueryBackend;
 
@@ -49,7 +51,8 @@ public class ConcurrentWorkloadRunnerFactory {
    * @param concurrencyLevel the number of times a Workload will be executed in parallel
    * @return a properly configuredConcurrentWorkloadRunner
    */
-  public ConcurrentWorkloadRunner get(final WorkloadSettings workload, final int concurrencyLevel) {
+  public ConcurrentWorkloadRunner getConcurrentWorkloadRunner(
+      final WorkloadSettings workload, final int concurrencyLevel) {
     logger.fine("Building ConcurrentWorkloadRunner.");
 
     int concurrencyLimit = getConcurrencyLimit(concurrencyLevel);
@@ -78,14 +81,14 @@ public class ConcurrentWorkloadRunnerFactory {
   public int getConcurrencyLimit(final int concurrencyLevel) {
     int concurrencyLimit = concurrencyLevel;
 
-    if (concurrencyLevel > CONCURRENCY_LIMIT) {
+    if (concurrencyLevel > QUERY_CONCURRENCY_LIMIT) {
       logger.warning(
           "Requested concurrency level:"
               + concurrencyLevel
               + ", exceeds the maximum concurrency limit: "
-              + CONCURRENCY_LIMIT
+              + QUERY_CONCURRENCY_LIMIT
               + ". Using the concurrency limit instead of the user provided one.");
-      concurrencyLimit = CONCURRENCY_LIMIT;
+      concurrencyLimit = QUERY_CONCURRENCY_LIMIT;
     }
 
     return concurrencyLimit;
