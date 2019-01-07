@@ -1,0 +1,26 @@
+# The number of times a Workload will be executed in parallel.
+# Our Concurrency Level limit is 50
+concurrencyLevel: 20
+
+# Whether to run several instances of the same Workload at diffeeent percentages of the provided
+# Concurrency Level.
+isRatioBasedBenchmark: false
+
+# The folder where to save the results file.
+outputFileFolder: ""
+
+# The Workloads and their associated query files.
+#
+# If the Credentials file is empty the tool will attempt to load the default Credentials
+# The Workload Tester expects the query file to contain one query per line.
+# The Workload Tester can read queries from files via 'queryFiles' or you can produce a query / list
+# of queries with 'queries'.
+workloads:
+- name: ""
+  projectId: ""
+  cloudCredentialsFile: ""
+  queryFiles:
+    - ""
+  queries:
+    - ""
+  outputFileName: ""
