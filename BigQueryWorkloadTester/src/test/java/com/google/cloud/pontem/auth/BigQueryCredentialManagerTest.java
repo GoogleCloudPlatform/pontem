@@ -38,7 +38,7 @@ public class BigQueryCredentialManagerTest {
   public void attemptToReadFromWrongPath() throws Exception {
     Optional<String> fakeCredentialsFile = Optional.of("/fake/path/");
 
-    bigQueryCredentialManager.getCredentials(fakeCredentialsFile);
+    bigQueryCredentialManager.getCredentialsFromFile(fakeCredentialsFile);
   }
 
   @Test(expected = IOException.class)
@@ -46,6 +46,6 @@ public class BigQueryCredentialManagerTest {
     URL resource = getClass().getClassLoader().getResource("fakecreds.json");
     Optional<String> fakeCredentialsFile = Optional.of(resource.getPath());
 
-    bigQueryCredentialManager.getCredentials(fakeCredentialsFile);
+    bigQueryCredentialManager.getCredentialsFromFile(fakeCredentialsFile);
   }
 }
