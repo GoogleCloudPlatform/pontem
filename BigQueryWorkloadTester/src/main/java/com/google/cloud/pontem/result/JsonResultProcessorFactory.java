@@ -27,7 +27,7 @@ public class JsonResultProcessorFactory {
    *
    * @return a properly configured JsonResultProcessor
    */
-  public static JsonResultProcessor get() {
+  public static JsonResultProcessor getJsonResultProcessor() {
     logger.fine("Building JsonResultProcessor.");
     ResultFileWriter resultFileWriter = new ResultFileWriter();
 
