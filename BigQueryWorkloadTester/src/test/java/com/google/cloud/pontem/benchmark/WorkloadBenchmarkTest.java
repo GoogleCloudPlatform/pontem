@@ -57,7 +57,8 @@ public class WorkloadBenchmarkTest {
     int concurrencyLevel = TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT;
     WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
-    when(concurrentWorkloadRunnerFactoryMock.get(workload, concurrencyLevel))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            workload, concurrencyLevel))
         .thenReturn(concurrentWorkloadRunnerMock);
     when(concurrentWorkloadRunnerMock.run(workload, concurrencyLevel))
         .thenReturn(WorkloadResultHelper.getConcurrentWorkloadResults());
@@ -66,7 +67,8 @@ public class WorkloadBenchmarkTest {
 
     assertThat(workloadResults, is(WorkloadResultHelper.getConcurrentWorkloadResults()));
 
-    verify(concurrentWorkloadRunnerFactoryMock, times(1)).get(workload, concurrencyLevel);
+    verify(concurrentWorkloadRunnerFactoryMock, times(1))
+        .getConcurrentWorkloadRunner(workload, concurrencyLevel);
     verify(concurrentWorkloadRunnerMock, times(1)).run(workload, concurrencyLevel);
   }
 
@@ -75,7 +77,8 @@ public class WorkloadBenchmarkTest {
     int concurrencyLevel = TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT;
     WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
-    when(concurrentWorkloadRunnerFactoryMock.get(workload, concurrencyLevel))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            workload, concurrencyLevel))
         .thenReturn(concurrentWorkloadRunnerMock);
     when(concurrentWorkloadRunnerMock.run(workload, concurrencyLevel))
         .thenReturn(WorkloadResultHelper.getConcurrentWorkloadResultsWithQueryErrors());
@@ -85,7 +88,8 @@ public class WorkloadBenchmarkTest {
     assertThat(
         workloadResults, is(WorkloadResultHelper.getConcurrentWorkloadResultsWithQueryErrors()));
 
-    verify(concurrentWorkloadRunnerFactoryMock, times(1)).get(workload, concurrencyLevel);
+    verify(concurrentWorkloadRunnerFactoryMock, times(1))
+        .getConcurrentWorkloadRunner(workload, concurrencyLevel);
     verify(concurrentWorkloadRunnerMock, times(1)).run(workload, concurrencyLevel);
   }
 
@@ -94,7 +98,8 @@ public class WorkloadBenchmarkTest {
     int concurrencyLevel = TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT;
     WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
-    when(concurrentWorkloadRunnerFactoryMock.get(workload, concurrencyLevel))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            workload, concurrencyLevel))
         .thenReturn(concurrentWorkloadRunnerMock);
     when(concurrentWorkloadRunnerMock.run(workload, concurrencyLevel))
         .thenReturn(WorkloadResultHelper.getConcurrentWorkloadExceptionResults());
@@ -103,7 +108,8 @@ public class WorkloadBenchmarkTest {
 
     assertThat(workloadResults, is(WorkloadResultHelper.getConcurrentWorkloadExceptionResults()));
 
-    verify(concurrentWorkloadRunnerFactoryMock, times(1)).get(workload, concurrencyLevel);
+    verify(concurrentWorkloadRunnerFactoryMock, times(1))
+        .getConcurrentWorkloadRunner(workload, concurrencyLevel);
     verify(concurrentWorkloadRunnerMock, times(1)).run(workload, concurrencyLevel);
   }
 }

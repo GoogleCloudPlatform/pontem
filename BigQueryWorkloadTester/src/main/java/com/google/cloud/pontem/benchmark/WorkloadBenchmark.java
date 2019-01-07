@@ -45,7 +45,7 @@ public class WorkloadBenchmark implements Benchmark {
     logger.info("Executing Standard Benchmark for Workload: " + workload.getName());
 
     ConcurrentWorkloadRunner concurrentWorkloadRunner =
-        runnerFactory.get(workload, concurrencyLevel);
+        runnerFactory.getConcurrentWorkloadRunner(workload, concurrencyLevel);
     return concurrentWorkloadRunner.run(workload, concurrencyLevel);
   }
 }

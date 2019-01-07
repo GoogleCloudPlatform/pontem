@@ -61,7 +61,7 @@ public final class RatioBasedWorkloadBenchmark implements Benchmark {
           runnerFactory.getConcurrencyLimit(concurrencyLevelForPercentage);
 
       ConcurrentWorkloadRunner concurrentWorkloadRunner =
-          runnerFactory.get(workload, concurrencyLevelForPercentage);
+          runnerFactory.getConcurrentWorkloadRunner(workload, concurrencyLevelForPercentage);
 
       if (concurrencyLevelAndPercentages.containsKey(concurrencyLevelForPercentage)) {
         // Given that we are working with integer math when the requested concurrency level is too

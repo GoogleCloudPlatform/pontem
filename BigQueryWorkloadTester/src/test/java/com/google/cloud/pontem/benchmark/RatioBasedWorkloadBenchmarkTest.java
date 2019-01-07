@@ -87,7 +87,8 @@ public class RatioBasedWorkloadBenchmarkTest {
     Map<ConcurrentWorkloadRunner, List<WorkloadResult>> mocksAndResults =
         MapBuilder.getImmutableMapFromLists(concurrentWorkloadRunnerMocks, workloadResultList);
 
-    when(concurrentWorkloadRunnerFactoryMock.get(any(WorkloadSettings.class), anyInt()))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            any(WorkloadSettings.class), anyInt()))
         .thenAnswer(returnsElementsOf(concurrentWorkloadRunnerMocks));
     when(concurrentWorkloadRunnerFactoryMock.getConcurrencyLimit(anyInt()))
         .thenAnswer(returnsElementsOf(concurrencyLimits));
@@ -136,7 +137,8 @@ public class RatioBasedWorkloadBenchmarkTest {
     Map<ConcurrentWorkloadRunner, List<WorkloadResult>> mocksAndResults =
         MapBuilder.getImmutableMapFromLists(concurrentWorkloadRunnerMocks, workloadResultList);
 
-    when(concurrentWorkloadRunnerFactoryMock.get(any(WorkloadSettings.class), anyInt()))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            any(WorkloadSettings.class), anyInt()))
         .thenAnswer(returnsElementsOf(concurrentWorkloadRunnerMocks));
     when(concurrentWorkloadRunnerFactoryMock.getConcurrencyLimit(anyInt()))
         .thenAnswer(returnsElementsOf(concurrencyLimits));
@@ -184,7 +186,8 @@ public class RatioBasedWorkloadBenchmarkTest {
     Map<ConcurrentWorkloadRunner, List<WorkloadResult>> mocksAndResults =
         MapBuilder.getImmutableMapFromLists(concurrentWorkloadRunnerMocks, workloadResultList);
 
-    when(concurrentWorkloadRunnerFactoryMock.get(any(WorkloadSettings.class), anyInt()))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            any(WorkloadSettings.class), anyInt()))
         .thenAnswer(returnsElementsOf(concurrentWorkloadRunnerMocks));
     when(concurrentWorkloadRunnerFactoryMock.getConcurrencyLimit(anyInt()))
         .thenAnswer(returnsElementsOf(concurrencyLimits));
@@ -214,7 +217,8 @@ public class RatioBasedWorkloadBenchmarkTest {
         WorkloadResultHelper.getWorkloadResultsForConcurrencyLevel(concurrencyLimit);
     ConcurrentWorkloadRunner concurrentWorkloadRunnerMock = mock(ConcurrentWorkloadRunner.class);
 
-    when(concurrentWorkloadRunnerFactoryMock.get(any(WorkloadSettings.class), anyInt()))
+    when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
+            any(WorkloadSettings.class), anyInt()))
         .thenReturn(concurrentWorkloadRunnerMock);
     when(concurrentWorkloadRunnerFactoryMock.getConcurrencyLimit(anyInt()))
         .thenReturn(concurrencyLimit);
