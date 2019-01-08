@@ -40,6 +40,9 @@ public final class BigQueryWorkloadTester {
 
   /** Main entry point for benchmark. Sets up the object graph and kicks-off execution. */
   public static void main(String[] args) {
+    logger.info("Welcome to BigQuery Workload Tester!");
+
+    logger.info("Loading config");
     Configuration.loadConfig("config.yaml");
     Configuration config = Configuration.getInstance();
     BigQueryCredentialManager bigQueryCredentialManager = new BigQueryCredentialManager();
