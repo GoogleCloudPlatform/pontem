@@ -29,17 +29,17 @@ public abstract class QueryResult {
 
   public abstract String getId();
 
-  public abstract Long getCreationTime();
-
-  public abstract Long getRuntime();
-
-  public abstract Long getWallTime();
-
   public abstract String getQuery();
 
   public abstract Status getStatus();
 
   public abstract ImmutableList<String> getErrors();
+
+  public abstract Long getCreationTime();
+
+  public abstract Long getRuntime();
+
+  public abstract Long getWallTime();
 
   @AutoValue.Builder
   public abstract static class Builder {
@@ -52,18 +52,18 @@ public abstract class QueryResult {
 
     public abstract Builder setStatus(Status value);
 
-    public abstract Builder setCreationTime(Long value);
-
-    public abstract Builder setRuntime(Long value);
-
-    public abstract Builder setWallTime(Long value);
-
     public abstract Builder setErrors(List<String> value);
 
     public Builder addError(String error) {
       errorsBuilder().add(error);
       return this;
     }
+
+    public abstract Builder setCreationTime(Long value);
+
+    public abstract Builder setWallTime(Long value);
+
+    public abstract Builder setRuntime(Long value);
 
     public abstract QueryResult build();
   }

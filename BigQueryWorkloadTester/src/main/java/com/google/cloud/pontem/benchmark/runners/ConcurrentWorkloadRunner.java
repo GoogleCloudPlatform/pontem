@@ -109,9 +109,9 @@ public class ConcurrentWorkloadRunner<T> {
         .setConcurrencyLevel(concurrencyLevel)
         .setStatus(Status.EXCEPTION)
         .setError(e.getMessage())
-        .setQueryResults(new ArrayList<>())
         .setRunTime(0L)
         .setWallTime(0L)
+        .setQueryResults(new ArrayList<>())
         .build();
   }
 }

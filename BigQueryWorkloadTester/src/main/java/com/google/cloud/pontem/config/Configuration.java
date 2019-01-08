@@ -18,20 +18,23 @@ package com.google.cloud.pontem.config;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
 /** Class that reads a YAML config file and imports said config into the corresponding objects. */
 public final class Configuration {
+  private static final Logger logger = Logger.getLogger(Configuration.class.getName());
 
   /** The instance of the Configuration that this class is storing. */
   private static Configuration instance = null;
 
-  private Integer concurrencyLevel;
-  private String outputFileFolder;
-  private Boolean isRatioBasedBenchmark;
-  private List<WorkloadSettings> workloads;
+  private Integer concurrencyLevel = 0;
+  private String outputFileFolder = "";
+  private Boolean isRatioBasedBenchmark = false;
+  private List<WorkloadSettings> workloads = new ArrayList<>();
 
   /**
    * Get the Instance of this class There should only ever be one instance of this class and other
@@ -66,8 +69,18 @@ public final class Configuration {
       throw new RuntimeException(e);
     }
 
-    // Eagerly read queries to ensure the loading does not affect the benchmark reads.
-    instance.workloads.forEach(w -> w.getQueries());
+    List<WorkloadSettings> filteredWorkloads = new ArrayList<>();
+    for (WorkloadSettings workload : instance.workloads) {
+      if (workload != null) {
+        // Eagerly read queries to ensure the loading does not affect the benchmark reads.
+        workload.getQueries();
+        filteredWorkloads.add(workload);
+      } else {
+        logger.warning("This configuration has empty workloads");
+      }
+    }
+
+    instance.workloads = filteredWorkloads;
 
     return true;
   }

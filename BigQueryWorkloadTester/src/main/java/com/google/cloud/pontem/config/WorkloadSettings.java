@@ -33,12 +33,12 @@ public class WorkloadSettings {
 
   private boolean isFirstGetQueries = true;
 
-  private String name;
-  private String projectId;
-  private String cloudCredentialsFile;
-  private String outputFileName;
-  private List<String> queries;
-  private List<String> queryFiles;
+  private String name = "";
+  private String projectId = "";
+  private String cloudCredentialsFile = "";
+  private String outputFileName = "";
+  private List<String> queries = new ArrayList<>();
+  private List<String> queryFiles = new ArrayList<>();
 
   public String getName() {
     return this.name;
@@ -85,13 +85,9 @@ public class WorkloadSettings {
   public List<String> getQueries() {
     if (isFirstGetQueries) {
       queries = queries.stream().filter(q -> q != null).collect(Collectors.toList());
+      queryFiles = queryFiles.stream().filter(q -> q != null).collect(Collectors.toList());
 
-      List<String> queriesFromFiles = new ArrayList<>();
-      if (queryFiles != null) {
-        queryFiles = queryFiles.stream().filter(q -> q != null).collect(Collectors.toList());
-        queriesFromFiles = getQueriesFromFiles();
-      }
-
+      List<String> queriesFromFiles = getQueriesFromFiles();
       if (queries != null) {
         queries.addAll(queriesFromFiles);
       } else {

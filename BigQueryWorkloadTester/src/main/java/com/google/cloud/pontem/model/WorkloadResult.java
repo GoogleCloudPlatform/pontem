@@ -40,11 +40,11 @@ public abstract class WorkloadResult {
 
   public abstract String getError();
 
-  public abstract ImmutableList<QueryResult> getQueryResults();
-
   public abstract long getWallTime();
 
   public abstract long getRunTime();
+
+  public abstract ImmutableList<QueryResult> getQueryResults();
 
   @AutoValue.Builder
   public abstract static class Builder {
@@ -59,11 +59,11 @@ public abstract class WorkloadResult {
 
     public abstract Builder setError(String value);
 
-    public abstract Builder setQueryResults(List<QueryResult> value);
-
     public abstract Builder setRunTime(long value);
 
     public abstract Builder setWallTime(long value);
+
+    public abstract Builder setQueryResults(List<QueryResult> value);
 
     public abstract WorkloadResult build();
   }
