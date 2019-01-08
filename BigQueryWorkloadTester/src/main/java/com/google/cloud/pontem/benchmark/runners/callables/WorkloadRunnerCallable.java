@@ -64,9 +64,9 @@ public class WorkloadRunnerCallable implements Callable<WorkloadResult> {
         .setConcurrencyLevel(concurrencyLevel)
         .setStatus(Status.SUCCESS)
         .setError("")
-        .setQueryResults(queryResults)
         .setRunTime(runtime)
         .setWallTime(wallTime)
+        .setQueryResults(queryResults)
         .build();
   }
 }
