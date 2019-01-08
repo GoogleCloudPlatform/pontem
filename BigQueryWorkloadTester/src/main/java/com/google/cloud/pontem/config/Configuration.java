@@ -20,13 +20,11 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
 /** Class that reads a YAML config file and imports said config into the corresponding objects. */
 public final class Configuration {
-  private static final Logger logger = Logger.getLogger(Configuration.class.getName());
 
   /** The instance of the Configuration that this class is storing. */
   private static Configuration instance = null;
