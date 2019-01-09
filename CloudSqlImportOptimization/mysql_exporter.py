@@ -139,7 +139,8 @@ def main():
     if hasattr(e, "output") and e.output:
       logging.error("Exception output: %s", e.output)
   finally:
-    _delete_directory(mysql_exporter_constants.TEMP_FOLDER)
+    if not mysql_exporter_constants.USING_SECURE_FILE_PRIV:
+      _delete_directory(mysql_exporter_constants.TEMP_FOLDER)
 
 
 if __name__ == "__main__":
