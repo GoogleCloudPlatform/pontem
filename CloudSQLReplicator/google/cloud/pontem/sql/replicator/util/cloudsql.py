@@ -42,9 +42,10 @@ SQL_ADMIN_SERVICE_VERSION = 'v1beta4'
 # Response Attributes
 IP_ADDRESSES = 'ipAddresses'
 IP_ADDRESS = 'ipAddress'
+SERVICE_ACCOUNT_EMAIL = 'serviceAccountEmailAddress'
 
 # Validation
-SUPPORTED_VERSIONS = frozenset(['MYSQL_5_6', 'MYSQL_5_7'])
+SUPPORTED_VERSIONS = frozenset({'MYSQL_5_6', 'MYSQL_5_7'})
 
 
 def build_sql_admin_service(credentials=None):
@@ -98,7 +99,7 @@ def create_cloudsql_instance(database_instance_body=None,
 
 
 def create_source_representation(
-        ip_address,
+        ip_address=None,
         port=DEFAULT_REPLICATION_PORT,
         database_version=DEFAULT_2ND_GEN_DB_VERSION,
         region=DEFAULT_2ND_GEN_REGION,
@@ -129,8 +130,8 @@ def create_source_representation(
         JSON: response from sqladmin.instances().insert() call.
     """
     default_source_body = {
-        'name': source_name or
-                DEFAULT_EXT_MASTER_FORMAT_STRING.format(uuid.uuid4()),
+        'name': (source_name or
+                 DEFAULT_EXT_MASTER_FORMAT_STRING.format(uuid.uuid4())),
         'databaseVersion': database_version,
         'region': region,
         'onPremisesConfiguration': {
@@ -150,10 +151,10 @@ def create_source_representation(
 
 
 def create_replica_instance(
-        master_instance_name,
-        dumpfile_path,
-        replica_user,
-        replica_pwd,
+        master_instance_name=None,
+        dumpfile_path=None,
+        replica_user=None,
+        replica_pwd=None,
         replica_name=None,
         replica_body=None,
         project=None,
@@ -267,21 +268,20 @@ def is_sql_operation_done(operation, project=None, credentials=None):
     return response['status'] == 'DONE'
 
 
-def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
-    """Returns outgoing IP address of Cloud SQL instance.
+def get_instance(instance, project=None, credentials=None):
+    """Returns information about Cloud SQL instance.
 
-     Args:
-       instance (str): name of instance to get IP address from.
-       project (str): Project ID
-       credentials (google.auth.Credentials): Credentials to authorize client.
+    Args:
+        instance (str): name of instance to get IP address from.
+        project (str): Project ID
+        credentials (google.auth.Credentials): Credentials to authorize client.
 
-     Returns:
-       str: IP address of SQL instance.
+    Returns:
+        JSON: Resource describing Cloud SQL instance.
 
-     Raises:
-       KeyError: Exception if no OUTGOING IP Address is not found.
-       NameError: Exception if instance is not found.
-   """
+    Raises:
+        NameError: Exception if instance is not found.
+    """
     default_credentials, default_project = google.auth.default()
     service = build_sql_admin_service(credentials or default_credentials)
     request = service.instances().get(
@@ -289,21 +289,67 @@ def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
         instance=instance)
 
     try:
-        response = request.execute()
-
-        if IP_ADDRESSES in response:
-            outgoing_ip_address = (
-                next(
-                    ip_address for ip_address in response[IP_ADDRESSES]
-                    if ip_address['type'] == 'OUTGOING'
-                )
-            )
-            if outgoing_ip_address:
-                return outgoing_ip_address[IP_ADDRESS]
-            raise KeyError('No outgoing IP address found.')
-        else:
-            raise KeyError('{} not found in response.'.format(IP_ADDRESSES))
-
+        return request.execute()
     except (errors.HttpError, HttpLib2Error) as e:
         if isinstance(e, errors.HttpError) and e.resp.status == 404:
             raise NameError('Cloud SQL instance {} not found.'.format(instance))
+
+
+def get_outgoing_ip_of_instance(instance, project=None, credentials=None):
+    """Returns outgoing IP address of Cloud SQL instance.
+
+    Args:
+       instance (str): name of instance to get IP address from.
+       project (str): Project ID
+       credentials (google.auth.Credentials): Credentials to authorize client.
+
+    Returns:
+       str: IP address of SQL instance.
+
+    Raises:
+       KeyError: Exception if no OUTGOING IP Address is not found.
+    """
+    response = get_instance(instance, project, credentials)
+
+    if IP_ADDRESSES in response:
+        outgoing_ip_address = (
+            next(
+                ip_address for ip_address in response[IP_ADDRESSES]
+                if ip_address['type'] == 'OUTGOING'
+            )
+        )
+        if outgoing_ip_address:
+            return outgoing_ip_address[IP_ADDRESS]
+        raise KeyError('No outgoing IP address found.')
+
+    raise KeyError('{} not found in response.'.format(IP_ADDRESSES))
+
+
+def get_ip_and_service_account(instance, project=None, credentials=None):
+    """Gets both the outgoing ip address and service accont of an instance.
+
+    Args:
+       instance (str): name of instance to get IP address from.
+       project (str): Project ID
+       credentials (google.auth.Credentials): Credentials to authorize client.
+
+    Returns:
+       str: IP address of SQL instance.
+       str: Service account email.
+    """
+    response = get_instance(instance, project, credentials)
+    ip_address = None
+    service_account = None
+    if IP_ADDRESSES in response:
+        outgoing_ip_address = (
+            next(
+                ip_address for ip_address in response[IP_ADDRESSES]
+                if ip_address['type'] == 'OUTGOING'
+            )
+        )
+        if outgoing_ip_address:
+            ip_address = outgoing_ip_address[IP_ADDRESS]
+    if SERVICE_ACCOUNT_EMAIL in response:
+        service_account = response[SERVICE_ACCOUNT_EMAIL]
+
+    return ip_address, service_account

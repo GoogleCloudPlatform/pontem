@@ -27,7 +27,7 @@ NAMESPACE_PACKAGES = [
 REQUIRES = [
     'absl-py>=0.6.1',
     'future>=0.17.1',
-    'futures>=3.2.0',
+    'futures>=3.0.5',
     'google-api-core>=1.6.0',
     'google-api-python-client>=1.7.6',
     'google-auth>=1.6.1',
@@ -51,7 +51,7 @@ setup(
     license='Apache 2.0',
     entry_points={
         'console_scripts': [
-            'sr=google.cloud.pontem.sql.replicator.cli:main',
+            'sr=google.cloud.pontem.sql.replicator.cli.main:run',
         ]
     }
 )

@@ -17,6 +17,7 @@ import logging
 
 import google.auth
 from google.cloud import storage
+from google.cloud import exceptions
 
 from google.cloud.pontem.sql.replicator.util import gcp_api_util
 
@@ -117,7 +118,56 @@ def grant_read_access_to_bucket(bucket_name,
             client.
     """
     storage_client = build_storage_client(project, credentials)
-    bucket = storage_client.get_bucket(bucket_name)
-    acl = bucket.acl
-    acl.user(email).grant_read()
-    acl.save()
+    role = 'roles/storage.objectViewer'
+    bucket = storage_client.bucket(bucket_name)
+    policy = bucket.get_iam_policy()
+
+    policy[role].add(email)
+
+    bucket.set_iam_policy(policy)
+
+    logging.info('Added %s with role %s to %s.', email, role, bucket_name)
+
+
+def bucket_exists(bucket_name, project=None, credentials=None):
+    """Checks if a bucket exists in a project.
+
+    Args:
+        bucket_name (str): Name of bucket to check.
+        project (str): Project ID where blob will be deleted.
+        credentials (google.auth.Credentials): credentials to authorize
+            client.
+
+    Returns:
+        bool: True if bucket exists, False otherwise
+    """
+    storage_client = build_storage_client(project, credentials)
+    try:
+        _ = storage_client.get_bucket(bucket_name)
+    except exceptions.NotFound:
+        return False
+    return True
+
+
+def blob_exists(bucket_name,
+                blob_name,
+                project=None,
+                credentials=None):
+    """Checks if a blob in the Cloud Storage bucket.
+
+    Args:
+        bucket_name (str): where blob will be verified.
+        blob_name (str): blob that will be deleted.
+        project (str): Project ID where blob will be verified.
+        credentials (google.auth.Credentials): credentials to authorize client.
+    Returns:
+        bool: True if blob exists, False otherwise
+    """
+    storage_client = build_storage_client(project, credentials)
+    try:
+        bucket = storage_client.get_bucket(bucket_name)
+    except exceptions.NotFound:
+        return False
+
+    blob = bucket.blob(blob_name)
+    return blob.exists()
