@@ -20,19 +20,18 @@ import subprocess
 import mysql.connector
 from mysql.connector import errorcode
 
-import mysql_constants
-import util_errors
+from google.cloud.pontem.sql.replicator.util import mysql_constants
+from google.cloud.pontem.sql.replicator.util import util_errors
 
 
 class MySQL(object):
     """Helper to check MySQL requirements before replication to Cloud SQL."""
 
-    def __init__(self, host, database, user, password, port='3306'):
+    def __init__(self, host, user, password, port='3306'):
         """Inits MySQL with a connection to target DB
 
         Args:
           host (str): MySQL server
-          database (str): Database to connect to
           user (str): User to use when connecting
           password (str): Password to use when connecting
           port (str): Port to connect over
@@ -41,12 +40,11 @@ class MySQL(object):
             self._user = user
             self._password = password
             self._host = host
-            self._database = database
             self._port = port
             self._connection = mysql.connector.connect(
                 user=user, password=password,
                 host=host,
-                database=database, port=port)
+                port=port)
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 print('Something is wrong with your user name or password')
@@ -67,6 +65,16 @@ class MySQL(object):
         """
         version = self._connection.get_server_version()
         return version
+
+    def is_supported_version(self):
+        """ Checks if this version of MySQL.
+
+        Returns:
+            bool: True if this version is supported.
+        """
+        supported = (self.get_mysql_version() in
+                     mysql_constants.SUPPORTED_MYSQL_VERSIONS)
+        return supported
 
     def get_gtid_mode_on(self):
         """Gets GTID mode.
@@ -90,24 +98,27 @@ class MySQL(object):
         row = cursor.fetchone()
         return row[0] is not None
 
-    def get_views(self):
+    def get_views(self, database):
         """ Returns a list of views on the database.
 
+        Args:
+            database (str): Database to find views for.
         Returns:
-            list: list of views for the current database
+            list: list of views for the current database.
         """
 
         views = []
         cursor = self._connection.cursor()
+        cursor.execute('USE {}'.format(database))
         cursor.execute(
-            mysql_constants.MY_SQL_LIST_VIEWS_QUERY.format(self._database)
+            mysql_constants.MY_SQL_LIST_VIEWS_QUERY.format(database)
         )
         for (view_name, _) in cursor:
             views.append(view_name)
 
         return views
 
-    def dump_sql(self, bucket_url):
+    def dump_sql(self, databases, bucket_url):
         """Performs mysqldump
 
         Generates a gzipped SQL dump of the database that can be used to
@@ -116,14 +127,15 @@ class MySQL(object):
         validate a dump file was created in the Cloud Storage Bucket.
 
         Args:
-          bucket_url (str): The URL of the Cloud Storage Bucket
+            databases (list): Databases to dump.
+            bucket_url (str): The URL of the Cloud Storage Bucket.
         """
         command_args = ['mysqldump',
                         '-h', self._host,
                         '-P', self._port,
                         '-u', self._user,
                         '--password=' + self._password,
-                        '--databases', self._database,
+                        '--databases', ' '.join(databases),
                         '--skip-comments',
                         '--hex-blob',
                         '--skip-triggers',
@@ -134,11 +146,13 @@ class MySQL(object):
                         '--single-transaction',
                         '--set-gtid-purged=on'
                        ]
-        for view in self.get_views():
-            command_args.append('--ignore-table=' + self._database + '.' + view)
+
+        for database in databases:
+            for view in self.get_views(database):
+                command_args.append('--ignore-table=' + database + '.' + view)
 
         mysql_dump = subprocess.Popen(command_args, stdout=subprocess.PIPE)
-        gzip = subprocess.Popen(('gzip'),
+        gzip = subprocess.Popen('gzip',
                                 stdin=mysql_dump.stdout,
                                 stdout=subprocess.PIPE)
         gsutil = subprocess.Popen(('gsutil',

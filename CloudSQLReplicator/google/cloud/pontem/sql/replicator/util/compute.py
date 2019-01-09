@@ -15,6 +15,10 @@
 """Wrapper for Compute API service proxy."""
 import re
 
+from googleapiclient import errors
+from httplib2 import HttpLib2Error
+
+
 import google.auth
 
 from google.cloud.pontem.sql.replicator.util import gcp_api_util
@@ -44,14 +48,15 @@ def build_compute_service(credentials=None):
     return service
 
 
-def create_firewall_rule(name, source_ip_range, protocol='TCP',
-                         is_allowed=True, ports=frozenset(['3306']),
-                         is_ingress=True,
+def create_firewall_rule(name, source_ip_range, description=None,
+                         protocol='TCP', is_allowed=True,
+                         ports=None, is_ingress=True,
                          project=None, credentials=None):
     """Creates a firewall rule in a Google Cloud Project.
 
     Args:
         name (str): name of resource, must comply with RFC1035.
+        description (str): description of firewall rule.
         source_ip_range (list): list of source IP ranges in CIDR format.
         protocol (str): protocol allowed.
         is_allowed (bool): whether traffic allowed or denied.
@@ -70,13 +75,18 @@ def create_firewall_rule(name, source_ip_range, protocol='TCP',
         raise ValueError('{} does not conform to RFC1035'.format(name))
     default_credentials, default_project = google.auth.default()
     service = build_compute_service(credentials or default_credentials)
+
+    if ports is None:
+        ports = ['3306']
+
     request_body = {
         'name': name,
+        'description': description,
         'sourceRanges': source_ip_range,
-        'allowed' if is_allowed else 'denied': {
+        'allowed' if is_allowed else 'denied': [{
             'IPProtocol': protocol,
             'ports': ports,
-        },
+        }],
         'direction': 'INGRESS' if is_ingress else 'EGRESS',
     }
 
@@ -87,3 +97,26 @@ def create_firewall_rule(name, source_ip_range, protocol='TCP',
     response = request.execute()
 
     return response
+
+
+def is_firewall_rule_active(firewall, project=None, credentials=None):
+    """Checks if a firewall rule active.
+
+    Args:
+        firewall (str): The name of the firewall rule.
+        project (str): Project ID where replica will be created.
+        credentials (google.auth.Credentials): Credentials to authorize client.
+
+    Returns:
+        bool: True if firewall rule is active, False otherwise.
+    """
+    default_credentials, default_project = google.auth.default()
+    service = build_compute_service(credentials or default_credentials)
+    try:
+        _ = service.firewalls().get(project=project or default_project,
+                                    firewall=firewall)
+
+    except (errors.HttpError, HttpLib2Error) as e:
+        if isinstance(e, errors.HttpError) and e.resp.status == 404:
+            return False
+    return True

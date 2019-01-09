@@ -13,16 +13,20 @@
 # limitations under the License.
 
 """GCP API utility functions."""
+import sys
 
 import google_auth_httplib2
 from googleapiclient import discovery
 import httplib2
 
+
 import google.auth
 
 from google.cloud.pontem.sql import replicator
 
-# GCP API constants
+PY3 = sys.version_info[0] == 3
+PY2 = sys.version_info[0] == 2
+
 
 def get_user_agent():
     """Returns user agent based on package info.
@@ -60,9 +64,14 @@ def build_authorized_service(service, version, credentials=None):
         Resource: Authorized compute service proxy with custom user agent.
     """
     headers = get_user_agent_header()
-    httplib2.Http.request.__func__.func_defaults = (
-        'GET', None, headers, 5, None
-    )
+    if PY2:
+        httplib2.Http.request.__func__.func_defaults = (
+            'GET', None, headers, 5, None
+        )
+    elif PY3:
+        httplib2.Http.request.func_defaults = (
+            'GET', None, headers, 5, None
+        )
     default_credentials, _ = google.auth.default()
     authorized_http = google_auth_httplib2.AuthorizedHttp(
         credentials or default_credentials
