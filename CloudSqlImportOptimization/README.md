@@ -69,7 +69,7 @@ TIP: You can use the **--verbose** options for extra logging.
 If
 [--secure-file-priv](https://dev.mysql.com/doc/refman/5.7/en/server-options.html#option_mysqld_secure-file-priv)
 is enabled in your MySQL instance then you should run the **Exporter** with the
-**--using-secure-file-priv** option to ensure that all files written in the
+**--using-secure-file-priv** option to ensure that all files are written in the
 whitelisted directory and no temp folders are used.
 
        $ ./mysql_exporter.py <database-name> <destination-folder> \
