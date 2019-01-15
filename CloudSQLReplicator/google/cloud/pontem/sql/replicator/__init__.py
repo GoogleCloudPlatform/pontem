@@ -15,4 +15,5 @@
 """Pontem SQL Replicator."""
 
 __version__ = '0.0.1'
-__package_name__ = 'cloudsql-replicator'
+__package_name__ = 'cloudsql-replication'
+
