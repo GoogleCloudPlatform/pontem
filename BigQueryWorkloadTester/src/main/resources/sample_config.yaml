@@ -1,6 +1,6 @@
 # The number of times a Workload will be executed in parallel.
 # Our Concurrency Level limit is 50
-concurrencyLevel: 25
+concurrencyLevel: 1
 
 # Whether to run several instances of the same Workload at diffeeent percentages of the provided
 # Concurrency Level.
