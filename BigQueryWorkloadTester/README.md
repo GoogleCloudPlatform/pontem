@@ -52,9 +52,10 @@ all your queries will successfully run against BigQuery.
 WARNING: If you set a Concurreny Level over the limit it will be truncated to
 50.
 
-However, **BigQuery's Maximum Concurrency Level is not a hard limit** so you may
-want to try to going over it to squeeze out some extra performance. If you are
-so inclined, you can override our hard limit by updating
+Please note that **BigQuery's Maximum Concurrency Level is not a hard limit** if
+you wish for it to be increased please reach out to Cloud Support or your
+Account manager. Once your limit is increased, you can override BigQuery
+Workload Tester's hard limit by updating
 [ConcurrentWorkloadRunnerFactory.QUERY_CONCURRENCY_LIMIT](https://github.com/GoogleCloudPlatform/pontem/blob/9e7e27a3c03e6da9a0dc77c41e182a6b25693516/BigQueryWorkloadTester/src/main/java/com/google/cloud/pontem/benchmark/runners/ConcurrentWorkloadRunnerFactory.java#L38).
 
 ### Benchmark modes
