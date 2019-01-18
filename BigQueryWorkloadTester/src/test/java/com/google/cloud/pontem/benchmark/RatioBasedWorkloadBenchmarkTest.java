@@ -34,6 +34,7 @@ import com.google.cloud.pontem.testing.TestConstants;
 import com.google.cloud.pontem.testing.WorkloadResultHelper;
 import com.google.cloud.pontem.testing.WorkloadSettingsHelper;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,6 +47,8 @@ import org.junit.runners.JUnit4;
 /** Tests for {@link RatioBasedWorkloadBenchmark}. */
 @RunWith(JUnit4.class)
 public class RatioBasedWorkloadBenchmarkTest {
+  private static final List<Double> BENCHMARK_RATIOS =
+      Arrays.asList(0.01, 0.1, 0.25, 0.5, 1.0, 1.50, 2.0);
 
   private ConcurrentWorkloadRunnerFactory concurrentWorkloadRunnerFactoryMock;
 
@@ -56,7 +59,7 @@ public class RatioBasedWorkloadBenchmarkTest {
     this.concurrentWorkloadRunnerFactoryMock = mock(ConcurrentWorkloadRunnerFactory.class);
 
     this.ratioBasedWorkloadBenchmark =
-        new RatioBasedWorkloadBenchmark(concurrentWorkloadRunnerFactoryMock);
+        new RatioBasedWorkloadBenchmark(concurrentWorkloadRunnerFactoryMock, BENCHMARK_RATIOS);
   }
 
   @Test
@@ -65,7 +68,7 @@ public class RatioBasedWorkloadBenchmarkTest {
     WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     List<Integer> expectedConcurrencyLevels = new ArrayList<>();
-    for (double percentage : RatioBasedWorkloadBenchmark.CONCURRENCY_PERCENTAGES) {
+    for (double percentage : BENCHMARK_RATIOS) {
       int expectedConcurrencyLevel = (int) Math.ceil(concurrencyLevel * percentage);
       expectedConcurrencyLevels.add(expectedConcurrencyLevel);
     }
@@ -114,7 +117,7 @@ public class RatioBasedWorkloadBenchmarkTest {
     WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     List<Integer> expectedConcurrencyLevels = new ArrayList<>();
-    for (double percentage : RatioBasedWorkloadBenchmark.CONCURRENCY_PERCENTAGES.subList(0, 4)) {
+    for (double percentage : BENCHMARK_RATIOS.subList(0, 4)) {
       int expectedConcurrencyLevel = (int) Math.ceil(concurrencyLevel * percentage);
       expectedConcurrencyLevels.add(expectedConcurrencyLevel);
     }
@@ -164,7 +167,7 @@ public class RatioBasedWorkloadBenchmarkTest {
     WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     List<Integer> expectedConcurrencyLevels = new ArrayList<>();
-    for (double percentage : RatioBasedWorkloadBenchmark.CONCURRENCY_PERCENTAGES.subList(2, 7)) {
+    for (double percentage : BENCHMARK_RATIOS.subList(2, 7)) {
       int expectedConcurrencyLevel = (int) Math.ceil(concurrencyLevel * percentage);
       expectedConcurrencyLevels.add(expectedConcurrencyLevel);
     }
@@ -232,5 +235,27 @@ public class RatioBasedWorkloadBenchmarkTest {
     assertThat(workloadResults, is(workloadResultsForLimit));
 
     verify(concurrentWorkloadRunnerMock, times(1)).run(workload, concurrencyLimit);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void failsForNullBenchmarkRatios() {
+    int concurrencyLevel = 15;
+    WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
+
+    RatioBasedWorkloadBenchmark ratioBasedWorkloadBenchmark =
+        new RatioBasedWorkloadBenchmark(concurrentWorkloadRunnerFactoryMock, null);
+
+    ratioBasedWorkloadBenchmark.run(workload, concurrencyLevel);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void failsForEmptyBenchmarkRatios() {
+    int concurrencyLevel = 15;
+    WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
+
+    RatioBasedWorkloadBenchmark ratioBasedWorkloadBenchmark =
+        new RatioBasedWorkloadBenchmark(concurrentWorkloadRunnerFactoryMock, Arrays.asList());
+
+    ratioBasedWorkloadBenchmark.run(workload, concurrencyLevel);
   }
 }

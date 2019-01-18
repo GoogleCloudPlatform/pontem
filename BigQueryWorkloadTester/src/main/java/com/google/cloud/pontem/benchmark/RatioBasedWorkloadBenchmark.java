@@ -19,8 +19,8 @@ import com.google.cloud.pontem.benchmark.runners.ConcurrentWorkloadRunner;
 import com.google.cloud.pontem.benchmark.runners.ConcurrentWorkloadRunnerFactory;
 import com.google.cloud.pontem.config.WorkloadSettings;
 import com.google.cloud.pontem.model.WorkloadResult;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,16 +29,16 @@ import java.util.logging.Logger;
 /** @see Benchmark */
 public final class RatioBasedWorkloadBenchmark implements Benchmark {
 
-  public static final List<Double> CONCURRENCY_PERCENTAGES =
-      Arrays.asList(0.01, 0.1, 0.25, 0.5, 1.0, 1.50, 2.0);
-
   private static final Logger logger =
       Logger.getLogger(RatioBasedWorkloadBenchmark.class.getName());
 
   private final ConcurrentWorkloadRunnerFactory runnerFactory;
+  private final List<Double> benchmarkRatios;
 
-  public RatioBasedWorkloadBenchmark(ConcurrentWorkloadRunnerFactory runnerFactory) {
+  public RatioBasedWorkloadBenchmark(
+      ConcurrentWorkloadRunnerFactory runnerFactory, List<Double> benchmarkRatios) {
     this.runnerFactory = runnerFactory;
+    this.benchmarkRatios = benchmarkRatios;
   }
 
   /**
@@ -52,10 +52,13 @@ public final class RatioBasedWorkloadBenchmark implements Benchmark {
   public List<WorkloadResult> run(final WorkloadSettings workload, final int concurrencyLevel) {
     logger.info("Executing Ratio Based Benchmark for Workload: " + workload.getName());
 
+    Preconditions.checkArgument(benchmarkRatios != null, "No concurrency ratios provided!");
+    Preconditions.checkArgument(benchmarkRatios.size() > 0, "No concurrency ratios provided!");
+
     List<WorkloadResult> workloadResults = new ArrayList<>();
     Map<Integer, Double> concurrencyLevelAndPercentages = new LinkedHashMap<>();
 
-    for (double percentage : CONCURRENCY_PERCENTAGES) {
+    for (double percentage : benchmarkRatios) {
       int concurrencyLevelForPercentage = calculateConcurrencyLevel(concurrencyLevel, percentage);
       concurrencyLevelForPercentage =
           runnerFactory.getConcurrencyLimit(concurrencyLevelForPercentage);
