@@ -32,7 +32,7 @@ public class BigQueryBackendFactory {
   private static final Logger logger = Logger.getLogger(BigQueryBackendFactory.class.getName());
 
   private static final String USER_AGENT_HEADER = "user-agent";
-  private static final String USER_AGENT_VALUE = "pontem,bigquery-workload-tester/0.0.1";
+  private static final String USER_AGENT_VALUE = "pontem,bigquery-workload/0.0.1";
 
   /**
    * Ensures that the BigQueryBackend and it's dependencies are properly built and configured.
