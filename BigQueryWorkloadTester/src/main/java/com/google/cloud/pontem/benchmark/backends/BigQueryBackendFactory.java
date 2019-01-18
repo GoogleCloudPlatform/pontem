@@ -15,11 +15,14 @@
  */
 package com.google.cloud.pontem.benchmark.backends;
 
+import com.google.api.gax.rpc.FixedHeaderProvider;
+import com.google.api.gax.rpc.HeaderProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.pontem.auth.BigQueryCredentialManager;
 import com.google.cloud.pontem.config.WorkloadSettings;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -27,6 +30,9 @@ import java.util.logging.Logger;
 public class BigQueryBackendFactory {
 
   private static final Logger logger = Logger.getLogger(BigQueryBackendFactory.class.getName());
+
+  private static final String USER_AGENT_HEADER = "user-agent";
+  private static final String USER_AGENT_VALUE = "pontem,bigquery-workload-tester/0.0.1";
 
   /**
    * Ensures that the BigQueryBackend and it's dependencies are properly built and configured.
@@ -40,10 +46,15 @@ public class BigQueryBackendFactory {
 
     GoogleCredentials googleCredentials =
         bigQueryCredentialManager.getCredentialsFromFile(workload.getCloudCredentialsFile());
+
+    HeaderProvider headerProvider =
+        FixedHeaderProvider.create(ImmutableMap.of(USER_AGENT_HEADER, USER_AGENT_VALUE));
+
     BigQuery bigQuery =
         BigQueryOptions.newBuilder()
             .setProjectId(workload.getProjectId())
             .setCredentials(googleCredentials)
+            .setHeaderProvider(headerProvider)
             .build()
             .getService();
 
