@@ -79,7 +79,7 @@ public final class BigQueryWorkloadTester {
       final Configuration config, final ConcurrentWorkloadRunnerFactory runnerFactory) {
     Benchmark benchmark;
     if (config.isRatioBasedBenchmark()) {
-      benchmark = new RatioBasedWorkloadBenchmark(runnerFactory);
+      benchmark = new RatioBasedWorkloadBenchmark(runnerFactory, config.getBenchmarkRatios());
     } else {
       benchmark = new WorkloadBenchmark(runnerFactory);
     }

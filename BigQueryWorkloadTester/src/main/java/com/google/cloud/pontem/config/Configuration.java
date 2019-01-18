@@ -34,6 +34,7 @@ public final class Configuration {
   private Integer concurrencyLevel = 0;
   private String outputFileFolder = "";
   private Boolean isRatioBasedBenchmark = false;
+  private List<Double> benchmarkRatios = new ArrayList<>();
   private List<WorkloadSettings> workloads = new ArrayList<>();
 
   /**
@@ -107,6 +108,14 @@ public final class Configuration {
 
   public void setIsRatioBasedBenchmark(Boolean isRatioBasedBenchmark) {
     this.isRatioBasedBenchmark = isRatioBasedBenchmark;
+  }
+
+  public List<Double> getBenchmarkRatios() {
+    return this.benchmarkRatios;
+  }
+
+  public void setBenchmarkRatios(List<Double> benchmarkRatios) {
+    this.benchmarkRatios = benchmarkRatios;
   }
 
   public List<WorkloadSettings> getWorkloads() {

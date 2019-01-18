@@ -2,9 +2,15 @@
 # Our Concurrency Level limit is 50
 concurrencyLevel: 1
 
-# Whether to run several instances of the same Workload at diffeeent percentages of the provided
+# Whether to run several instances of the same Workload at different percentages of the provided
 # Concurrency Level.
 isRatioBasedBenchmark: false
+
+# Which ratios of the concurrencyLevel to use with in a Ratio Based Benchmark.
+# If no ratios are provided and Ratio Based Benchmark is used the Workload Execution will fail.
+# Please remember that the concurrencyLevel limit is 50, the first ratio to surpass this limit will
+# be swapped for 50 and all others will be ignored.
+benchmarkRatios: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0]
 
 # The folder where to save the results file.
 outputFileFolder: ""
@@ -20,7 +26,7 @@ workloads:
   projectId: ""
   cloudCredentialsFile: ""
   queryFiles:
-    - ""
+  - ""
   queries:
-    - ""
+  - ""
   outputFileName: ""
