@@ -2,7 +2,7 @@
 # Our Concurrency Level limit is 50
 concurrencyLevel: 1
 
-# Whether to run several instances of the same Workload at diffeeent percentages of the provided
+# Whether to run several instances of the same Workload at different percentages of the provided
 # Concurrency Level.
 isRatioBasedBenchmark: true
 
