@@ -19,6 +19,7 @@ from __future__ import print_function
 from builtins import input
 import getpass
 import json
+import logging as std_logging
 import re
 import shlex
 import sys
@@ -567,7 +568,6 @@ def replicate(replication_configuration):
         replication_configuration (ReplicationConfiguration):
             configuration for replication operation
     """
-    # pprint.pprint(replication_configuration.to_json())
 
     # Create our source representation
     source_body = (
@@ -623,11 +623,12 @@ def replicate_dispatcher(interactive=False, config=None):
 
 
 def allow_host(host_ip):
-    """Allows host to connect to default VPC.
+    """Allows client host to connect to default VPC.
 
     Args:
-        host_ip (str): IPV4 address of host.
+        host_ip (str): IPV4 address of client host.
     """
+
     compute.create_firewall_rule(
         name='client-connection-{}'.format(uuid.uuid4()),
         description='Allow {} to connect to VPC'.format(host_ip),
@@ -665,7 +666,7 @@ def configure(argv):
         'allow-host',
         help='Add firewall rule to allow host ingress access to default VPC.'
     )
-    firewall_parser.add_argument('-i', '--ip', help='IP address of host.')
+    firewall_parser.add_argument('-i', '--host_ip', help='IP address of host.')
     firewall_parser.set_defaults(command=allow_host)
 
     # todo(chrisdrake): Add sub parser for status command
@@ -679,6 +680,8 @@ def main(argv):
     Args:
         argv (Namespace): parsed commandline flags.
     """
+    std_logging.getLogger('googleapiclient.discovery_cache').setLevel(
+        std_logging.ERROR)
     logging.info('Running under Python {0[0]}.{0[1]}.{0[2]}'
                  .format(sys.version_info))
     logging.info('Running version {} of replicator'
