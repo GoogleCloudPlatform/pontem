@@ -622,18 +622,17 @@ def replicate_dispatcher(interactive=False, config=None):
     replicate(config)
 
 
-def allow_host(ip):
-    """Allows host to connect to default VPC.
+def allow_host(host_ip):
+    """Allows client host to connect to default VPC.
 
     Args:
-        ip (str): IPV4 address of host.
+        host_ip (str): IPV4 address of client host.
     """
 
-    # pylint: disable=invalid-name
     compute.create_firewall_rule(
         name='client-connection-{}'.format(uuid.uuid4()),
-        description='Allow {} to connect to VPC'.format(ip),
-        source_ip_range=[ip])
+        description='Allow {} to connect to VPC'.format(host_ip),
+        source_ip_range=[host_ip])
 
 
 def configure(argv):
@@ -667,7 +666,7 @@ def configure(argv):
         'allow-host',
         help='Add firewall rule to allow host ingress access to default VPC.'
     )
-    firewall_parser.add_argument('-i', '--ip', help='IP address of host.')
+    firewall_parser.add_argument('-i', '--host_ip', help='IP address of host.')
     firewall_parser.set_defaults(command=allow_host)
 
     # todo(chrisdrake): Add sub parser for status command
