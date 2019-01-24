@@ -66,11 +66,14 @@ BigQuery Workload Tester supports two Benchmarking modes:
 *   Ratio Based Benchmark
 
 A **Ratio Based Benchmark** will run the Workload Benchmark at your requested
-Concurrency Level but also at different percentage of the requested Concurrency
+Concurrency Level but also at different ratios of the requested Concurrency
 Levels. This way, you can easily determine whether there are performance
 variations in your Workload at different Concurrency Levels.
 
-The current percentages applied are: **1%, 10%, 25%, 50%, 100% ,150% and 200%**
+You can define which ratios of the Concurrency Level to test by changing the
+**benchmarkRatios** array in the config. We have defined a set of default ratios
+that correspond to the following percentages: **1%, 10%, 25%, 50%, 100% ,150%
+and 200%**
 
 ### Output
 
