@@ -568,7 +568,6 @@ def replicate(replication_configuration):
         replication_configuration (ReplicationConfiguration):
             configuration for replication operation
     """
-    # pprint.pprint(replication_configuration.to_json())
 
     # Create our source representation
     source_body = (
@@ -629,6 +628,8 @@ def allow_host(ip):
     Args:
         ip (str): IPV4 address of host.
     """
+
+    # pylint: disable=invalid-name
     compute.create_firewall_rule(
         name='client-connection-{}'.format(uuid.uuid4()),
         description='Allow {} to connect to VPC'.format(ip),
@@ -680,7 +681,8 @@ def main(argv):
     Args:
         argv (Namespace): parsed commandline flags.
     """
-    std_logging.getLogger('googleapiclient.discovery_cache').setLevel(std_logging.ERROR)
+    std_logging.getLogger('googleapiclient.discovery_cache').setLevel(
+        std_logging.ERROR)
     logging.info('Running under Python {0[0]}.{0[1]}.{0[2]}'
                  .format(sys.version_info))
     logging.info('Running version {} of replicator'
