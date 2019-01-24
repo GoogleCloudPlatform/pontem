@@ -19,6 +19,7 @@ from __future__ import print_function
 from builtins import input
 import getpass
 import json
+import logging as std_logging
 import re
 import shlex
 import sys
@@ -622,16 +623,16 @@ def replicate_dispatcher(interactive=False, config=None):
     replicate(config)
 
 
-def allow_host(host_ip):
+def allow_host(ip):
     """Allows host to connect to default VPC.
 
     Args:
-        host_ip (str): IPV4 address of host.
+        ip (str): IPV4 address of host.
     """
     compute.create_firewall_rule(
         name='client-connection-{}'.format(uuid.uuid4()),
-        description='Allow {} to connect to VPC'.format(host_ip),
-        source_ip_range=[host_ip])
+        description='Allow {} to connect to VPC'.format(ip),
+        source_ip_range=[ip])
 
 
 def configure(argv):
@@ -679,6 +680,7 @@ def main(argv):
     Args:
         argv (Namespace): parsed commandline flags.
     """
+    std_logging.getLogger('googleapiclient.discovery_cache').setLevel(std_logging.ERROR)
     logging.info('Running under Python {0[0]}.{0[1]}.{0[2]}'
                  .format(sys.version_info))
     logging.info('Running version {} of replicator'
