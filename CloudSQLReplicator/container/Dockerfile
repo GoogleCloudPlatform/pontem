@@ -8,7 +8,6 @@ RUN apt-get update -qqy && apt-get install -qqy \
         apt-transport-https \
         lsb-release \
         openssh-client \
-        git \
         gnupg
 
 RUN apt-get install -y libpq-dev build-essential python3.6 python3.6-dev python3-pip python3.6-venv
