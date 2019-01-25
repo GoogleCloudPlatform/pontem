@@ -22,6 +22,7 @@ import json
 import logging as std_logging
 import re
 import shlex
+import socket
 import sys
 import time
 import uuid
@@ -32,6 +33,7 @@ from absl.flags import argparse_flags
 from absl import logging
 
 # Used for Python 2/3 compatibility
+import httplib2
 from future.utils import iteritems
 
 from google.cloud.pontem.sql import replicator
@@ -40,6 +42,14 @@ from google.cloud.pontem.sql.replicator.util import compute
 from google.cloud.pontem.sql.replicator.util import mysql_util
 from google.cloud.pontem.sql.replicator.util import storage
 
+GOOGLE_INTERNAL_METADATA_DOMAIN = 'metadata.google.internal'
+GOOGLE_METADATA_URL = (
+    'http://{}/computeMetadata/v1/instance/network-interfaces'
+    '/0/access-configs/0/external-ip'.format(
+        GOOGLE_INTERNAL_METADATA_DOMAIN
+    )
+)
+
 
 class MissingRequiredParameterError(ValueError):
     """Raised when a required parameter is missing."""
@@ -47,6 +57,7 @@ class MissingRequiredParameterError(ValueError):
 
 class SSLConfiguration(object):
     """SSL Configuration"""
+
     def __init__(self,
                  ca_certificate=None,
                  client_certificate=None,
@@ -66,16 +77,17 @@ class SSLConfiguration(object):
 
 class MasterConfiguration(object):
     """Configuration for External Master Representation."""
-    master_config_defaults = frozenset({
-        'user': None,
-        'password': None,
-        'master_ip': None,
-        'master_port': cloudsql.DEFAULT_REPLICATION_PORT,
-        'databases': None,
-        'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
-        'region': cloudsql.DEFAULT_2ND_GEN_REGION,
-        'source_name': None,
-    }.items())
+    master_config_defaults = frozenset(
+        {
+            'user': None,
+            'password': None,
+            'master_ip': None,
+            'master_port': cloudsql.DEFAULT_REPLICATION_PORT,
+            'databases': None,
+            'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
+            'region': cloudsql.DEFAULT_2ND_GEN_REGION,
+            'source_name': None,
+        }.items())
 
     def __init__(self, **kwargs):
         """Constructor.
@@ -148,21 +160,22 @@ class MasterConfiguration(object):
 
 class ReplicaConfiguration(object):
     """Configuration for External Master Representation."""
-    replica_config_defaults = frozenset({
-        'master_instance_name': None,
-        'bucket': None,
-        'dumpfile_path': None,
-        'user': None,
-        'password': None,
-        'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
-        'tier': cloudsql.DEFAULT_2ND_GEN_TIER,
-        'region': cloudsql.DEFAULT_2ND_GEN_REGION,
-        'replica_name': None,
-        'caCertificate': None,
-        'client_certificate': None,
-        'client_key': None
+    replica_config_defaults = frozenset(
+        {
+            'master_instance_name': None,
+            'bucket': None,
+            'dumpfile_path': None,
+            'user': None,
+            'password': None,
+            'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
+            'tier': cloudsql.DEFAULT_2ND_GEN_TIER,
+            'region': cloudsql.DEFAULT_2ND_GEN_REGION,
+            'replica_name': None,
+            'caCertificate': None,
+            'client_certificate': None,
+            'client_key': None
 
-    }.items())
+        }.items())
 
     def __init__(self, **kwargs):
         """Constructor.
@@ -557,8 +570,7 @@ def create_replica_instance(replica_configuration):
         time.sleep(5)
 
     logging.info('Replica instance {} has been created.'.format(
-        replica_name)
-                )
+        replica_name))
 
 
 def replicate(replication_configuration):
@@ -614,6 +626,14 @@ def replicate_dispatcher(interactive=False, config=None):
         interactive (bool): Whether to run replicate in interactive mode.
         config (str): Path to configuration file.
     """
+    if is_in_gcp():
+        logging.info('In GCP environment, setting up firewall for host')
+        allow_host(get_external_ip())
+    else:
+        logging.info(
+            'Host not in GCP environment, ensure connectivity to MySQL server.'
+        )
+
     if interactive:
         config = get_replicate_config_from_user()
     elif config is not None:
@@ -633,6 +653,31 @@ def allow_host(host_ip):
         name='client-connection-{}'.format(uuid.uuid4()),
         description='Allow {} to connect to VPC'.format(host_ip),
         source_ip_range=[host_ip])
+
+
+def is_in_gcp():
+    """Determines if host is in gpc.
+
+    Returns:
+        bool: True if host can resolve Google Metadata server, False otherwise.
+    """
+    try:
+        socket.gethostbyname(GOOGLE_INTERNAL_METADATA_DOMAIN)
+        return True
+    except socket.error:
+        return False
+
+
+def get_external_ip():
+    """Gets ip address from Google Metadata Server.
+
+    Returns:
+        str: ip address of host.
+    """
+    http = httplib2.Http('.cache')
+    (_, content) = http.request(
+        GOOGLE_METADATA_URL, 'GET', headers={'Metadata-Flavor': 'Google'})
+    return content
 
 
 def configure(argv):
