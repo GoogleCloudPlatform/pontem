@@ -725,8 +725,10 @@ def main(argv):
     Args:
         argv (Namespace): parsed commandline flags.
     """
-    std_logging.getLogger('googleapiclient.discovery_cache').setLevel(
-        std_logging.ERROR)
+    #Suppress warnings from logger
+    logger = std_logging.getLogger()
+    logger.setLevel(logging.ERROR)
+
     logging.info('Running under Python {0[0]}.{0[1]}.{0[2]}'
                  .format(sys.version_info))
     logging.info('Running version {} of replicator'
