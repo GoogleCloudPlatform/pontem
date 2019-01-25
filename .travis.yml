@@ -62,3 +62,4 @@ jobs:
   - stage: CLOUD_SQL_REPLICATOR_PLACEHOLDER
     if: commit_message =~ /(\[CloudSQLReplicator\])/ # So travis will return check
     script: "echo 'Placeholder for CloudSQLReplicator build.'"
+    
