@@ -22,6 +22,7 @@ import json
 import logging as std_logging
 import re
 import shlex
+import socket
 import sys
 import time
 import uuid
@@ -33,6 +34,7 @@ from absl.flags import argparse_flags
 from absl import logging
 
 # Used for Python 2/3 compatibility
+import httplib2
 from future.utils import iteritems
 from googleapiclient import discovery
 
@@ -41,6 +43,14 @@ from google.cloud.pontem.sql.replicator.util import cloudsql
 from google.cloud.pontem.sql.replicator.util import compute
 from google.cloud.pontem.sql.replicator.util import mysql_util
 from google.cloud.pontem.sql.replicator.util import storage
+
+GOOGLE_INTERNAL_METADATA_DOMAIN = 'metadata.google.internal'
+GOOGLE_METADATA_URL = (
+    'http://{}/computeMetadata/v1/instance/network-interfaces'
+    '/0/access-configs/0/external-ip'.format(
+        GOOGLE_INTERNAL_METADATA_DOMAIN
+    )
+)
 
 
 class MissingRequiredParameterError(ValueError):
@@ -638,6 +648,14 @@ def replicate_dispatcher(interactive=False, config=None):
         interactive (bool): Whether to run replicate in interactive mode.
         config (str): Path to configuration file.
     """
+    if is_in_gcp():
+        logging.info('In GCP environment, setting up firewall for host')
+        allow_host(get_external_ip())
+    else:
+        logging.info(
+            'Host not in GCP environment, ensure connectivity to MySQL server.'
+        )
+
     if interactive:
         config = get_replicate_config_from_user()
     elif config is not None:
@@ -657,6 +675,31 @@ def allow_host(host_ip):
         name='client-connection-{}'.format(uuid.uuid4()),
         description='Allow {} to connect to VPC'.format(host_ip),
         source_ip_range=[host_ip])
+
+
+def is_in_gcp():
+    """Determines if host is in gpc.
+
+    Returns:
+        bool: True if host can resolve Google Metadata server, False otherwise.
+    """
+    try:
+        socket.gethostbyname(GOOGLE_INTERNAL_METADATA_DOMAIN)
+        return True
+    except socket.error:
+        return False
+
+
+def get_external_ip():
+    """Gets ip address from Google Metadata Server.
+
+    Returns:
+        str: ip address of host.
+    """
+    http = httplib2.Http('.cache')
+    (_, content) = http.request(
+        GOOGLE_METADATA_URL, 'GET', headers={'Metadata-Flavor': 'Google'})
+    return content
 
 
 def configure(argv):
