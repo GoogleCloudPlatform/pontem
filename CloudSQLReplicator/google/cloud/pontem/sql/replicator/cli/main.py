@@ -516,10 +516,14 @@ def create_source_representation(source_body):
     operation_id = response['name']
 
     # Wait for the source representation to be created
+    if not cloudsql.is_sql_operation_done(operation_id):
+        sys.stdout.write('Waiting for source representation to be created.')
     while not cloudsql.is_sql_operation_done(operation_id):
-        logging.info('Waiting for source representation to be created.')
+        sys.stdout.write('...')
+        sys.stdout.flush()
         time.sleep(5)
 
+    sys.stdout.write('\n')
     logging.info(
         'Source representation {} has been created.'.format(
             source_body['name']
