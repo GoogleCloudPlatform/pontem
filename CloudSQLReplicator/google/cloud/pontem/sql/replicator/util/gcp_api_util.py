@@ -80,6 +80,7 @@ def build_authorized_service(service, version, credentials=None):
     service = discovery.build(
         service,
         version,
+        cache_discovery=False,
         http=authorized_http
     )
 
