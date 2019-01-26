@@ -704,7 +704,7 @@ def get_external_ip():
     http = httplib2.Http('.cache')
     (_, content) = http.request(
         GOOGLE_METADATA_URL, 'GET', headers={'Metadata-Flavor': 'Google'})
-    return content
+    return content.decode('utf-8')
 
 
 def configure(argv):
