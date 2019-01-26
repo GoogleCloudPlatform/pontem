@@ -27,14 +27,17 @@ import sys
 import time
 import uuid
 import pprint
+import warnings
 
 from absl import app
 from absl.flags import argparse_flags
 from absl import logging
 
-# Used for Python 2/3 compatibility
 import httplib2
+# Used for Python 2/3 compatibility
 from future.utils import iteritems
+# Imported to suppress logging.
+from googleapiclient import discovery
 
 from google.cloud.pontem.sql import replicator
 from google.cloud.pontem.sql.replicator.util import cloudsql
@@ -53,6 +56,19 @@ GOOGLE_METADATA_URL = (
 
 class MissingRequiredParameterError(ValueError):
     """Raised when a required parameter is missing."""
+
+
+class NoURLFilter(std_logging.Filter):
+    """Class to filter out URL messages from Google Cloud API."""
+    def filter(self, record):
+        """Filters out messages that start with URL.
+
+        Args:
+            record (message): Logging message.
+        Returns:
+            bool: True if does not start with URL, False otherwise.
+        """
+        return not record.getMessage().startswith('URL')
 
 
 class SSLConfiguration(object):
@@ -500,10 +516,14 @@ def create_source_representation(source_body):
     operation_id = response['name']
 
     # Wait for the source representation to be created
+    if not cloudsql.is_sql_operation_done(operation_id):
+        sys.stdout.write('Waiting for source representation to be created.')
     while not cloudsql.is_sql_operation_done(operation_id):
-        logging.info('Waiting for source representation to be created.')
+        sys.stdout.write('...')
+        sys.stdout.flush()
         time.sleep(5)
 
+    sys.stdout.write('\n')
     logging.info(
         'Source representation {} has been created.'.format(
             source_body['name']
@@ -530,7 +550,8 @@ def create_replica_instance(replica_configuration):
     is_firewall_rule_active = False
     firewall_rule_name = 'replication-{}'.format(uuid.uuid4())
     ip_address = None
-    # Wait for replica to be created.
+    # Wait for replica to be created
+    sys.stdout.write('Waiting for replica instance to be created.')
     while not cloudsql.is_sql_operation_done(operation_id):
 
         # Try to get outgoing ip address
@@ -541,9 +562,11 @@ def create_replica_instance(replica_configuration):
             if ip_address:
                 outgoing_ip_address_provisioned = True
             else:
-                print('Outgoing IP address not available.')
+                logging.debug('Outgoing IP address not available.')
             if service_account:
                 if not service_account_available:
+                    # Get logging onto the next line after the dots.
+                    sys.stdout.write('\n')
                     logging.info(
                         'Service account email is {}'.format(service_account)
                     )
@@ -553,7 +576,7 @@ def create_replica_instance(replica_configuration):
                         email='serviceAccount:{}'.format(service_account)
                     )
             else:
-                print('Service account not available.')
+                logging.debug('Service account not available.')
         elif not is_firewall_rule_active:
             # Create firewall rule to allow replica to access master.
             _ = compute.create_firewall_rule(
@@ -566,11 +589,15 @@ def create_replica_instance(replica_configuration):
             is_firewall_rule_active = compute.is_firewall_rule_active(
                 firewall_rule_name
             )
-        logging.info('Waiting for replica instance to be created.')
+        sys.stdout.write('...')
+        sys.stdout.flush()
         time.sleep(5)
 
-    logging.info('Replica instance {} has been created.'.format(
-        replica_name))
+    logging.info(
+        'Replica instance {} has been created.'.format(
+            replica_name
+        )
+    )
 
 
 def replicate(replication_configuration):
@@ -656,7 +683,7 @@ def allow_host(host_ip):
 
 
 def is_in_gcp():
-    """Determines if host is in gpc.
+    """Determines if host is in gcp.
 
     Returns:
         bool: True if host can resolve Google Metadata server, False otherwise.
@@ -725,9 +752,14 @@ def main(argv):
     Args:
         argv (Namespace): parsed commandline flags.
     """
-    #Suppress warnings from logger
-    logger = std_logging.getLogger()
-    logger.setLevel(logging.ERROR)
+    # Suppress warnings from googleapiclient
+    warnings.filterwarnings(
+        'ignore',
+        'Your application has authenticated using end user credentials')
+    std_logging.basicConfig(level=logging.ERROR)
+    f = NoURLFilter()
+    std_logging.getLogger().addFilter(f)
+    std_logging.getLogger(discovery.__name__).addFilter(f)
 
     logging.info('Running under Python {0[0]}.{0[1]}.{0[2]}'
                  .format(sys.version_info))
