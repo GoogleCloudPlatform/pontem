@@ -33,9 +33,10 @@ from absl import app
 from absl.flags import argparse_flags
 from absl import logging
 
-# Used for Python 2/3 compatibility
 import httplib2
+# Used for Python 2/3 compatibility
 from future.utils import iteritems
+# Imported to suppress logging.
 from googleapiclient import discovery
 
 from google.cloud.pontem.sql import replicator
