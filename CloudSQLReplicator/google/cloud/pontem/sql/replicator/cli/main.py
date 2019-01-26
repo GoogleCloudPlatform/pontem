@@ -683,7 +683,7 @@ def allow_host(host_ip):
 
 
 def is_in_gcp():
-    """Determines if host is in gpc.
+    """Determines if host is in gcp.
 
     Returns:
         bool: True if host can resolve Google Metadata server, False otherwise.
