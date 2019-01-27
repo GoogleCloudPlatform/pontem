@@ -38,6 +38,7 @@ import httplib2
 from future.utils import iteritems
 # Imported to suppress logging.
 from googleapiclient import discovery
+import yaml
 
 from google.cloud.pontem.sql import replicator
 from google.cloud.pontem.sql.replicator.util import cloudsql
@@ -207,14 +208,10 @@ class ReplicaConfiguration(object):
         # pylint: disable=access-member-before-definition
 
         # Check for required properties are present
-        if not set(
-                [
-                    'master_instance_name',
-                    'dumpfile_path',
-                    'user',
-                    'password'
-                ]
-        ).issubset(kwargs):
+        if not {'master_instance_name',
+                'dumpfile_path',
+                'user',
+                'password'}.issubset(kwargs):
             raise MissingRequiredParameterError(
                 'Required property missing for master configuration.'
             )
@@ -280,7 +277,10 @@ class ReplicaConfiguration(object):
 class ReplicationConfiguration(object):
     """Configuration for setting up replication to external master."""
 
-    def __init__(self, master_configuration, replica_configuration):
+    def __init__(self,
+                 master_configuration,
+                 replica_configuration,
+                 run_uuid=None):
         """Constructor.
 
         Args:
@@ -288,6 +288,7 @@ class ReplicationConfiguration(object):
                 of external master.
             replica_configuration (ReplicaConfiguration): Instance configuration
                 information for replica.
+            run_uuid (str): Unique id for this replication run.
         Raises:
             KeyError: If either configuration is missing an error is raised.
         """
@@ -300,6 +301,31 @@ class ReplicationConfiguration(object):
             )
         self.master_configuration = master_configuration
         self.replica_configuration = replica_configuration
+        self._run_uuid = run_uuid or str(uuid.uuid4())
+
+    @property
+    def run_uuid(self):
+        """Property that uniquely identifies this replication run.
+
+        Returns:
+            str: Universally unique identifier of replication configuration.
+        """
+        return self._run_uuid
+
+    @run_uuid.setter
+    def run_uuid(self, value):
+        """Setter for run uuid property.
+
+        Args:
+            value (str): New run uuid to reassign master and replica names.
+        """
+        self._run_uuid = value
+        self.master_configuration.source_name = (
+            cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(self._run_uuid)
+        )
+        self.replica_configuration.replica_name = (
+            cloudsql.DEFAULT_REPLICA_FORMAT_STRING.format(self._run_uuid)
+        )
 
     def to_json(self):
         """Converts replication configuration into a JSON object.
@@ -313,6 +339,18 @@ class ReplicationConfiguration(object):
         }
 
 
+def export_config_to_file(config, file_path=None):
+    """Serializes config to config to a .yaml file.
+
+    Args:
+        config (ReplicationConfiguration): Config object.
+        file_path (str): Where to serialize the config.
+    """
+    config_file_path = file_path or '{}.yaml'.format(config.run_uuid)
+    with open(config_file_path, 'w+') as f:
+        yaml.dump(config, f)
+
+
 def get_replicate_config_from_file(config_file_path):
     """Creates a Replication Configuration object from a file.
 
@@ -323,17 +361,23 @@ def get_replicate_config_from_file(config_file_path):
         ReplicationConfiguration: Configuration object to be used with
             Cloud SQL Admin API.
     """
+    config = None
     with open(config_file_path) as f:
-        config = json.load(f)
-        return ReplicationConfiguration(
-            master_configuration=config['masterConfiguration'],
-            replica_configuration=config['replicaConfiguration']
-        )
+        if (config_file_path.endswith('.yaml', re.I) or
+                config_file_path.endswith('.yml', re.I)):
+            config = yaml.load(f)
+        else:
+            config = json.load(f)
+    # Assign a new run id
+    config.run_uuid = str(uuid.uuid4())
+    return config
 
 
-def get_master_config_from_user():
+def get_master_config_from_user(run_uuid):
     """Gets master configuration from user.
 
+    Args:
+         run_uuid (str): Unique identifier for this replication run.
     Returns:
         MasterConfiguration: configuration for creating source representation.
     """
@@ -366,7 +410,7 @@ def get_master_config_from_user():
         input(
             'Enter source name (leave blank for generated name):'
         ) or
-        cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(uuid.uuid4())
+        cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(run_uuid)
     )
 
     master_config = MasterConfiguration(master_ip=master_ip,
@@ -407,19 +451,14 @@ def get_ssl_config_from_user():
 
     return SSLConfiguration(ca_certificate, client_certificate, client_key)
 
+def get_dumpfile_config_from_user():
+    """Gets dumpfile config from user.
 
-def get_replica_config_from_user(master_config):
-    """Gets replica configuration from user.
-
-    Args:
-        master_config (MasterConfiguration): Configuration from
-            source representation.
     Raises:
         ValueError: Error if dumpfile specified does not exist.
     Returns:
-        ReplicaConfiguration: Configuration for creating replica instance.
+         str: bucket name or dumpfile path.
     """
-    master_instance_name = master_config.source_name
     bucket = None
     dumpfile_path = input('Enter dumpfile path (must start with gs://):')
     if dumpfile_path:
@@ -444,6 +483,22 @@ def get_replica_config_from_user(master_config):
                 storage.create_bucket(bucket)
                 logging.info('Bucket {} created.'.format(bucket))
 
+    return bucket, dumpfile_path
+
+def get_replica_config_from_user(master_config, run_uuid):
+    """Gets replica configuration from user.
+
+    Args:
+        master_config (MasterConfiguration): Configuration from
+            source representation.
+        run_uuid (str): Unique run id for this replication.
+    Returns:
+        ReplicaConfiguration: Configuration for creating replica instance.
+    """
+    master_instance_name = master_config.source_name
+
+    bucket_name, dumpfile_path = get_dumpfile_config_from_user()
+
     user = input(
         'Enter replication user name (leave blank to use external master user):'
     )
@@ -465,14 +520,14 @@ def get_replica_config_from_user(master_config):
             'Enter replica name (leave blank for generated name):'
         ) or
         cloudsql.DEFAULT_REPLICA_FORMAT_STRING.format(
-            uuid.uuid4()
+            run_uuid
         )
     )
 
     ssl_config = get_ssl_config_from_user()
 
     replica_config = ReplicaConfiguration(
-        bucket=bucket,
+        bucket=bucket_name,
         master_instance_name=master_instance_name,
         dumpfile_path=dumpfile_path,
         user=user,
@@ -496,11 +551,14 @@ def get_replicate_config_from_user():
         ReplicationConfiguration: Replication configuration information to
             provide to Cloud SQL Admin API calls.
     """
-    master_config = get_master_config_from_user()
-    replica_config = get_replica_config_from_user(master_config)
-
-    return ReplicationConfiguration(master_configuration=master_config,
-                                    replica_configuration=replica_config)
+    run_uuid = str(uuid.uuid4())
+    master_config = get_master_config_from_user(run_uuid)
+    replica_config = get_replica_config_from_user(master_config, run_uuid)
+    config = ReplicationConfiguration(master_configuration=master_config,
+                                      replica_configuration=replica_config,
+                                      run_uuid=run_uuid)
+    export_config_to_file(config)
+    return config
 
 
 def create_source_representation(source_body):
