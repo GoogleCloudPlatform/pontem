@@ -451,6 +451,7 @@ def get_ssl_config_from_user():
 
     return SSLConfiguration(ca_certificate, client_certificate, client_key)
 
+
 def get_dumpfile_config_from_user():
     """Gets dumpfile config from user.
 
@@ -484,6 +485,7 @@ def get_dumpfile_config_from_user():
                 logging.info('Bucket {} created.'.format(bucket))
 
     return bucket, dumpfile_path
+
 
 def get_replica_config_from_user(master_config, run_uuid):
     """Gets replica configuration from user.
@@ -557,7 +559,12 @@ def get_replicate_config_from_user():
     config = ReplicationConfiguration(master_configuration=master_config,
                                       replica_configuration=replica_config,
                                       run_uuid=run_uuid)
-    export_config_to_file(config)
+    save_config = re.match('y',
+                           input('Save configuration file? y/n:'),
+                           re.I)
+    if save_config:
+        export_config_to_file(config)
+        print('Config file saved as {}.yaml'.format(run_uuid))
     return config
 
 
