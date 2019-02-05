@@ -24,6 +24,28 @@ from google.cloud.pontem.sql.replicator.util import mysql_constants
 from google.cloud.pontem.sql.replicator.util import util_errors
 
 
+def execute_mysqldump(command_args, bucket_url):
+    """Automates the MySQLDump command.
+
+    Args:
+        command_args (List): a list of args for MySQLDump.
+        bucket_url (str): GCS destination URL for SQL Dump file .
+
+    Raises:
+        MySQLDumpError - If something went wrong with the dump.
+    """
+    mysql_dump = subprocess.Popen(command_args, stdout=subprocess.PIPE)
+    gzip = subprocess.Popen('gzip',
+                            stdin=mysql_dump.stdout,
+                            stdout=subprocess.PIPE)
+    gsutil = subprocess.Popen(('gsutil',
+                               'cp', '-', bucket_url),
+                              stdin=gzip.stdout)
+    _, error = gsutil.communicate()
+    if error:
+        raise util_errors.MySQLDumpError(error.strip())
+
+
 class MySQL(object):
     """Helper to check MySQL requirements before replication to Cloud SQL."""
 
@@ -118,7 +140,32 @@ class MySQL(object):
 
         return views
 
-    def dump_sql(self, databases, bucket_url):
+    def dump_external_sql(self, bucket_url, databases=None):
+        """Performs dump for external MySQL databases.
+
+        Args:
+            bucket_url (str): The URL of the Cloud Storage Bucket.
+            databases (list): Databases to dump. None adds the
+                --all-databases flag.
+        """
+        command_args = ['mysqldump',
+                        '-h', self._host,
+                        '-P', self._port,
+                        '-u', self._user,
+                        '--password=' + self._password,
+                        '--databases', ' '.join(databases)
+                        if databases is not None else '--all-databases',
+                        '--single-transaction',
+                        '--flush-privileges',
+                        '--hex-blob',
+                        '--skip-triggers',
+                        '--default-character-set=utf8'
+                       ]
+
+        execute_mysqldump(command_args, bucket_url)
+        return
+
+    def dump_sql(self, bucket_url, databases=None):
         """Performs mysqldump
 
         Generates a gzipped SQL dump of the database that can be used to
@@ -127,15 +174,17 @@ class MySQL(object):
         validate a dump file was created in the Cloud Storage Bucket.
 
         Args:
-            databases (list): Databases to dump.
             bucket_url (str): The URL of the Cloud Storage Bucket.
+            databases (list): Databases to dump. None adds the
+                --all-databases flag.
         """
         command_args = ['mysqldump',
                         '-h', self._host,
                         '-P', self._port,
                         '-u', self._user,
                         '--password=' + self._password,
-                        '--databases', ' '.join(databases),
+                        '--databases', ' '.join(databases)
+                        if databases is not None else '--all-databases',
                         '--skip-comments',
                         '--hex-blob',
                         '--skip-triggers',
@@ -147,17 +196,11 @@ class MySQL(object):
                         '--set-gtid-purged=on'
                        ]
 
-        for database in databases:
-            for view in self.get_views(database):
-                command_args.append('--ignore-table=' + database + '.' + view)
+        if databases is not None:
+            for database in databases:
+                for view in self.get_views(database):
+                    command_args.append(
+                        '--ignore-table=' + database + '.' + view)
 
-        mysql_dump = subprocess.Popen(command_args, stdout=subprocess.PIPE)
-        gzip = subprocess.Popen('gzip',
-                                stdin=mysql_dump.stdout,
-                                stdout=subprocess.PIPE)
-        gsutil = subprocess.Popen(('gsutil',
-                                   'cp', '-', bucket_url),
-                                  stdin=gzip.stdout)
-        _, error = gsutil.communicate()
-        if error:
-            raise util_errors.MySQLDumpError(error.strip())
+        execute_mysqldump(command_args, bucket_url)
+        return

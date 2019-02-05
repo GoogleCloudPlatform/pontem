@@ -691,16 +691,12 @@ def replicate(replication_configuration):
             )
             bucket_url = (
                 'gs://{}/replication-{}.sql.gz'.format(
-                    bucket_name, uuid.uuid4()
+                    bucket_name, replication_configuration.run_uuid
                 )
             )
-            external_master_db.dump_sql(
-                databases=(
-                    replication_configuration.master_configuration.databases
-                ),
-                bucket_url=bucket_url
-
-            )
+            external_master_db.dump_sql(bucket_url=bucket_url, databases=(
+                replication_configuration.master_configuration.databases
+            ))
             replication_configuration.replica_configuration.dumpfile_path = (
                 bucket_url
             )
@@ -745,6 +741,39 @@ def allow_host(host_ip):
         name='client-connection-{}'.format(uuid.uuid4()),
         description='Allow {} to connect to VPC'.format(host_ip),
         source_ip_range=[host_ip])
+
+
+def dump_database(host_ip, user, password, databases, bucket):
+    """Dumps MySQL database.
+
+    Args:
+        host_ip (str): IPV4 address of MySQL instance host.
+        user (str): Username of MySQL user to perform dump.
+        password (str): Password of user.
+        databases (str): Comma delimited list of databases.
+        bucket (str): Bucket name.
+    """
+    run_uuid = uuid.uuid4()
+    if is_in_gcp():
+        logging.info('In GCP environment, setting up firewall for host')
+        allow_host(get_external_ip())
+    else:
+        logging.info(
+            'Host not in GCP environment, ensure connectivity to MySQL server.'
+        )
+    external_master_db = mysql_util.MySQL(
+        host=host_ip or '127.0.0.1',
+        user=user,
+        password=password
+    )
+    bucket_url = (
+        'gs://{}/replication-{}.sql.gz'.format(
+            bucket, run_uuid
+        )
+    )
+    external_master_db.dump_external_sql(bucket_url=bucket_url, databases=(
+        databases.split(',')
+    ))
 
 
 def is_in_gcp():
@@ -806,6 +835,21 @@ def configure(argv):
     firewall_parser.add_argument('-i', '--host_ip', help='IP address of host.')
     firewall_parser.set_defaults(command=allow_host)
 
+    dump_parser = subparsers.add_parser(
+        'dump',
+        help='Dump MySQL database.'
+    )
+    dump_parser.add_argument('-i', '--host_ip',
+                             help='IP address of MySQL host.')
+    dump_parser.add_argument('-u', '--user',
+                             help='Username to use to dump database.')
+    dump_parser.add_argument('-p', '--password', help='Password for user.')
+    dump_parser.add_argument('-d', '--databases',
+                             help='Comma delimited list of databases to dump.')
+    dump_parser.add_argument('-b', '--bucket',
+                             help='Bucket name where dump will be stored.')
+
+    dump_parser.set_defaults(command=dump_database)
     # todo(chrisdrake): Add sub parser for status command
     args = parser.parse_args(argv[1:])
     return args
