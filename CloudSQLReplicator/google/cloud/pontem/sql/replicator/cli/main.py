@@ -849,6 +849,7 @@ def configure(argv):
     dump_parser.add_argument('-b', '--bucket',
                              help='Bucket name where dump will be stored.')
 
+    dump_parser.set_defaults(command=dump_database)
     # todo(chrisdrake): Add sub parser for status command
     args = parser.parse_args(argv[1:])
     return args
