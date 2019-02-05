@@ -694,13 +694,9 @@ def replicate(replication_configuration):
                     bucket_name, uuid.uuid4()
                 )
             )
-            external_master_db.dump_sql(
-                databases=(
-                    replication_configuration.master_configuration.databases
-                ),
-                bucket_url=bucket_url
-
-            )
+            external_master_db.dump_sql(bucket_url=bucket_url, databases=(
+                replication_configuration.master_configuration.databases
+            ))
             replication_configuration.replica_configuration.dumpfile_path = (
                 bucket_url
             )
