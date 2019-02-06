@@ -1,10 +1,10 @@
 steps:
   - name: 'gcr.io/cloud-builders/git'
     args: ['clone', 'https://github.com/GoogleCloudPlatform/pontem.git']
-    id: A
+    id: ['A']
   - name: 'ubuntu'
     args: ['cp', '-r', '/workspace/pontem/CloudSQLReplicator', '/home']
-    waitFor: A
+    waitFor: ['A']
   - name: 'ubuntu'
     args: ['bash', '-c', 'echo "$(ls .)"']
     dir: 'pontem/CloudSQLReplicator'
