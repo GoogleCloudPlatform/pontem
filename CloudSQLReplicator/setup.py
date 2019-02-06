@@ -39,6 +39,7 @@ REQUIRES = [
     'httplib2>=0.12.0',
     'mysql-connector>=2.1.6',
     'oauth2client>=4.1.3',
+    'PyYAML>=3.13',
     'six>=1.11.0',
 ]
 

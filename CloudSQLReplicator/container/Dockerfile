@@ -28,8 +28,9 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     gcloud config set component_manager/disable_update_check true && \
     gcloud config set metrics/environment github_docker_image && \
     gcloud --version
-
-COPY ./pontem/CloudSQLReplicator /replicator
-WORKDIR /replicator
+RUN mkdir /replicator
+COPY . /replicator
+RUN ls /replicator
+WORKDIR /replicator/CloudSQLReplicator
 RUN python3 setup.py install
 VOLUME ["/root/.config"]
