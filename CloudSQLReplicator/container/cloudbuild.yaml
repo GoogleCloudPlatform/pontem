@@ -5,10 +5,9 @@ steps:
   - name: 'ubuntu'
     args: ['bash', '-c', 'echo "$(ls .)"']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/pontem-mysql-external-master/pontem-csr', 'container']
+    args: ['build', '-t', 'gcr.io/pontem-mysql-external-master/pontem-csr', '.', '-f', 'CloudSQLReplicator/container/Dockerfile']
     id: 'build-container'
     waitFor: ['clone-repo']
-    dir: 'CloudSQLReplicator'
     timeout: 500s
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push',  'gcr.io/pontem-mysql-external-master/pontem-csr']
