@@ -1,8 +1,10 @@
 steps:
   - name: 'gcr.io/cloud-builders/git'
     args: ['clone', 'https://github.com/GoogleCloudPlatform/pontem.git']
+  - name: 'ubuntu'
+    args: ['bash', '-c', 'echo "$(ls .)"']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/pontem-mysql-external-master/pontem-csr', './Dockerfile']
+    args: ['build', '-t', 'gcr.io/pontem-mysql-external-master/pontem-csr', '.']
     timeout: 500s
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push',  'gcr.io/pontem-mysql-external-master/pontem-csr']
