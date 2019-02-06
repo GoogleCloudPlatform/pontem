@@ -31,6 +31,6 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
 RUN mkdir /replicator
 COPY . /replicator
 RUN ls /replicator
-WORKDIR /replicator
+WORKDIR /replicator/CloudSQLReplicator
 RUN python3 setup.py install
 VOLUME ["/root/.config"]
