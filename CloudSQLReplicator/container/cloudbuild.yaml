@@ -5,15 +5,12 @@ steps:
   - name: 'ubuntu'
     args: ['cp', '-r', '/workspace/pontem/CloudSQLReplicator', '/home']
     waitFor: ['A']
-  - name: 'ubuntu'
-    args: ['bash', '-c', 'echo "$(ls .)"']
-    dir: 'pontem/CloudSQLReplicator'
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/pontem-mysql-external-master/pontem-sqlreplicator', '.']
+    args: ['build', '-t', 'gcr.io/pontem-mysql-external-master/pontem-csr', '.']
     timeout: 500s
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push',  'gcr.io/pontem-mysql-external-master/pontem-sqlreplicator']
+    args: ['push',  'gcr.io/pontem-mysql-external-master/pontem-csr']
 options:
   machineType: 'N1_HIGHCPU_8'
 timeout: 660s
-images: ['gcr.io/pontem-mysql-external-master/pontem-sqlreplicator']
+images: ['gcr.io/pontem-mysql-external-master/pontem-csr']
