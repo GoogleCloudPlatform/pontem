@@ -29,7 +29,7 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     gcloud config set metrics/environment github_docker_image && \
     gcloud --version
 RUN mkdir /replicator
-COPY .. /replicator
+COPY . /replicator
 WORKDIR /replicator
 RUN python3 setup.py install
 VOLUME ["/root/.config"]
