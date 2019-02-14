@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests GCP API KMS utility functions."""
+"""Tests GCP API Key Management Service utility functions."""
 
 
 import unittest
@@ -57,7 +57,7 @@ class TestKMSMethods(unittest.TestCase):
         """Test that code creates KMS client correctly."""
 
         _ = kms.build_kms_client()
-        
+
         # Verify that method calls default during build_kms_client
         mock_auth_default.assert_called_once_with()
         # Verify that get_user_agent is called

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""KMS utility Module."""
+"""Cloud Key Management Service utility Module."""
 
 import google.api_core.gapic_v1.client_info
 from google.cloud import kms_v1
