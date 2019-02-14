@@ -55,8 +55,9 @@ class TestKMSMethods(unittest.TestCase):
     @mock.patch.object(client_info, 'ClientInfo')
     def test_build_kms_client(self, mock_client_info_init, mock_get_user_agent, mock_kms_client, mock_auth_default):
         """Test that code creates KMS client correctly."""
-        # Verify that get_user_agent is called
+
         _ = kms.build_kms_client()
+        
         # Verify that method calls default during build_kms_client
         mock_auth_default.assert_called_once_with()
         # Verify that get_user_agent is called

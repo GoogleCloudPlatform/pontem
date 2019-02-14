@@ -145,7 +145,7 @@ def add_member_to_crypto_key_policy(member, role, key_id, key_ring_id,
     """Adds a member of a role to crypto key policy.
 
     Args:
-        member (str): Email adddress of member to add.
+        member (str): Email address of member to add.
         role (str): Role member is in.
         key_id (str): Unique identifier for key.
         key_ring_id (str): Unique identifier for keyring.
