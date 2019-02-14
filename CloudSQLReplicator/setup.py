@@ -33,6 +33,7 @@ REQUIRES = [
     'google-auth>=1.6.1',
     'google-auth-httplib2>=0.0.3',
     'google-cloud-core>=0.28.1',
+    'google-cloud-kms>=0.2.1',
     'google-cloud-storage>=1.13.0',
     'google-resumable-media>=0.3.1',
     'googleapis-common-protos>=1.5.5',
