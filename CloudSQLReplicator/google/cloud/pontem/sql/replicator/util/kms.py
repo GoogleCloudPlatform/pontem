@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""KMS utility Module."""
+"""Cloud Key Management Service utility Module."""
+
 
 import google.api_core.gapic_v1.client_info
 from google.cloud import kms_v1
@@ -145,7 +146,7 @@ def add_member_to_crypto_key_policy(member, role, key_id, key_ring_id,
     """Adds a member of a role to crypto key policy.
 
     Args:
-        member (str): Email adddress of member to add.
+        member (str): Email address of member to add.
         role (str): Role member is in.
         key_id (str): Unique identifier for key.
         key_ring_id (str): Unique identifier for keyring.
