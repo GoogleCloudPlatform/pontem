@@ -140,32 +140,60 @@ class MySQL(object):
 
         return views
 
-    def dump_external_sql(self, bucket_url, databases=None):
+    def dump_external_sql(self, bucket_url, databases=None,
+                          ssl_ca=None, ssl_cert=None, ssl_key=None):
         """Performs dump for external MySQL databases.
 
         Args:
             bucket_url (str): The URL of the Cloud Storage Bucket.
             databases (list): Databases to dump. None adds the
                 --all-databases flag.
+            ssl_ca (str): File path of the Certificate Authority Cert.
+            ssl_cert (str): File path of the Client Certificate
+                with public key.
+            ssl_key (str): File path of the client private key file.
         """
-        command_args = ['mysqldump',
-                        '-h', self._host,
-                        '-P', self._port,
-                        '-u', self._user,
-                        '--password=' + self._password,
-                        '--databases', ' '.join(databases)
-                        if databases is not None else '--all-databases',
-                        '--single-transaction',
-                        '--flush-privileges',
-                        '--hex-blob',
-                        '--skip-triggers',
-                        '--default-character-set=utf8'
-                       ]
+        command_args = [
+            'mysqldump',
+            '-h', self._host,
+            '-P', self._port,
+            '-u', self._user,
+            '--password=' + self._password
+        ]
+
+        if databases is not None:
+            command_args.append('--databases')
+            command_args.append(' '.join(databases))
+        else:
+            command_args.append('--all-databases')
+
+        if ssl_ca:
+            command_args.append('--ssl-ca')
+            command_args.append(ssl_ca)
+
+        if ssl_cert:
+            command_args.append('--ssl-cert')
+            command_args.append(ssl_cert)
+
+        if ssl_key:
+            command_args.append('--ssl-key')
+            command_args.append(ssl_key)
+
+        command_args.extend(
+            [
+                '--single-transaction',
+                '--flush-privileges',
+                '--hex-blob',
+                '--skip-triggers',
+                '--default-character-set=utf8'
+            ]
+        )
 
         execute_mysqldump(command_args, bucket_url)
         return
 
-    def dump_sql(self, bucket_url, databases=None):
+    def dump_sql(self, bucket_url, databases=None,
+                 ssl_ca=None, ssl_cert=None, ssl_key=None):
         """Performs mysqldump
 
         Generates a gzipped SQL dump of the database that can be used to
@@ -177,24 +205,50 @@ class MySQL(object):
             bucket_url (str): The URL of the Cloud Storage Bucket.
             databases (list): Databases to dump. None adds the
                 --all-databases flag.
+            ssl_ca (str): File path of the Certificate Authority Cert.
+            ssl_cert (str): File path of the Client Certificate
+                with public key.
+            ssl_key (str): File path of the client private key file.
         """
-        command_args = ['mysqldump',
-                        '-h', self._host,
-                        '-P', self._port,
-                        '-u', self._user,
-                        '--password=' + self._password,
-                        '--databases', ' '.join(databases)
-                        if databases is not None else '--all-databases',
-                        '--skip-comments',
-                        '--hex-blob',
-                        '--skip-triggers',
-                        '--master-data=1',
-                        '--order-by-primary',
-                        '--no-autocommit',
-                        '--default-character-set=utf8',
-                        '--single-transaction',
-                        '--set-gtid-purged=on'
-                       ]
+        command_args = [
+            'mysqldump',
+            '-h', self._host,
+            '-P', self._port,
+            '-u', self._user,
+            '--password=' + self._password,
+        ]
+
+        if databases is not None:
+            command_args.append('--databases')
+            command_args.append(' '.join(databases))
+        else:
+            command_args.append('--all-databases')
+
+        if ssl_ca:
+            command_args.append('--ssl-ca')
+            command_args.append(ssl_ca)
+
+        if ssl_cert:
+            command_args.append('--ssl-cert')
+            command_args.append(ssl_cert)
+
+        if ssl_key:
+            command_args.append('--ssl-key')
+            command_args.append(ssl_key)
+
+        command_args.extend(
+            [
+                '--skip-comments',
+                '--hex-blob',
+                '--skip-triggers',
+                '--master-data=1',
+                '--order-by-primary',
+                '--no-autocommit',
+                '--default-character-set=utf8',
+                '--single-transaction',
+                '--set-gtid-purged=on'
+            ]
+        )
 
         if databases is not None:
             for database in databases:
