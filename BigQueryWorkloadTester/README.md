@@ -16,29 +16,97 @@ The **benchmark results** will be written to a JSON file and will track the
 
 ## Building and Testing the BigQuery Workload Tester
 
-BigQuery Workload Tester uses Gradle so building is as easy as:
+BigQuery Workload Tester uses Gradle. In the Cloud Shell, you can run the following
+to build the Workload Tester:
 
-        $ gradle clean :BigQueryWorkloadTester:build
+```bash
+sudo apt-get -y install gradle
+git clone https://github.com/GoogleCloudPlatform/pontem.git
+cd pontem/BigQueryWorkloadTester
+gradle clean :BigQueryWorkloadTester:build
+```
 
-And testing: $ gradle clean :BigQueryWorkloadTester:build
-
-## Config
+## Configuration
 
 Before executing BigQuery Workload Tester you will need to configure your own
-Workflows inside:
+Workflows inside `src/main/resources/config.yaml`.
 
-        src/main/resources/config.yaml
+A complete sample config file has been provided to demonstrate how the configuration
+might be setup `src/main/resources/sample_config.yaml`.
 
-A sample config file has been provided to demonstrate how the configuration
-might be setup:
+But you can create a simple workload configuration as follows (be sure to set your project ID):
 
-        src/main/resources.sample_config.yaml
+```bash
+export PROJECT_ID=<my-project-id>
+
+mkdir src/main/resources/queries
+
+cat <<EOF>src/main/resources/queries/query1.sql
+SELECT 42
+EOF
+
+cat <<EOF>src/main/resources/queries/query2.sql
+SELECT count(*) FROM UNNEST(["apple", "pear", "orange"]) as x
+EOF
+
+cat <<EOF>src/main/resources/config.yaml
+concurrencyLevel: 1
+isRatioBasedBenchmark: true
+benchmarkRatios: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0]
+outputFileFolder: workload_results/
+workloads:
+- name: "Simple and Text Queries"
+  projectId: $PROJECT_ID
+  queryFiles:
+    - queries/query1.sql
+    - queries/query2.sql
+  outputFileName: simple_and_text_queries.json
+EOF
+```
+
+This will create a couple of simple queries to execute.
 
 ## Running the BigQuery Workload Tester
 
-Once you've configured BigQuery Workload Tester you can run it by invoking:
+```bash
+mkdir -p workload_results
+gradle clean :BigQueryWorkloadTester:run
+```
 
-        $ gradle clean :BigQueryWorkloadTester:run
+If your output looks something like this, with no errors, it worked:
+
+```bash
+$ gradle clean :BigQueryWorkloadTester:run
+:BigQueryWorkloadTester:clean
+:BigQueryWorkloadTester:compileJava
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+:BigQueryWorkloadTester:processResources
+:BigQueryWorkloadTester:classes
+:BigQueryWorkloadTester:run
+Feb 11, 2019 5:31:11 PM com.google.cloud.pontem.BigQueryWorkloadTester main
+INFO: Welcome to BigQuery Workload Tester!
+Feb 11, 2019 5:31:11 PM com.google.cloud.pontem.BigQueryWorkloadTester main
+INFO: Loading config
+Feb 11, 2019 5:31:11 PM com.google.cloud.pontem.BigQueryWorkloadTester main
+INFO: Starting execution
+Feb 11, 2019 5:31:11 PM com.google.cloud.pontem.benchmark.RatioBasedWorkloadBenchmark run
+INFO: Executing Ratio Based Benchmark for Workload: Simple and Text Queries
+Feb 11, 2019 5:31:11 PM com.google.cloud.pontem.benchmark.runners.ConcurrentWorkloadRunner run
+INFO: Executing Workload with Concurrency Level: 1
+Feb 11, 2019 5:31:14 PM com.google.cloud.pontem.benchmark.runners.ConcurrentWorkloadRunner run
+INFO: Executing Workload with Concurrency Level: 2
+Feb 11, 2019 5:31:16 PM com.google.cloud.pontem.BigQueryWorkloadTester main
+INFO: Finished bechmarking phase, processing results
+Feb 11, 2019 5:31:16 PM com.google.cloud.pontem.BigQueryWorkloadTester main
+INFO: Finished Workload Tester execution
+
+BUILD SUCCESSFUL
+
+Total time: 19.024 secs
+
+This build could be faster, please consider using the Gradle Daemon: https://docs.gradle.org/2.12/userguide/gradle_daemon.html
+```
 
 ### Concurrency Level
 
