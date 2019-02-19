@@ -45,6 +45,7 @@ from google.cloud.pontem.sql.replicator.util import cloudsql
 from google.cloud.pontem.sql.replicator.util import compute
 from google.cloud.pontem.sql.replicator.util import mysql_util
 from google.cloud.pontem.sql.replicator.util import storage
+from google.oauth2 import service_account as service_account_credentials
 
 GOOGLE_INTERNAL_METADATA_DOMAIN = 'metadata.google.internal'
 GOOGLE_METADATA_URL = (
@@ -53,7 +54,9 @@ GOOGLE_METADATA_URL = (
         GOOGLE_INTERNAL_METADATA_DOMAIN
     )
 )
-
+CA_CERTIFICATE_FILE_NAME = 'ca.pem'
+CLIENT_CERTIFICATE_FILE_NAME = 'client-cert.pem'
+CLIENT_KEY_FILE_NAME = 'client-key.pem'
 
 class MissingRequiredParameterError(ValueError):
     """Raised when a required parameter is missing."""
@@ -596,25 +599,36 @@ def create_source_representation(source_body):
     )
 
 
-def create_replica_instance(replica_configuration):
+def create_replica_instance(replica_configuration,
+                            project=None, credentials=None):
     """Creates a replica instance.
 
     Args:
         replica_configuration (ReplicationConfiguration):
             Config object for instances.insert() method of sql admin service.
+        project (str): Project ID where replica will be created.
+        credentials (google.auth.Credentials): Credentials to authorize client.
     """
     replica_instance_body = (
         replica_configuration.to_json()
     )['replicaInstanceBody']
+
     response = cloudsql.create_replica_instance(
-        replica_body=replica_instance_body)
+        replica_body=replica_instance_body,
+        project=project, credentials=credentials)
     operation_id = response['name']
     outgoing_ip_address_provisioned = False
     service_account_available = False
     replica_name = replica_instance_body['name']
     is_firewall_rule_active = False
     firewall_rule_name = 'replication-{}'.format(uuid.uuid4())
+    firewall_rule = compute.FirewallRule(
+        firewall_rule_name,
+        description='replication from {}'.format(replica_name)
+    )
+
     ip_address = None
+
     # Wait for replica to be created
     sys.stdout.write('Waiting for replica instance to be created.')
     while not cloudsql.is_sql_operation_done(operation_id):
@@ -622,9 +636,11 @@ def create_replica_instance(replica_configuration):
         # Try to get outgoing ip address
         if not outgoing_ip_address_provisioned or not service_account_available:
             ip_address, service_account = (
-                cloudsql.get_ip_and_service_account(replica_name)
+                cloudsql.get_ip_and_service_account(
+                    replica_name, project=project, credentials=credentials)
             )
             if ip_address:
+                firewall_rule.source_ip_range = [ip_address]
                 outgoing_ip_address_provisioned = True
             else:
                 logging.debug('Outgoing IP address not available.')
@@ -638,21 +654,22 @@ def create_replica_instance(replica_configuration):
                     service_account_available = True
                     storage.grant_read_access_to_bucket(
                         bucket_name=replica_configuration.bucket,
-                        email='serviceAccount:{}'.format(service_account)
+                        email='serviceAccount:{}'.format(
+                            service_account,
+                            project=project,
+                            credentials=credentials)
                     )
             else:
                 logging.debug('Service account not available.')
         elif not is_firewall_rule_active:
             # Create firewall rule to allow replica to access master.
             _ = compute.create_firewall_rule(
-                name=firewall_rule_name,
-                description='replication from {}'.format(replica_name),
-                source_ip_range=[ip_address])
+                firewall_rule, project=project, credentials=credentials)
             is_firewall_rule_active = True
         else:
             # Verify firewall rule is still active
             is_firewall_rule_active = compute.is_firewall_rule_active(
-                firewall_rule_name
+                firewall_rule_name, project=project, credentials=credentials
             )
         sys.stdout.write('...')
         sys.stdout.flush()
@@ -694,9 +711,36 @@ def replicate(replication_configuration):
                     bucket_name, replication_configuration.run_uuid
                 )
             )
-            external_master_db.dump_sql(bucket_url=bucket_url, databases=(
-                replication_configuration.master_configuration.databases
-            ))
+
+            # Serialize SSL certs if required, overwrite
+            ssl_ca = None
+            ssl_cert = None
+            ssl_key = None
+            # Write out Certificate Authority Certificate
+            if replication_configuration.caCertificate:
+                with open(CA_CERTIFICATE_FILE_NAME, 'w') as f:
+                    f.write(replication_configuration.caCertificate)
+                ssl_ca = CA_CERTIFICATE_FILE_NAME
+
+            # Write out Client Certificate
+            if replication_configuration.client_certificate:
+                with open(CLIENT_CERTIFICATE_FILE_NAME, 'w') as f:
+                    f.write(replication_configuration.client_certificate)
+                ssl_cert = CLIENT_CERTIFICATE_FILE_NAME
+
+            # Write out Client Key File
+            if replication_configuration.client_key:
+                with open(CLIENT_KEY_FILE_NAME, 'w') as f:
+                    f.write(replication_configuration.client_key)
+                ssl_key = CLIENT_KEY_FILE_NAME
+
+            external_master_db.dump_sql(
+                bucket_url=bucket_url,
+                databases=(
+                    replication_configuration.master_configuration.databases
+                ),
+                ssl_ca=ssl_ca, ssl_cert=ssl_cert, ssl_key=ssl_key
+            )
             replication_configuration.replica_configuration.dumpfile_path = (
                 bucket_url
             )
@@ -730,17 +774,39 @@ def replicate_dispatcher(interactive=False, config=None):
     replicate(config)
 
 
-def allow_host(host_ip):
+def get_svc_account_credentials(key_file_path, scopes=None):
+    """Returns service account credentials.
+
+    Args:
+        key_file_path (str): File path to svc account JSON file.
+        scopes (List): List of scopes being requested.
+
+    Returns:
+        Google.Credentials: Service account credentials.
+    """
+    return service_account_credentials.Credentials.from_service_account_file(
+        key_file_path, scopes=scopes)
+
+
+def allow_host(host_ip, project=None, svc_credentials=None):
     """Allows client host to connect to default VPC.
 
     Args:
         host_ip (str): IPV4 address of client host.
+        project (str): Project where host will be allowed network connectivity.
+        svc_credentials (str): File path to svc account JSON file.
     """
+    firewall_rule = compute.FirewallRule(
+        'client-connection-{}'.format(uuid.uuid4()),
+        description='Allow {} to connect to VPC'.format(host_ip)
+    )
+    firewall_rule.source_ip_range = [host_ip]
+    credentials = None
+    if svc_credentials:
+        credentials = get_svc_account_credentials(svc_credentials)
 
-    compute.create_firewall_rule(
-        name='client-connection-{}'.format(uuid.uuid4()),
-        description='Allow {} to connect to VPC'.format(host_ip),
-        source_ip_range=[host_ip])
+    compute.create_firewall_rule(firewall_rule,
+                                 project=project, credentials=credentials)
 
 
 def dump_database(host_ip, user, password, databases, bucket):
@@ -833,6 +899,9 @@ def configure(argv):
         help='Add firewall rule to allow host ingress access to default VPC.'
     )
     firewall_parser.add_argument('-i', '--host_ip', help='IP address of host.')
+    firewall_parser.add_argument('-p', '--project', help='Project Id.')
+    firewall_parser.add_argument('-s', '--svc_credentials',
+                                 help='Service Account Credentials JSON File.')
     firewall_parser.set_defaults(command=allow_host)
 
     dump_parser = subparsers.add_parser(
@@ -850,7 +919,13 @@ def configure(argv):
                              help='Bucket name where dump will be stored.')
 
     dump_parser.set_defaults(command=dump_database)
-    # todo(chrisdrake): Add sub parser for status command
+
+    create_config_parser = subparsers.add_parser(
+        'create-config',
+        help='Create a config file.'
+    )
+    create_config_parser.set_defaults(command=get_replicate_config_from_user)
+
     args = parser.parse_args(argv[1:])
     return args
 
