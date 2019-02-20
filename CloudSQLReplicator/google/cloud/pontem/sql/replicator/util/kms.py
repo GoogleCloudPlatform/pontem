@@ -14,13 +14,17 @@
 
 """Cloud Key Management Service utility Module."""
 
-
 import google.api_core.gapic_v1.client_info
+import google.auth
+from google.cloud import exceptions
 from google.cloud import kms_v1
 from google.cloud.kms_v1 import enums
 
-
 from google.cloud.pontem.sql.replicator.util import gcp_api_util
+
+
+class KeyNotEnabledError(ValueError):
+    """Raised if the key specified is not enabled."""
 
 
 def build_kms_client(credentials=None):
@@ -168,3 +172,64 @@ def add_member_to_crypto_key_policy(member, role, key_id, key_ring_id,
 
     kms_client.set_iam_policy(resource, policy)
     return policy
+
+
+def key_ring_exists(key_ring_id, location='global',
+                    project=None, credentials=None):
+    """Checks if a key ring exists.
+
+    Args:
+        key_ring_id (str): Unique identifier for keyring.
+        location (str): Where key exists.
+        project (str): Project ID where keyring will be created.
+        credentials (google.auth.Credentials): credentials to authorize client.
+
+    Returns:
+        bool: Returns True if key exists, False otherwise.
+    """
+    _, default_project = google.auth.default()
+    kms_client = build_kms_client(credentials)
+    key_ring_path = kms_client.key_ring_path(project or default_project,
+                                             location, key_ring_id)
+    try:
+        _ = kms_client.get_key_ring(key_ring_path)
+    except exceptions.NotFound:
+        return False
+    return True
+
+
+def key_exists(key_id, key_ring_id, version_id='1',
+               location='global', project=None, credentials=None):
+    """Checks if a key exists.
+
+    Args:
+        key_id (str): Unique identifier for key.
+        key_ring_id (str): Unique identifier for keyring.
+        version_id (str): Version of key to check
+        location (str): Where key exists.
+        project (str): Project ID where keyring will be created.
+        credentials (google.auth.Credentials): credentials to authorize client.
+
+    Raises:
+        KeyNotEnabledError: Raises error if key exists, but is not enabled.
+
+    Returns:
+        bool: Returns True if key exists, False otherwise.
+    """
+    _, default_project = google.auth.default()
+    kms_client = build_kms_client(credentials)
+    key_version_path = (
+        kms_client.crypto_key_version_path(project or default_project,
+                                           location, key_ring_id,
+                                           key_id, version_id)
+    )
+    try:
+        key_version = kms_client.get_crypto_key_version(key_version_path)
+        if (key_version.CryptoKeyVersionState ==
+                enums.CryptoKeyVersion.CryptoKeyVersionState.ENABLED):
+            raise KeyNotEnabledError(
+                'Key at {} is not enabled.'.format(key_version_path)
+            )
+    except exceptions.NotFound:
+        return False
+    return True
