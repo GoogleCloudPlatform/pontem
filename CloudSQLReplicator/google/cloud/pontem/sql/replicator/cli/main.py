@@ -40,9 +40,12 @@ from future.utils import iteritems
 from googleapiclient import discovery
 import yaml
 
+import google.auth
+from google.cloud.pontem.sql import config as repl_config
 from google.cloud.pontem.sql import replicator
 from google.cloud.pontem.sql.replicator.util import cloudsql
 from google.cloud.pontem.sql.replicator.util import compute
+from google.cloud.pontem.sql.replicator.util import kms
 from google.cloud.pontem.sql.replicator.util import mysql_util
 from google.cloud.pontem.sql.replicator.util import storage
 from google.oauth2 import service_account as service_account_credentials
@@ -58,12 +61,10 @@ CA_CERTIFICATE_FILE_NAME = 'ca.pem'
 CLIENT_CERTIFICATE_FILE_NAME = 'client-cert.pem'
 CLIENT_KEY_FILE_NAME = 'client-key.pem'
 
-class MissingRequiredParameterError(ValueError):
-    """Raised when a required parameter is missing."""
-
 
 class NoURLFilter(std_logging.Filter):
     """Class to filter out URL messages from Google Cloud API."""
+
     def filter(self, record):
         """Filters out messages that start with URL.
 
@@ -73,285 +74,6 @@ class NoURLFilter(std_logging.Filter):
             bool: True if does not start with URL, False otherwise.
         """
         return not record.getMessage().startswith('URL')
-
-
-class SSLConfiguration(object):
-    """SSL Configuration"""
-
-    def __init__(self,
-                 ca_certificate=None,
-                 client_certificate=None,
-                 client_key=None):
-        """Constructor.
-
-        Args:
-            ca_certificate (str): PEM representation of CA X509 certificate.
-            client_certificate (str): PEM representation of
-                client X509 certificate.
-            client_key (str): key for client certificate.
-        """
-        self.ca_certificate = ca_certificate
-        self.client_certificate = client_certificate
-        self.client_key = client_key
-
-
-class MasterConfiguration(object):
-    """Configuration for External Master Representation."""
-    master_config_defaults = frozenset(
-        {
-            'user': None,
-            'password': None,
-            'master_ip': None,
-            'master_port': cloudsql.DEFAULT_REPLICATION_PORT,
-            'databases': None,
-            'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
-            'region': cloudsql.DEFAULT_2ND_GEN_REGION,
-            'source_name': None,
-        }.items())
-
-    def __init__(self, **kwargs):
-        """Constructor.
-
-        Args:
-           kwargs: Parameters that are used to initialize master configuration.
-        Raises:
-             TypeError: If unrecognized properties are passed.
-             MissingRequiredParameterError: If required attributes are not set.
-             ValueError: If one or more configuration values is not allowed
-                (e.g. 5.6 and 5.7 are the only allowed database versions).
-        """
-        # pylint: disable=access-member-before-definition
-
-        # Check for required properties are present
-        if not set(['user', 'password', 'master_ip']).issubset(kwargs):
-            raise MissingRequiredParameterError(
-                'Required property missing for master configuration.'
-            )
-
-        # Set recognized properties
-        for (key, value) in (
-                iteritems(dict(MasterConfiguration.master_config_defaults))
-        ):
-            setattr(self, key, kwargs.get(key) or value)
-
-        if self.database_version not in cloudsql.SUPPORTED_VERSIONS:
-            raise ValueError(
-                'Database version {} not supported'.format(
-                    self.database_version
-                )
-            )
-
-        if self.source_name is None:
-            self.source_name = (
-                cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(uuid.uuid4())
-            )
-
-    def to_json(self):
-        """Converts MasterConfiguration into a dict.
-
-        Converts object instance into dictionary that can be used with
-            Cloud SQL Admin API.
-
-        Returns:
-            dict: JSON object to be used as  body argument for
-                instance.insert method of Cloud SQL Admin API.
-        """
-        master_config = {
-            'host': self.master_ip,
-            'port': self.master_port,
-            'user': self.user,
-            'password': self.password,
-            'databases': self.databases,
-            'sourceRepresentationBody': {
-                'name': self.source_name,
-                'databaseVersion': self.database_version,
-                'region': self.region,
-                'onPremisesConfiguration': {
-                    'kind': 'sql#onPremisesConfiguration',
-                    'hostPort': '{}:{}'.format(
-                        self.master_ip,
-                        self.master_port
-                    )
-                }
-            }
-        }
-        return master_config
-
-
-class ReplicaConfiguration(object):
-    """Configuration for External Master Representation."""
-    replica_config_defaults = frozenset(
-        {
-            'master_instance_name': None,
-            'bucket': None,
-            'dumpfile_path': None,
-            'user': None,
-            'password': None,
-            'database_version': cloudsql.DEFAULT_2ND_GEN_DB_VERSION,
-            'tier': cloudsql.DEFAULT_2ND_GEN_TIER,
-            'region': cloudsql.DEFAULT_2ND_GEN_REGION,
-            'replica_name': None,
-            'caCertificate': None,
-            'client_certificate': None,
-            'client_key': None
-
-        }.items())
-
-    def __init__(self, **kwargs):
-        """Constructor.
-
-        Args:
-            kwargs: Parameters that are used to initialize master configuration.
-        Raises:
-             MissingRequiredParameterError: If required attributes are not set.
-             TypeError: If unrecognized properties are passed.
-             ValueError: If one or more configuration values is not allowed
-                (e.g. 5.6 and 5.7 are the only allowed database versions).
-        """
-        # pylint: disable=access-member-before-definition
-
-        # Check for required properties are present
-        if not {'master_instance_name',
-                'dumpfile_path',
-                'user',
-                'password'}.issubset(kwargs):
-            raise MissingRequiredParameterError(
-                'Required property missing for master configuration.'
-            )
-        for (key, value) in (
-                iteritems(dict(ReplicaConfiguration.replica_config_defaults))
-        ):
-            setattr(self, key, kwargs.get(key) or value)
-
-        if self.database_version not in cloudsql.SUPPORTED_VERSIONS:
-            raise ValueError(
-                'Database version {} not supported'.format(
-                    self.database_version
-                )
-            )
-        if self.dumpfile_path and not self.dumpfile_path.startswith('gs://'):
-            raise ValueError(
-                'dumpfile_path must start with gs://'
-            )
-        if self.replica_name is None:
-            self.replica_name = (
-                cloudsql.DEFAULT_REPLICA_FORMAT_STRING.format(uuid.uuid4())
-            )
-
-    def to_json(self):
-        """Converts ReplicaConfiguration into a dict.
-
-        Converts object instance into dictionary that can be used with
-            Cloud SQL Admin API.
-
-        Returns:
-            dict: JSON object to be used as  body argument for
-                instance.insert method of Cloud SQL Admin API.
-        """
-        replica_config = {
-            'bucket': self.bucket,
-            'replicaInstanceBody': {
-                'name': self.replica_name,
-                'settings': {
-                    'tier': self.tier,
-
-                },
-                'databaseVersion': self.database_version,
-                'masterInstanceName': self.master_instance_name,
-                'region': self.region,
-                'replicaConfiguration': {
-                    'kind': 'sql#replicaConfiguration',
-                    'mysqlReplicaConfiguration': {
-                        'kind': 'sql#mysqlReplicaConfiguration',
-                        'dumpFilePath': self.dumpfile_path,
-                        'username': self.user,
-                        'password': self.password,
-                        'caCertificate': self.caCertificate,
-                        'clientCertificate': self.client_certificate,
-                        'clientKey': self.client_key
-                    }
-
-                }
-            }
-        }
-        return replica_config
-
-
-class ReplicationConfiguration(object):
-    """Configuration for setting up replication to external master."""
-
-    def __init__(self,
-                 master_configuration,
-                 replica_configuration,
-                 run_uuid=None):
-        """Constructor.
-
-        Args:
-            master_configuration (MasterConfiguration): Source representation
-                of external master.
-            replica_configuration (ReplicaConfiguration): Instance configuration
-                information for replica.
-            run_uuid (str): Unique id for this replication run.
-        Raises:
-            KeyError: If either configuration is missing an error is raised.
-        """
-        if master_configuration is None or replica_configuration is None:
-            raise KeyError(
-                'Master config is {}. Replica config is {}'.format(
-                    'missing' if master_configuration is None else 'present',
-                    'missing' if replica_configuration is None else 'present'
-                )
-            )
-        self.master_configuration = master_configuration
-        self.replica_configuration = replica_configuration
-        self._run_uuid = run_uuid or str(uuid.uuid4())
-
-    @property
-    def run_uuid(self):
-        """Property that uniquely identifies this replication run.
-
-        Returns:
-            str: Universally unique identifier of replication configuration.
-        """
-        return self._run_uuid
-
-    @run_uuid.setter
-    def run_uuid(self, value):
-        """Setter for run uuid property.
-
-        Args:
-            value (str): New run uuid to reassign master and replica names.
-        """
-        self._run_uuid = value
-        self.master_configuration.source_name = (
-            cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(self._run_uuid)
-        )
-        self.replica_configuration.replica_name = (
-            cloudsql.DEFAULT_REPLICA_FORMAT_STRING.format(self._run_uuid)
-        )
-
-    def to_json(self):
-        """Converts replication configuration into a JSON object.
-
-        Returns:
-            JSON: JSON Configuration object for replication.
-        """
-        return {
-            'masterConfiguration': self.master_configuration.to_json(),
-            'replicaConfiguration': self.replica_configuration.to_json()
-        }
-
-
-def export_config_to_file(config, file_path=None):
-    """Serializes config to config to a .yaml file.
-
-    Args:
-        config (ReplicationConfiguration): Config object.
-        file_path (str): Where to serialize the config.
-    """
-    config_file_path = file_path or '{}.yaml'.format(config.run_uuid)
-    with open(config_file_path, 'w+') as f:
-        yaml.dump(config, f)
 
 
 def get_replicate_config_from_file(config_file_path):
@@ -416,14 +138,15 @@ def get_master_config_from_user(run_uuid):
         cloudsql.DEFAULT_EXT_MASTER_FORMAT_STRING.format(run_uuid)
     )
 
-    master_config = MasterConfiguration(master_ip=master_ip,
-                                        master_port=master_port,
-                                        user=user,
-                                        password=password,
-                                        databases=databases,
-                                        database_version=database_version,
-                                        region=region,
-                                        source_name=source_name)
+    master_config = repl_config.MasterConfiguration(
+        master_ip=master_ip,
+        master_port=master_port,
+        user=user,
+        password=password,
+        databases=databases,
+        database_version=database_version,
+        region=region,
+        source_name=source_name)
 
     return master_config
 
@@ -452,7 +175,8 @@ def get_ssl_config_from_user():
         ) if client_certificate else None
     )
 
-    return SSLConfiguration(ca_certificate, client_certificate, client_key)
+    return repl_config.SSLConfiguration(
+        ca_certificate, client_certificate, client_key)
 
 
 def get_dumpfile_config_from_user():
@@ -531,7 +255,7 @@ def get_replica_config_from_user(master_config, run_uuid):
 
     ssl_config = get_ssl_config_from_user()
 
-    replica_config = ReplicaConfiguration(
+    replica_config = repl_config.ReplicaConfiguration(
         bucket=bucket_name,
         master_instance_name=master_instance_name,
         dumpfile_path=dumpfile_path,
@@ -549,6 +273,52 @@ def get_replica_config_from_user(master_config, run_uuid):
     return replica_config
 
 
+def get_encryption_config_from_user():
+    """Gets encryption configuration from user.
+
+    Returns:
+        EncryptionConfiguration: Encryption configuration to
+            encrypt password/client-key.
+    """
+    while True:
+        # Loop until we have a valid encryption configuration
+        key = input(
+            'Enter key to encrypt password (leave blank to leave plaintext):'
+        )
+        if key:
+            _, default_project = google.auth.default()
+            key_ring = input('Enter keyring id:')
+            location = input(
+                'Enter location (leave blank for global):') or 'global'
+            project = input(
+                'Enter project (leave blank for default):') or default_project
+
+            # check if keyring and key exist
+            try:
+                if key_ring:
+                    if not kms.key_ring_exists(key_ring_id=key_ring,
+                                               location=location,
+                                               project=project):
+                        kms.create_key_ring(key_ring_id=key_ring,
+                                            location=location,
+                                            project=project)
+                    if not kms.key_exists(key_id=key, key_ring_id=key_ring,
+                                          location=location, project=project):
+                        kms.create_key(key_id=key, key_ring_id=key_ring,
+                                       location=location, project=project)
+                    return repl_config.EncryptionConfiguration(
+                        key_id=key,
+                        key_ring_id=key_ring,
+                        location=location,
+                        project=project)
+                else:
+                    print('No keyring entered. Please enter a keyring.')
+            except kms.KeyNotEnabledError:
+                print('Key not enabled.  Select or create another key.')
+        else:
+            return repl_config.EncryptionConfiguration(None, None)
+
+
 def get_replicate_config_from_user():
     """Sets up replica interactively.
 
@@ -559,14 +329,24 @@ def get_replicate_config_from_user():
     run_uuid = str(uuid.uuid4())
     master_config = get_master_config_from_user(run_uuid)
     replica_config = get_replica_config_from_user(master_config, run_uuid)
-    config = ReplicationConfiguration(master_configuration=master_config,
-                                      replica_configuration=replica_config,
-                                      run_uuid=run_uuid)
+    config = repl_config.ReplicationConfiguration(
+        master_configuration=master_config,
+        replica_configuration=replica_config,
+        run_uuid=run_uuid)
     save_config = re.match('y',
                            input('Save configuration file? y/n:'),
                            re.I)
+
     if save_config:
-        export_config_to_file(config)
+        encryption_config = get_encryption_config_from_user()
+        if encryption_config.key_id:
+            repl_config.export_config_to_file(
+                config,
+                key_id=encryption_config.key_id,
+                key_ring_id=encryption_config.key_ring_id,
+                project=encryption_config.project)
+        else:
+            repl_config.export_config_to_file(config)
         print('Config file saved as {}.yaml'.format(run_uuid))
     return config
 
@@ -770,6 +550,23 @@ def replicate_dispatcher(interactive=False, config=None):
         config = get_replicate_config_from_user()
     elif config is not None:
         config = get_replicate_config_from_file(config)
+        # Check if we need to decrypt password
+        if config.key and config.key_ring:
+            if config.master_configuration.encrypted_password:
+                config.master_configuration.password = kms.decrypt(
+                    config.master_configuration.encrypted_password,
+                    key_id=config.key, key_ring_id=config.key_ring,
+                    project=config.project)
+            if config.replica_configuration.encrypted_password:
+                config.replica_configuration.password = kms.decrypt(
+                    config.replica_configuration.encrypted_password,
+                    key_id=config.key, key_ring_id=config.key_ring,
+                    project=config.project)
+            if config.replica_configuration.encrypted_client_key:
+                config.replica_configuration.client_key = kms.decrypt(
+                    config.replica_configuration.encrypted_client_key,
+                    key_id=config.key, key_ring_id=config.key_ring,
+                    project=config.project)
 
     replicate(config)
 
