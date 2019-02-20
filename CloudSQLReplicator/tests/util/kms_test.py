@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-<<<<<<< HEAD
-"""Tests GCP API KMS utility functions."""
-=======
 """Tests GCP API Key Management Service utility functions."""
->>>>>>> 6ebfaa16c4a07ea16894b43dbbd46490b030ff72
 
 
 import unittest
