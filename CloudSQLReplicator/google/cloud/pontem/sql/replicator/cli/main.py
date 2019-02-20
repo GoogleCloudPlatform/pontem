@@ -41,7 +41,7 @@ from googleapiclient import discovery
 import yaml
 
 import google.auth
-from google.cloud.pontem.sql import config as repl_config
+from google.cloud.pontem.sql.replicator.cli import config as repl_config
 from google.cloud.pontem.sql import replicator
 from google.cloud.pontem.sql.replicator.util import cloudsql
 from google.cloud.pontem.sql.replicator.util import compute
