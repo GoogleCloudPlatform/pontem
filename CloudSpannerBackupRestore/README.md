@@ -9,7 +9,8 @@
 pontem is an open-source project that enable users of Cloud Spanner
 to perform four key operations:
 
-1. Database Backup.
+1. Database Backup grabs a snapshot of a Cloud Spanner Database and backs it up
+   to an external location such as Google Cloud Storage.
 1. Database Backup Integrity Check which verifies that the backup completed
 successfully. In particular, this checks the list of tables backed-up
 and the number of rows backed-up. It does not check the cell-level data
@@ -28,8 +29,7 @@ to [file issues](https://github.com/GoogleCloudPlatform/pontem/issues/new)
 for feature requests and bugs.
 
 ## Getting Started
-pontem can be run in various modes. Consult the [usage guide](USAGE.md) for
-relevant examples.
+Pontem Cloud Spanner Backup and Restore feature can be run in various modes. Consult the [usage guide](USAGE.md) for relevant examples.
 
 ## A note on Security
 - Since Cloud Spanner data will reside in Google Cloud Storage (GCS),

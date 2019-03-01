@@ -33,11 +33,32 @@ stages:
 - E2E_TESTS
 jobs:
   include:
-  - stage: STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
-    script: gradle clean check
-  - stage: BUILD_TEST_AND_COVERAGE
+  - stage: BIQUERY_WORKLOAD_TESTER_STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
+    if: commit_message =~ /(\[BigQueryWorkloadTester\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    script: 
+    - gradle clean :BigQueryWorkloadTester:check
+
+  - stage: CLOUD_SPANNER_BACKUP_RESTORE_STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    script: 
+    - gradle clean :CloudSpannerBackupRestore:check
+
+  - stage: BIQUERY_WORKLOAD_TESTER_BUILD_TEST_AND_COVERAGE
+    if: commit_message =~ /(\[BigQueryWorkloadTester\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
     script:
-    - gradle clean build jacocoTestReport --info --stacktrace 
+    - gradle clean :BigQueryWorkloadTester:build :BigQueryWorkloadTester:jacocoTestReport --info --stacktrace 
+    - bash <(curl -s https://codecov.io/bash) -f BigQueryWorkloadTester/$JACOCO_REPORT_PATH -F BigQueryWorkloadTester
+
+  - stage: CLOUD_SPANNER_BACKUP_RESTORE_BUILD_TEST_AND_COVERAGE
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    script:
+    - gradle clean :CloudSpannerBackupRestore:build :CloudSpannerBackupRestore:jacocoTestReport --info --stacktrace 
     - bash <(curl -s https://codecov.io/bash) -f CloudSpannerBackupRestore/$JACOCO_REPORT_PATH -F CloudSpannerBackupRestore
-  - stage: E2E_TESTS
+
+  - stage: CLOUD_SPANNER_BACKUP_RESTORE_E2E_TESTS
+    if: commit_message =~ /(\[CloudSpannerBackupRestore\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
     script: "./CloudSpannerBackupRestore/travis/run_e2e_tests.sh --test_suite=Avro --project=${E2E_TEST_PROJECT_NAME} --bucket=${E2E_TEST_BUCKET} --database=${E2E_TEST_DATABASE}"
+
+  - stage: CLOUD_SQL_REPLICATOR_PLACEHOLDER
+    if: commit_message =~ /(\[CloudSQLReplicator\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    script: "echo 'Placeholder for CloudSQLReplicator build.'"

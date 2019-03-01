@@ -1,0 +1,50 @@
+# The number of times a Workload will be executed in parallel.
+# Our Concurrency Level limit is 50
+concurrencyLevel: 1
+
+# Whether to run several instances of the same Workload at different percentages of the provided
+# Concurrency Level.
+isRatioBasedBenchmark: true
+
+# Which ratios of the concurrencyLevel to use with in a Ratio Based Benchmark.
+# If no ratios are provided and Ratio Based Benchmark is used the Workload Execution will fail.
+# Please remember that the concurrencyLevel limit is 50, the first ratio to surpass this limit will
+# be swapped for 50 and all others will be ignored.
+benchmarkRatios: [0.01, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0]
+
+# The folder where to save the results file.
+outputFileFolder: /usr/my_user/home/workload_results/
+
+# The Workloads and their associated query files.
+#
+# If the Credentials file is empty the tool will attempt to load the default Credentials
+# The Workload Tester expects the query file to contain one query per line.
+# The Workload Tester can read queries from files via 'queryFiles' or you can produce a query / list
+# of queries with 'queries'.
+workloads:
+- name: "Simple and Text Queries"
+  projectId: pontem-mysql-import-testing
+  cloudCredentialsFile: "/usr/my_user/home/service-account-123.json"
+  queryFiles:
+    - queries/query1.sql
+    - queries/query2.sql
+  queries:
+    - "SELECT COUNT(*) FROM `bigquery-public-data:human_genome_variants.simons_genome_diversity_project_sample_metadata`;"
+  outputFileName: simple_and_text_queries.json
+- name: Simple_and_Complex_Queries
+  projectId: pontem-mysql-import-testing
+  cloudCredentialsFile: "/usr/my_user/home/service-account-456.json"
+  queryFiles:
+    - queries/query1.sql
+    - queries/complex_query1.sql
+  queries:
+    -
+  outputFileName: simple_and_complex_queries.json
+- name: "Text Query"
+  projectId: pontem-mysql-import-testing
+  cloudCredentialsFile: "/usr/my_user/home/service-account-456.json"
+  queryFiles:
+    -
+  queries:
+    - "SELECT COUNT(*) FROM `bigquery-public-data:human_genome_variants.simons_genome_diversity_project_sample_metadata`;"
+  outputFileName: text_query.json
