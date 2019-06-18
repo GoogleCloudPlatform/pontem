@@ -17,7 +17,7 @@
 
 # Constants
 COMMIT_MESSAGE_FILEPATH=$1
-PROJECTS=("BigQueryWorkloadTester" "CloudSpannerBackupRestore" "CloudSQLReplicator")
+PROJECTS=("CloudSpannerBackupRestore" "CloudSQLReplicator")
 
 # Functions
 function get_projects_touched_in_files(){
