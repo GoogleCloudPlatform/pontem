@@ -24,8 +24,3 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.m2/repository/
-stages:
-- STYLE
-- BUILD_TEST_AND_COVERAGE
-- E2E_TESTS
-jobs:
