@@ -6,4 +6,3 @@ Google Cloud Storage and Database products.
 
 Current products:
 
-1. [Cloud Spanner Backup and Restore](CloudSpannerBackupRestore/README.md)
