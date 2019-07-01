@@ -32,12 +32,12 @@ stages:
 jobs:
   include:
   - stage: BIQUERY_WORKLOAD_TESTER_STYLE # Checkstyle is actually included in Gradle's build task but an independent run allows for much cleaner output
-    if: commit_message =~ /(\[BigQueryWorkloadTester\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    if: commit_message =~ /(\[BigQueryWorkloadTester\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[Root\])/ # If no tag is matched run everything
     script: 
     - gradle clean :BigQueryWorkloadTester:check
  
   - stage: BIQUERY_WORKLOAD_TESTER_BUILD_TEST_AND_COVERAGE
-    if: commit_message =~ /(\[BigQueryWorkloadTester\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[CloudSpannerBackupRestore\]|\[CloudSQLReplicator\]|\[Root\])/ # If no tag is matched run everything
+    if: commit_message =~ /(\[BigQueryWorkloadTester\]|\[Root\])/ OR commit_message !~ /(\[BigQueryWorkloadTester\]|\[Root\])/ # If no tag is matched run everything
     script:
     - gradle clean :BigQueryWorkloadTester:build :BigQueryWorkloadTester:jacocoTestReport --info --stacktrace 
     - bash <(curl -s https://codecov.io/bash) -f BigQueryWorkloadTester/$JACOCO_REPORT_PATH -F BigQueryWorkloadTester
