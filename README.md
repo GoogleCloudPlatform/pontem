@@ -6,3 +6,6 @@ Google Cloud Storage and Database products.
 
 Current products:
 
+=======
+1. [BigQuery Workload Tester](BigQueryWorkloadTester/README.md)
+
