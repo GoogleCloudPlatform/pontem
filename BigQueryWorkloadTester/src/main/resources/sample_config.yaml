@@ -29,7 +29,7 @@ workloads:
     - queries/query1.sql
     - queries/query2.sql
   queries:
-    - "SELECT COUNT(*) FROM `bigquery-public-data:human_genome_variants.simons_genome_diversity_project_sample_metadata`;"
+    - "SELECT COUNT(*) FROM `bigquery-public-data.human_genome_variants.simons_genome_diversity_project_sample_metadata`;"
   outputFileName: simple_and_text_queries.json
 - name: Simple_and_Complex_Queries
   projectId: pontem-mysql-import-testing
@@ -46,5 +46,5 @@ workloads:
   queryFiles:
     -
   queries:
-    - "SELECT COUNT(*) FROM `bigquery-public-data:human_genome_variants.simons_genome_diversity_project_sample_metadata`;"
+    - "SELECT COUNT(*) FROM `bigquery-public-data.human_genome_variants.simons_genome_diversity_project_sample_metadata`;"
   outputFileName: text_query.json
