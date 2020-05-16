@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem.benchmark;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -55,7 +56,7 @@ public class WorkloadBenchmarkTest {
   @Test
   public void runsBenchmark() {
     int concurrencyLevel = TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT;
-    WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
+    final WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     when(concurrentWorkloadRunnerFactoryMock.getConcurrentWorkloadRunner(
             workload, concurrencyLevel))
