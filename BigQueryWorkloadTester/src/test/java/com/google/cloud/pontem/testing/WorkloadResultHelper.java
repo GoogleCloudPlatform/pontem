@@ -34,6 +34,12 @@ public class WorkloadResultHelper {
         TestConstants.QUERIES_AND_IDS, TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT);
   }
 
+  /**
+   * Returns a WorkloadResult for multiple successful queries.
+   * @param queriesAndIds a Map of query String to JobId
+   * @param concurrencyLevel an int representing the concurrency level
+   * @return WorkloadResult
+   */
   public static WorkloadResult getWorkloadResultMultipleSuccessfulQueries(
       final Map<String, JobId> queriesAndIds, final int concurrencyLevel) {
     List<QueryResult> queryResults = new ArrayList<>();
@@ -54,6 +60,10 @@ public class WorkloadResultHelper {
         .build();
   }
 
+  /**
+   * Returns a WorkloadResult with multiple query errors.
+   * @return WorkloadResult
+   */
   public static WorkloadResult getWorkloadResultMultipleQueryErrors() {
     List<QueryResult> queryResults = new ArrayList<>();
     for (Entry<String, JobId> entry : TestConstants.QUERIES_AND_IDS.entrySet()) {
@@ -80,6 +90,11 @@ public class WorkloadResultHelper {
     return getWorkloadResultsForConcurrencyLevel(TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT);
   }
 
+  /**
+   * Returns a list of WorkloadResult for a given concurrency level.
+   * @param concurrencyLevel an int representing the concurrency level
+   * @return WorkloadResult
+   */
   public static List<WorkloadResult> getWorkloadResultsForConcurrencyLevel(
       final int concurrencyLevel) {
     WorkloadResult workloadResult =
@@ -116,6 +131,10 @@ public class WorkloadResultHelper {
     return Arrays.asList(getConcurrentWorkloadExceptionResult());
   }
 
+  /**
+   * Returns a WorkloadResult with exceptions.
+   * @return WorkloadResult
+   */
   public static WorkloadResult getConcurrentWorkloadExceptionResult() {
     return WorkloadResult.newBuilder()
         .setWorkloadName(TestConstants.WORKLOAD_NAME)

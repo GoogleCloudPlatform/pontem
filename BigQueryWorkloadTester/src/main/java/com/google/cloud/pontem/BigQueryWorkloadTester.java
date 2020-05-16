@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem;
 
 import com.google.cloud.pontem.auth.BigQueryCredentialManager;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Tool to Benchmark BigQuery Workloads */
+/** Tool to Benchmark BigQuery Workloads. */
 public final class BigQueryWorkloadTester {
 
   private static final Logger logger = Logger.getLogger(BigQueryWorkloadTester.class.getName());

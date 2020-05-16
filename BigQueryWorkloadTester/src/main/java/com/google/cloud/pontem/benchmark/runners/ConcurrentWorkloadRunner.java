@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.google.cloud.pontem.benchmark.runners;
 
 import com.google.cloud.pontem.config.WorkloadSettings;
@@ -37,6 +38,12 @@ public class ConcurrentWorkloadRunner<T> {
   private final List<Callable<WorkloadResult>> callables;
   private final Stopwatch stopwatch;
 
+  /**
+   * Constructs an instance of ConcurrentWorkloadRunner.
+   * @param executorService an ExecutorService
+   * @param callables a List of Callables returning WorkloadResult
+   * @param stopwatch a Stopwatch
+   */
   public ConcurrentWorkloadRunner(
       ExecutorService executorService,
       List<Callable<WorkloadResult>> callables,

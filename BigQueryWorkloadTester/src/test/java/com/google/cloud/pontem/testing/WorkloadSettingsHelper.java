@@ -21,6 +21,10 @@ import com.google.cloud.pontem.config.WorkloadSettings;
 /** Helper that builds WorkloadSettings objects for testing. */
 public class WorkloadSettingsHelper {
 
+  /**
+   * Returns a WorkloadSettings containing multiple queries.
+   * @return workloadSettings
+   */
   public static WorkloadSettings getMultipleQueries() {
     WorkloadSettings workloadSettings = new WorkloadSettings();
     workloadSettings.setName(TestConstants.WORKLOAD_NAME);
