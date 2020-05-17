@@ -108,17 +108,17 @@ public class WorkloadSettings {
     List<String> queriesFromFiles = new ArrayList<>();
 
     for (String queryFile : queryFiles) {
-      queriesFromFiles.addAll(readQueryFile(queryFile));
+      queriesFromFiles.add(readQueryFile(queryFile));
     }
 
     return queriesFromFiles;
   }
 
-  private List<String> readQueryFile(final String queryFile) {
-    List<String> queries = new ArrayList<>();
+  private String readQueryFile(final String queryFile) {
+    List<String> queryLines = new ArrayList<>();
 
     try {
-      queries =
+      queryLines =
           Resources.readLines(
               Resources.getResource(queryFile),
               // TODO(ldanielmadariaga): Handle other charsets
@@ -128,6 +128,6 @@ public class WorkloadSettings {
       logger.log(Level.FINE, "Failed to write to query files: ", e);
     }
 
-    return queries;
+    return String.join("\n", queryLines);
   }
 }
