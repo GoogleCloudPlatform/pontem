@@ -39,7 +39,10 @@ public final class BigQueryWorkloadTester {
 
   private static final Logger logger = Logger.getLogger(BigQueryWorkloadTester.class.getName());
 
-  /** Main entry point for benchmark. Sets up the object graph and kicks-off execution. */
+  /**
+   * Main entry point for benchmark. Sets up the object graph and kicks-off execution.
+   * @param args String array
+   * */
   public static void main(String[] args) {
     logger.info("Welcome to BigQuery Workload Tester!");
 

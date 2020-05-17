@@ -37,8 +37,10 @@ public class BigQueryBackendFactory {
 
   /**
    * Ensures that the BigQueryBackend and it's dependencies are properly built and configured.
-   *
+   * @param bigQueryCredentialManager a BigQueryCredentialManager
+   * @param workload a WorkloadSettings
    * @return a properly configured BigQueryBackend
+   * @throws java.io.IOException IOException
    */
   public static BigQueryBackend getBigQueryBackend(
       final BigQueryCredentialManager bigQueryCredentialManager, final WorkloadSettings workload)
