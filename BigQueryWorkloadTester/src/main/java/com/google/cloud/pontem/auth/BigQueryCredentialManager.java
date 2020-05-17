@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.pontem.auth;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -31,8 +30,7 @@ public class BigQueryCredentialManager {
       Arrays.asList("https://www.googleapis.com/auth/bigquery");
 
   /**
-   * Retrieves GoogleCredentials if credentialsFile is empty it will fall-back to the
-   * default config.
+   * Retrieves GoogleCredentials if credentialsFile is empty it will fall-back to the default config
    *
    * @param credentialsFile Optional containing the credentials file path
    * @return the properly configured GoogleCredentials object

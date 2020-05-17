@@ -31,12 +31,6 @@ public class QueryResultHelper {
     return getSuccessfulQueryResult(TestConstants.JOB_ID.toString(), TestConstants.TEST_QUERY);
   }
 
-  /**
-   * Return a successful QueryResult.
-   * @param jobId The JobId
-   * @param query The query
-   * @return QueryResult
-   */
   public static QueryResult getSuccessfulQueryResult(final String jobId, final String query) {
     return getSharedQueryResultValues(jobId, query)
         .setStatus(Status.SUCCESS)
@@ -46,10 +40,6 @@ public class QueryResultHelper {
         .build();
   }
 
-  /**
-   * Return a list of successful QueryResults.
-   * @return QueryResult
-   */
   public static List<QueryResult> getSuccessfulQueryResults() {
     List<QueryResult> queryResults = new ArrayList<>();
     for (Entry<String, JobId> entry : TestConstants.QUERIES_AND_IDS.entrySet()) {
@@ -69,14 +59,6 @@ public class QueryResultHelper {
     return getQueryResultWithSingleError(jobId, query, Arrays.asList(errorMessage));
   }
 
-
-  /**
-   * Return a QueryResult with a single error.
-   * @param jobId The JobId
-   * @param query The query
-   * @param errorMessages a List of error messages
-   * @return
-   */
   public static QueryResult getQueryResultWithSingleError(
       final String jobId, final String query, final List<String> errorMessages) {
     return getSharedQueryResultValues(jobId, query)
@@ -87,10 +69,6 @@ public class QueryResultHelper {
         .build();
   }
 
-  /**
-   * Returns a list of QueryResult, each with a single error.
-   * @return QueryResult
-   */
   public static List<QueryResult> getQueryResultsWithSingleError() {
     List<QueryResult> queryResults = new ArrayList<>();
     for (Entry<String, JobId> entry : TestConstants.QUERIES_AND_IDS.entrySet()) {
@@ -104,23 +82,11 @@ public class QueryResultHelper {
     return queryResults;
   }
 
-  /**
-   * Returns a QueryResult with multiple errors.
-   * @return QueryResult
-   */
   public static QueryResult getQueryResultWithMultipleErrors() {
     return getQueryResultWithMultipleErrors(
         TestConstants.JOB_ID.toString(), TestConstants.TEST_QUERY, TestConstants.ERROR_MESSAGES);
   }
 
-  /**
-   * Returns a QueryResult with multiple errors for a given JobId, query with specified error
-   * messages.
-   * @param jobId The JobId
-   * @param query The query String
-   * @param errorMessages a List of String containing error messages
-   * @return
-   */
   public static QueryResult getQueryResultWithMultipleErrors(
       final String jobId, final String query, final List<String> errorMessages) {
     return getSharedQueryResultValues(jobId, query)
@@ -135,12 +101,6 @@ public class QueryResultHelper {
     return getExceptionQueryResult(TestConstants.TEST_QUERY, TestConstants.ERROR_MESSAGE_1);
   }
 
-  /**
-   * Returns a QueryResult with an exception.
-   * @param query The query
-   * @param error The error message
-   * @return QueryResult
-   */
   public static QueryResult getExceptionQueryResult(final String query, final String error) {
     return QueryResult.newBuilder()
         .setId("")

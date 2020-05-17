@@ -56,7 +56,6 @@ public class ConcurrentWorkloadRunnerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void runConcurrentWorkload() throws Exception {
     int concurrencyLevel = TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT;
 
@@ -94,7 +93,6 @@ public class ConcurrentWorkloadRunnerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void runConcurrentWorkloadExceedingConcurrencyLevel() throws Exception {
     int expectedConcurrencyLevel = TestConstants.CONCURRENCY_LEVEL_LIMIT;
 
@@ -134,7 +132,6 @@ public class ConcurrentWorkloadRunnerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void runConcurrentWorkloadWithQueryErrors() throws Exception {
     int concurrencyLevel = TestConstants.CONCURRENCY_LEVEL_BELOW_LIMIT;
 

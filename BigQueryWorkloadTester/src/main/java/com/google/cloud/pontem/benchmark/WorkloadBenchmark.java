@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.pontem.benchmark;
 
 import com.google.cloud.pontem.benchmark.runners.ConcurrentWorkloadRunner;
@@ -23,7 +22,6 @@ import com.google.cloud.pontem.model.WorkloadResult;
 import java.util.List;
 import java.util.logging.Logger;
 
-@SuppressWarnings("checkstyle:SummaryJavadoc")
 /** @see Benchmark */
 public class WorkloadBenchmark implements Benchmark {
 

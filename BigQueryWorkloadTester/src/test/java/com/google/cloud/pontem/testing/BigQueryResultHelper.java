@@ -29,12 +29,6 @@ public class BigQueryResultHelper {
     return getSuccessfulBigQueryResult(TestConstants.JOB_ID.toString());
   }
 
-  /**
-   * Returns a successful BigQueryResult.
-   *
-   * @param jobId The JobId
-   * @return BigQueryResult
-   */
   public static BigQueryResult getSuccessfulBigQueryResult(final String jobId) {
     return getBigQuerySharedValues(jobId)
         .setStatus(Status.SUCCESS)
@@ -43,22 +37,11 @@ public class BigQueryResultHelper {
         .build();
   }
 
-  /**
-   * Returns a BigQueryResult with query errors.
-   *
-   * @return BigQueryResult
-   */
   public static BigQueryResult getBigQueryResultWithQueryErrors() {
     return getBigQueryResultWithQueryErrors(
         TestConstants.JOB_ID.toString(), TestConstants.ERRORS.get(0).getMessage());
   }
 
-  /**
-   * Returns a BigQueryResult with query errors and an error message.
-   * @param jobId The JobId
-   * @param errorMessage A error message to include in the BigQueryResult
-   * @return
-   */
   public static BigQueryResult getBigQueryResultWithQueryErrors(
       final String jobId, String errorMessage) {
     return getBigQuerySharedValues(jobId)
@@ -76,12 +59,6 @@ public class BigQueryResultHelper {
     return getBigQueryResultWithMultipleQueryErrors(jobId, TestConstants.ERROR_MESSAGES);
   }
 
-  /**
-   * Returns a BigQueryResult with multiple query errors.
-   * @param jobId The JobId
-   * @param errorMessages A List of Strings containing error messages
-   * @return
-   */
   public static BigQueryResult getBigQueryResultWithMultipleQueryErrors(
       final String jobId, final List<String> errorMessages) {
     return getBigQuerySharedValues(jobId)

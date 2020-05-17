@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.pontem.config;
 
 import com.google.common.base.Strings;
@@ -57,10 +56,6 @@ public class WorkloadSettings {
     this.projectId = projectId;
   }
 
-  /**
-   * Return an Optional with a path to a credentials file.
-   * @return Optional&ltString&gt
-   */
   public Optional<String> getCloudCredentialsFile() {
     Optional<String> optional = Optional.empty();
 
@@ -87,10 +82,6 @@ public class WorkloadSettings {
     this.queryFiles = queryFiles;
   }
 
-  /**
-   * Return a List of queries.
-   * @return List&ltString&gt
-   */
   public List<String> getQueries() {
     if (isFirstGetQueries) {
       queries = queries.stream().filter(q -> q != null).collect(Collectors.toList());

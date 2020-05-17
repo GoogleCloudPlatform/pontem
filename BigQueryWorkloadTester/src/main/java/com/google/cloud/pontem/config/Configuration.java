@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.pontem.config;
 
 import com.google.common.io.Resources;
@@ -40,7 +39,7 @@ public final class Configuration {
 
   /**
    * Get the Instance of this class There should only ever be one instance of this class and other
-   * classes can use this static method to retrieve the instance.
+   * classes can use this static method to retrieve the instance
    *
    * @return Configuration the stored Instance of this class
    */
@@ -54,7 +53,7 @@ public final class Configuration {
   }
 
   /**
-   * Load the Configuration specified at fileName.
+   * Load the Configuration specified at fileName
    *
    * @return boolean did this load succeed?
    */

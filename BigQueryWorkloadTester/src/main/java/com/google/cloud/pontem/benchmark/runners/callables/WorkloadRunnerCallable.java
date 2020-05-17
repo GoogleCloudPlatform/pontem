@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.pontem.benchmark.runners.callables;
 
 import com.google.cloud.pontem.benchmark.runners.SerialQueryRunner;
@@ -26,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-/** A {@link Callable} that executes a Workload. */
+/** A {@link Callable} that executes a Workload */
 public class WorkloadRunnerCallable implements Callable<WorkloadResult> {
 
   private final SerialQueryRunner serialQueryRunner;
@@ -34,13 +33,6 @@ public class WorkloadRunnerCallable implements Callable<WorkloadResult> {
   private final int concurrencyLevel;
   private final WorkloadSettings workload;
 
-  /**
-   * Constructs a WorkloadRunnerCallable.
-   * @param serialQueryRunner a SerialQueryRunner
-   * @param stopwatch a Stopwatch
-   * @param workload a WorkloadSettings defining a workload
-   * @param concurrencyLevel an int representing concurrency level
-   */
   public WorkloadRunnerCallable(
       SerialQueryRunner serialQueryRunner,
       Stopwatch stopwatch,
