@@ -55,7 +55,7 @@ public final class Configuration {
 
   /**
    * Load the Configuration specified at fileName.
-   * @param filename filename to load configuration from
+   *
    * @return boolean did this load succeed?
    */
   public static boolean loadConfig(String filename) {
