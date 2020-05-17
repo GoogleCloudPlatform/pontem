@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.pontem.benchmark;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -66,7 +65,7 @@ public class RatioBasedWorkloadBenchmarkTest {
   @Test
   public void runsBenchmarkWithAllPercentages() {
     int concurrencyLevel = 15;
-    final WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
+    WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     List<Integer> expectedConcurrencyLevels = new ArrayList<>();
     for (double percentage : BENCHMARK_RATIOS) {
@@ -115,7 +114,7 @@ public class RatioBasedWorkloadBenchmarkTest {
   @Test
   public void runsBenchmarkUntilLimitIsReached() {
     int concurrencyLevel = 90;
-    final WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
+    WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     List<Integer> expectedConcurrencyLevels = new ArrayList<>();
     for (double percentage : BENCHMARK_RATIOS.subList(0, 4)) {
@@ -165,7 +164,7 @@ public class RatioBasedWorkloadBenchmarkTest {
   @Test
   public void runsBenchmarkIgnoringRepeatedLevels() {
     int concurrencyLevel = 4;
-    final WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
+    WorkloadSettings workload = WorkloadSettingsHelper.getMultipleQueries();
 
     List<Integer> expectedConcurrencyLevels = new ArrayList<>();
     for (double percentage : BENCHMARK_RATIOS.subList(2, 7)) {
