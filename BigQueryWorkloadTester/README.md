@@ -19,6 +19,7 @@ The **benchmark results** will be written to a JSON file and will track the
 BigQuery Workload Tester uses Gradle. In the Cloud Shell, you can run the following
 to build the Workload Tester:
 
+Gradle version 3.2.1 with Java8 is required for this project.
 ```bash
 sudo apt-get -y install gradle
 git clone https://github.com/GoogleCloudPlatform/pontem.git
